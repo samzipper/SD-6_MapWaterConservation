@@ -2,6 +2,7 @@
 
 # packages
 library(tidyverse)
+library(sf)
 
 ## plotting controls
 # ggplot theme
