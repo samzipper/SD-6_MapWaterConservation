@@ -1,3 +1,5 @@
+SD6_outline.gpkg and SD6-buffer_outline.gpkg = polygons for Sheridan-6 LEMA and a buffer surrounding the SD-6 LEMA. These files were created by Brownie (I think) as shapefiles, and I exported them as .gpkg to put into this repository.
+
 water_right_groupings_sd6.csv = water rights groupings within and surrounding SD-6. received by email from Brownie on 5/10/2019:
     "The worksheet WR_PDS contains all the water rights, use(s) made of water, point(s)  of diversion, authorized quantity and rates from WIMAS.  Lots of stuff in here.  Some key elements:
 

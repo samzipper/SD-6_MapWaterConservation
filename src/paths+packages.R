@@ -3,6 +3,11 @@
 # packages
 library(tidyverse)
 library(sf)
+library(patchwork)
+
+# path to GIS data
+dir_data <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data"
+dir_GIS <- file.path(dir_data, "GIS")
 
 ## plotting controls
 # ggplot theme
