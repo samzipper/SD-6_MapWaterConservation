@@ -47,8 +47,7 @@ start_flag <- T
 for (te in time_to_eq_all){
   for (sc in slope_change_all){
     
-    extension_yrs <- calc_lifespan_extension(year_init = year_init,
-                                             sat_thick_init = sat_thick_init,
+    extension_yrs <- calc_lifespan_extension(sat_thick_init = sat_thick_init,
                                              sat_thick_min = sat_thick_min,
                                              slope_init = slope_init,
                                              time_to_eq = te,

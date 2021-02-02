@@ -1,15 +1,12 @@
-## Sheridan6_Map.R
+## Map_SD6+BufferBoundaries.R
 # Map of LEMA and surroundings.
 
 source(file.path("src", "paths+packages.R"))
 library(ggspatial)
 
-# path to GIS data
-dir_GIS <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data/GIS"
-
 # lema and buffer
-sf_lema <- sf::st_read(file.path(dir_GIS, "sd6_areas", "sd_6.shp"))
-sf_buff <- sf::st_read(file.path(dir_GIS, "sd6_areas", "sd_6_adjacent.shp"))
+sf_lema <- sf::st_read(file.path("data", "SD6_outline.gpkg"))
+sf_buff <- sf::st_read(file.path("data", "SD6-buffer_outline.gpkg"))
 
 # field boundaries
 sf_fields <- sf::st_read(file.path(dir_GIS, "landUse+irrigation", "CLU_SPLIT_ZM_inside_SD6buf10mi_CDL_2008_2018.shp"))
@@ -36,5 +33,5 @@ ggplot(sf_buff) +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "bottom") +
-  ggsave(file.path("figures+tables", "Figure_Sheridan6map.png"), width = 6, height = 4, units = "in") +
+  ggsave(file.path("figures+tables", "Map_SD6+BufferBoundaries.png"), width = 6, height = 4, units = "in") +
   NULL
