@@ -1,14 +1,16 @@
 ## Map_AnnualIrrigation+ET.R
 # Map annual ET from OpenET data
 
-source(file.path("src", "paths+packages.R"))
+# 2021/02/02: this needs to be updated to work with the new separated geometry + attributes
+
+source(file.path("code", "paths+packages.R"))
 
 # lema and buffer
 sf_lema <- sf::st_read(file.path("data", "SD6_outline.gpkg"))
 sf_buff <- sf::st_read(file.path("data", "SD6-buffer_outline.gpkg"))
 
 # field boundaries
-sf_fields <- sf::st_read(file.path(dir_GIS, "landUse+irrigation", "CLU_SPLIT_ZM_inside_SD6buf10mi_CDL_2008_2018.shp"))
+sf_fields <- sf::st_read(file.path("data", "Fields_Boundaries.gpkg"))
 
 # ET rates
 yr_range <- seq(2016,2020)

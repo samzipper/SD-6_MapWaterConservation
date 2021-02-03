@@ -1,7 +1,7 @@
 ## Map_SD6+BufferBoundaries.R
 # Map of LEMA and surroundings.
 
-source(file.path("src", "paths+packages.R"))
+source(file.path("code", "paths+packages.R"))
 library(ggspatial)
 
 # lema and buffer
