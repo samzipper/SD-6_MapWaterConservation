@@ -9,10 +9,10 @@ sf_buff <- sf::st_read(file.path("data", "SD6-buffer_outline.gpkg"))
 
 # field boundaries and attributes
 sf_fields <- sf::st_read(file.path("data", "Fields_Boundaries.gpkg"))
-fields_irrigation <- 
+irr_fields <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Irrigation.csv")) %>% 
   pivot_longer(-UID, names_prefix = "irr", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "Irrigation")
-fields_landcover <- 
+lc_fields <- 
   readr::read_csv(file.path("data", "Fields_Attributes-LandCover.csv")) %>% 
   dplyr::select(-starts_with("pctcov")) %>% 
   pivot_longer(-UID, names_prefix = "cls", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "CropCode")
@@ -43,8 +43,8 @@ df_et_yr <-
 
 # combine with ET and crop type
 sf_all <-
-  dplyr::full_join(sf_fields, fields_irrigation, by = c("UID")) %>% 
-  dplyr::left_join(fields_landcover, by = c("UID", "Year")) %>% 
+  dplyr::full_join(sf_fields, irr_fields, by = c("UID")) %>% 
+  dplyr::left_join(lc_fields, by = c("UID", "Year")) %>% 
   dplyr::left_join(crop_names.groups, by = "CropCode") %>% 
   dplyr::left_join(df_et_yr, by = c("UID", "Year"))
 

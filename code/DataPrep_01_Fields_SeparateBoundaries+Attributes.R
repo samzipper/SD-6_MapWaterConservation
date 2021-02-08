@@ -1,11 +1,11 @@
 ## DataPrep_Fields_01_SeparateBoundaries+Attributes.R
 # This script is intended to separate out the field geometry (UID, polygon boundaries) from its characteristics (irrigation status, crop cover).
 
-source(file.path("src", "paths+packages.R"))
+source(file.path("code", "paths+packages.R"))
 
 # field boundaries
 sf_fields <- sf::st_read(file.path(dir_GIS, "landUse+irrigation", "CLU_SPLIT_ZM_inside_SD6buf10mi_CDL_2008_2018.shp"))
-sf_fields$area_m2 <- as.numeric(sf::st_area(sf_fields))
+sf_fields$area_m2_poly <- as.numeric(sf::st_area(sf_fields))
 
 # lema and buffer
 sf_lema <- 
@@ -73,21 +73,33 @@ fields_attributes <-
   sf::st_drop_geometry() %>% 
   dplyr::select(-Acres)
 
+#note: there are a few (25) fields that have multiple polygons, these are all really small
+#      see `dir_GIS/landUse+irrigation/Notes_SD6_CDL_extract.docx` from Jude for more details
+#      all data (irr, lc, etc) are the same except for `geometry` and `area_m2_poly`
+#      all the ones in SD-6 or the buffer area are small, unimportant in the big picture
+
+# so, for saving output we should calculate area as the sum, and only take unique instances for all other fields
+
 ## save
 # field boundaries
 sf::st_write(fields_boundaries, file.path("data", "Fields_Boundaries.gpkg"), append = F)
 
 # spatial attributes
 fields_attributes %>% 
-  dplyr::select(UID, area_m2, within_lema, within_buffer) %>% 
+  dplyr::select(UID, area_m2_poly, within_lema, within_buffer) %>% 
+  dplyr::group_by(UID, within_lema, within_buffer) %>% 
+  dplyr::summarize(area_m2 = sum(area_m2_poly)) %>% 
+  dplyr::ungroup() %>% 
   readr::write_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 
 # Irrigation status
 fields_attributes %>% 
   dplyr::select(UID, starts_with("irr")) %>% 
+  unique() %>% 
   readr::write_csv(file.path("data", "Fields_Attributes-Irrigation.csv"))
 
 # dominant land cover and percent in that class
 fields_attributes %>% 
   dplyr::select(UID, starts_with("cls"), starts_with("pctcov")) %>% 
+  unique() %>% 
   readr::write_csv(file.path("data", "Fields_Attributes-LandCover.csv"))
