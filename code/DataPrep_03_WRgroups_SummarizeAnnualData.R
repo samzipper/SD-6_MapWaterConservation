@@ -103,9 +103,8 @@ alldata_wrg %>%
                 n_irrfields, n_within_lema, n_within_buffer, CropCode_maincrop, area_m2_maincrop, n_croptypes) %>% 
   readr::write_csv(file.path("data", "WRgroups_AnnualData.csv"))
 
-# ET data for non-irrigated fields
+# ET data for all fields
 alldata_fields %>% 
-  #subset(Irrigation == 0) %>% 
   dplyr::select(UID, Year, Algorithm, ET_mm) %>% 
   readr::write_csv(file.path("data", "Fields_AnnualET.csv"))
 

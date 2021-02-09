@@ -54,9 +54,11 @@ extent <- sf::st_bbox(st_transform(sf_buff, st_crs(sf_all)))
 sf_subset <- sf_all[bound, op = st_intersects]
 
 # plot
+yrs_plot <- seq(2016, 2018)
+
 p_irr <-
   ggplot() +
-  geom_sf(data = subset(sf_subset, Year %in% c(2016, 2017)), aes(fill = factor(Irrigation)), color = NA) +
+  geom_sf(data = subset(sf_subset, Year %in% yrs_plot), aes(fill = factor(Irrigation)), color = NA) +
   geom_sf(data = sf_buff, color = "red", fill = NA, size = 1) +
   geom_sf(data = sf_lema, color = "blue", fill = NA, size = 1) +
   facet_wrap(~ Year) +
@@ -69,7 +71,7 @@ p_irr <-
 
 p_lc <-
   ggplot() +
-  geom_sf(data = subset(sf_all, Year %in% c(2016, 2017)), aes(fill = CropGroup), color = NA) +
+  geom_sf(data = subset(sf_all, Year %in% yrs_plot), aes(fill = CropGroup), color = NA) +
   geom_sf(data = sf_buff, color = "red", fill = NA, size = 1) +
   geom_sf(data = sf_lema, color = "blue", fill = NA, size = 1) +
   facet_wrap(~ Year) +
@@ -80,7 +82,7 @@ p_lc <-
 
 p_et <-
   ggplot() +
-  geom_sf(data = subset(sf_all, Year %in% c(2016, 2017)), aes(fill = ET_mm), color = NA) +
+  geom_sf(data = subset(sf_all, Year %in% yrs_plot), aes(fill = ET_mm), color = NA) +
   geom_sf(data = sf_buff, color = "red", fill = NA, size = 1) +
   geom_sf(data = sf_lema, color = "blue", fill = NA, size = 1) +
   facet_wrap(~ Year) +
