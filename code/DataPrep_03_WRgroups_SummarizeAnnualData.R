@@ -50,7 +50,7 @@ et_fields_yr <-
   et_fields_mo %>% 
   dplyr::mutate(Year = lubridate::year(date)) %>% 
   dplyr::group_by(UID, Year, Algorithm) %>% 
-  dplyr::summarize(ET_mm = sum(et_field_mean)) %>% 
+  dplyr::summarize(ET_mm = round(sum(et_field_mean), 2)) %>% 
   dplyr::ungroup()
 
 ## combine ET with wrg, field spatial attributes, land cover
@@ -97,10 +97,17 @@ alldata_wrg$IrrArea_m2 <- round(alldata_wrg$IrrArea_m2, 2)
 alldata_wrg$WaterUse_m3 <- round(alldata_wrg$WaterUse_m3, 2)
 
 ## save output
+# data by water rights group
 alldata_wrg %>% 
   dplyr::select(WR_GROUP, Year, Algorithm, ET_m3, Irrigation_m3, IrrArea_m2, WaterUse_m3, area_m2_wrg, 
                 n_irrfields, n_within_lema, n_within_buffer, CropCode_maincrop, area_m2_maincrop, n_croptypes) %>% 
   readr::write_csv(file.path("data", "WRgroups_AnnualData.csv"))
+
+# ET data for non-irrigated fields
+alldata_fields %>% 
+  #subset(Irrigation == 0) %>% 
+  dplyr::select(UID, Year, Algorithm, ET_mm) %>% 
+  readr::write_csv(file.path("data", "Fields_AnnualET.csv"))
 
 ## QA/QC
 # compare wrg irrigated area and fields irrigated area
