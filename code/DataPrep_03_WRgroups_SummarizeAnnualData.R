@@ -62,6 +62,17 @@ alldata_fields <-
   dplyr::left_join(lc_fields, by = c("UID", "Year")) %>% 
   dplyr::left_join(irr_fields, by = c("UID", "Year"))
 
+## summarize non-irrigated ET by crop type
+# set some criteria for which fields to keep for estimating non-irrigated ET
+UIDs_keep <- att_fields$UID[att_fields$within_buffer | att_fields$within_lema]  # within LEMA or buffer
+area_m2_thres <- 60703 # 60703 m2 = 15 acres
+
+et_nonirr <- 
+  alldata_fields %>% 
+  subset(UID %in% UIDs_keep & Irrigation == 0) %>% 
+  dplyr::group_by(Year, Algorithm, CropCode) %>% 
+  dplyr::summarize(ET_mm_CropNonirrMedian = median(ET_mm))
+
 ## aggregate to WR group
 # first, identify dominant crop type by WR group
 crops_wrg <- 
@@ -79,6 +90,7 @@ crops_wrg <-
 # now, summarize other characteristics
 alldata_wrg <- 
   alldata_fields %>% 
+  dplyr::left_join(et_nonirr, by = c("CropCode", "Year", "Algorithm")) %>% 
   subset(is.finite(WR_GROUP)) %>%  # non-irrigated fields have NA for WR_GROUP
   dplyr::group_by(WR_GROUP, Year, Algorithm) %>% 
   dplyr::summarize(n_irrfields = length(unique(UID)), # all fields are irrigated, so this will be equal to # of irrigated fields
@@ -86,7 +98,8 @@ alldata_wrg <-
                    n_within_lema = sum(within_lema),
                    n_within_buffer = sum(within_buffer),
                    n_croptypes = length(unique(CropCode)),
-                   ET_m3 = round(sum((ET_mm/1000)*area_m2), 2)) %>% 
+                   ET_m3 = round(sum((ET_mm/1000)*area_m2), 2),
+                   ET_m3_nonirr = round(sum((ET_mm_CropNonirrMedian/1000)*area_m2), 2)) %>% 
   dplyr::left_join(crops_wrg, by = c("Year", "WR_GROUP")) %>% 
   dplyr::mutate(area_prc_maincrop = area_m2_maincrop/area_m2_wrg) %>% 
   dplyr::left_join(wrg_summary, by = c("Year", "WR_GROUP"))
@@ -99,7 +112,7 @@ alldata_wrg$WaterUse_m3 <- round(alldata_wrg$WaterUse_m3, 2)
 ## save output
 # data by water rights group
 alldata_wrg %>% 
-  dplyr::select(WR_GROUP, Year, Algorithm, ET_m3, Irrigation_m3, IrrArea_m2, WaterUse_m3, area_m2_wrg, 
+  dplyr::select(WR_GROUP, Year, Algorithm, ET_m3, ET_m3_nonirr, Irrigation_m3, IrrArea_m2, WaterUse_m3, area_m2_wrg, 
                 n_irrfields, n_within_lema, n_within_buffer, CropCode_maincrop, area_m2_maincrop, n_croptypes) %>% 
   readr::write_csv(file.path("data", "WRgroups_AnnualData.csv"))
 
@@ -130,4 +143,18 @@ ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3)) +
   scale_y_continuous(name = "Estimated ET [m\u00b3]") +
   labs(title = "Comparison of irrigation vs. ET volumes by water rights group") +
   ggsave(file.path("plots", "WRgroups_CompareETtoIrrigation.png"),
+         width = 190, height = 240, units = "mm")
+
+# compare wrg irrigation volume to (ET - ET_nonirr) volume
+alldata_wrg$ET_m3_surplus <- alldata_wrg$ET_m3 - alldata_wrg$ET_m3_nonirr
+lm(ET_m3_surplus ~ Irrigation_m3, data = alldata_wrg)
+ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3_surplus)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  facet_grid(Algorithm ~ Year) +
+  scale_x_continuous(name = "Reported Irrigation [m\u00b3]") +
+  scale_y_continuous(name = "Estimated ET Surplus (actual ET - nonirrigated ET for those crops) [m\u00b3]") +
+  labs(title = "Comparison of irrigation vs. ET surplus volumes by water rights group") +
+  ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigation.png"),
          width = 190, height = 240, units = "mm")
