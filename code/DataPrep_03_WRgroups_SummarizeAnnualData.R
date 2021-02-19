@@ -53,6 +53,51 @@ et_fields_yr <-
   dplyr::summarize(ET_mm = round(sum(et_field_mean), 2)) %>% 
   dplyr::ungroup()
 
+## summarize meteorological data
+met_keys <- 
+  file.path(dir_data, "gridMET", "gridMET_Keys.csv") %>% 
+  readr::read_csv(col_types = "cdc") %>% 
+  dplyr::select(-fid) %>% 
+  dplyr::rename(gridmet_id = masterid)
+readr::write_csv(met_keys, file.path("data", "gridmet_GridmetToFieldsKey.csv"))
+
+met_eto <- 
+  file.path(dir_data, "gridMET", "monthly_eto.csv") %>% 
+  readr::read_csv() %>% 
+  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "ETo_mm") %>% 
+  dplyr::rename(datetime = X1)
+met_etr <- 
+  file.path(dir_data, "gridMET", "monthly_etr.csv") %>% 
+  readr::read_csv() %>% 
+  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "ETr_mm") %>% 
+  dplyr::rename(datetime = X1)
+met_precip <- 
+  file.path(dir_data, "gridMET", "monthly_precip.csv") %>% 
+  readr::read_csv() %>% 
+  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "precip_mm") %>% 
+  dplyr::rename(datetime = X1)
+
+met_monthly <- 
+  dplyr::left_join(met_eto, met_etr, by = c("datetime", "masterid")) %>% 
+  dplyr::left_join(met_precip, by = c("datetime", "masterid")) %>% 
+  dplyr::rename(gridmet_id = masterid)
+readr::write_csv(met_monthly, file.path("data", "gridmet_MonthlyByGridmet.csv"))
+
+met_yearly <-
+  met_monthly %>% 
+  dplyr::mutate(Year = lubridate::year(datetime)) %>% 
+  dplyr::group_by(gridmet_id, Year) %>% 
+  dplyr::summarize(ETo_mm = round(sum(ETo_mm), 2),
+                   ETr_mm = round(sum(ETr_mm), 2),
+                   precip_mm = round(sum(precip_mm), 2)) %>% 
+  subset(Year >= 2006) # this is when land cover data starts
+readr::write_csv(met_yearly, file.path("data", "gridmet_AnnualByGridmet.csv"))
+
+met_yearly_fields <-
+  dplyr::left_join(met_keys, met_yearly, by = "gridmet_id") %>% 
+  dplyr::select(-gridmet_id)
+readr::write_csv(met_yearly_fields, file.path("data", "gridmet_AnnualByField.csv"))
+
 ## combine ET with wrg, field spatial attributes, land cover
 ## combine field spatial attributes and land cover with WR groups
 alldata_fields <- 
@@ -60,7 +105,8 @@ alldata_fields <-
   dplyr::left_join(att_fields, by = "UID") %>% 
   dplyr::left_join(wrg_fields, by = c("UID", "Year")) %>% 
   dplyr::left_join(lc_fields, by = c("UID", "Year")) %>% 
-  dplyr::left_join(irr_fields, by = c("UID", "Year"))
+  dplyr::left_join(irr_fields, by = c("UID", "Year")) %>% 
+  dplyr::left_join(met_yearly_fields, by = c("UID", "Year"))
 
 ## summarize non-irrigated ET by crop type
 # set some criteria for which fields to keep for estimating non-irrigated ET
@@ -71,7 +117,9 @@ et_nonirr <-
   alldata_fields %>% 
   subset(UID %in% UIDs_keep & Irrigation == 0) %>% 
   dplyr::group_by(Year, Algorithm, CropCode) %>% 
-  dplyr::summarize(ET_mm_CropNonirrMedian = median(ET_mm))
+  dplyr::summarize(ET_mm_CropNonirrMedian = median(ET_mm),
+                   ETo_mm_CropNonirrMedian = median(ETo_mm),
+                   ETr_mm_CropNonirrMedian = median(ETr_mm))
 
 ## aggregate to WR group
 # first, identify dominant crop type by WR group
@@ -99,7 +147,10 @@ alldata_wrg <-
                    n_within_buffer = sum(within_buffer),
                    n_croptypes = length(unique(CropCode)),
                    ET_m3 = round(sum((ET_mm/1000)*area_m2), 2),
-                   ET_m3_nonirr = round(sum((ET_mm_CropNonirrMedian/1000)*area_m2), 2)) %>% 
+                   ET_m3_nonirr = round(sum((ET_mm_CropNonirrMedian/1000)*area_m2), 2),
+                   ETo_m3 = round(sum((ETo_mm/1000)*area_m2), 2),
+                   ETr_m3 = round(sum((ETr_mm/1000)*area_m2), 2),
+                   precip_m3 = round(sum((precip_mm/1000)*area_m2), 2)) %>% 
   dplyr::left_join(crops_wrg, by = c("Year", "WR_GROUP")) %>% 
   dplyr::mutate(area_prc_maincrop = area_m2_maincrop/area_m2_wrg) %>% 
   dplyr::left_join(wrg_summary, by = c("Year", "WR_GROUP"))
