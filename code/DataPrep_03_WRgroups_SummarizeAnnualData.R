@@ -163,7 +163,8 @@ alldata_wrg$WaterUse_m3 <- round(alldata_wrg$WaterUse_m3, 2)
 ## save output
 # data by water rights group
 alldata_wrg %>% 
-  dplyr::select(WR_GROUP, Year, Algorithm, ET_m3, ET_m3_nonirr, Irrigation_m3, IrrArea_m2, WaterUse_m3, area_m2_wrg, 
+  dplyr::select(WR_GROUP, Year, Algorithm, ET_m3, ETo_m3, ETr_m3, precip_m3, ET_m3_nonirr, 
+                Irrigation_m3, IrrArea_m2, WaterUse_m3, area_m2_wrg, 
                 n_irrfields, n_within_lema, n_within_buffer, CropCode_maincrop, area_m2_maincrop, n_croptypes) %>% 
   readr::write_csv(file.path("data", "WRgroups_AnnualData.csv"))
 
