@@ -115,7 +115,7 @@ area_m2_thres <- 60703 # 60703 m2 = 15 acres
 
 et_nonirr <- 
   alldata_fields %>% 
-  subset(UID %in% UIDs_keep & Irrigation == 0) %>% 
+  subset(UID %in% UIDs_keep & Irrigation == 0 & area_m2 > area_m2_thres) %>% 
   dplyr::group_by(Year, Algorithm, CropCode) %>% 
   dplyr::summarize(ET_mm_CropNonirrMedian = median(ET_mm),
                    ETo_mm_CropNonirrMedian = median(ETo_mm),
