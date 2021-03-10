@@ -228,4 +228,123 @@ ggplot(alldata_wrg, aes(x = Irrigation_m3/1e+05, y = (ET_m3 - ET_m3_nonirr)/1e+0
   theme(legend.position = "bottom") +
   ggsave(file.path("plots", "SALUS_CompareWIMAS-OpenETByWRG.png"),
          width = 190, height = 150, units = "mm")
-  
+
+## focus in on eeMETRIC
+# METRIC vs SALUS, irrigated fields only
+fields_ET %>% 
+  subset(Algorithm == "eemetric" &
+           CDL_mode_group==CropGroup & 
+           IrrCompare == "Both Irrigated" &
+           Year %in% yrs_comp &
+           CDL_mode_group %in% c("Corn", "Soybeans", "Sorghum", "Winter Wheat")) %>% 
+  ggplot(aes(y = ET_mm, x = ET_ann_mm)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, aes(color = CropGroup)) +
+  stat_smooth(method = "lm") +
+  scale_y_continuous(name = "eeMETRIC Annual ET [mm]") +
+  scale_x_continuous(name = "SALUS Annual ET [mm]") +
+  scale_color_manual(name = NULL, values = pal_crops) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "SALUSvMETRIC_CompareET.png"), width = 120, height = 120, units = "mm")
+
+fields_ET %>% 
+  subset(Algorithm == "eemetric" &
+           CDL_mode_group==CropGroup & 
+           IrrCompare == "Both Irrigated" &
+           Year %in% yrs_comp &
+           CDL_mode_group %in% c("Corn", "Soybeans", "Sorghum", "Winter Wheat")) %>% 
+  ggplot(aes(y = ET_mm, x = (PPT_ann_mm + IRR_ann_mm))) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, aes(color = CropGroup)) +
+  stat_smooth(method = "lm") +
+  scale_y_continuous(name = "eeMETRIC Annual ET [mm]") +
+  scale_x_continuous(name = "SALUS Annual Irrigation + Precip [mm]") +
+  scale_color_manual(name = NULL, values = pal_crops) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "SALUSvMETRIC_CompareIrr+Prec.png"), width = 120, height = 120, units = "mm")
+
+fields_ET %>% 
+  subset(Algorithm == "eemetric" &
+           CDL_mode_group==CropGroup & 
+           IrrCompare == "Both Irrigated" &
+           Year %in% yrs_comp &
+           CDL_mode_group %in% c("Corn", "Soybeans", "Sorghum", "Winter Wheat")) %>% 
+  ggplot(aes(y = ET_mm, x = (PPT_ann_mm + IRR_ann_mm - RCH_ann_mm))) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, aes(color = CropGroup)) +
+  stat_smooth(method = "lm") +
+  scale_y_continuous(name = "eeMETRIC Annual ET [mm]") +
+  scale_x_continuous(name = "SALUS Annual Irrigation + Precip - Deep Perc [mm]") +
+  scale_color_manual(name = NULL, values = pal_crops) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "SALUSvMETRIC_CompareIrr+Prec-Perc.png"), width = 120, height = 120, units = "mm")
+
+fields_ET %>% 
+  subset(Algorithm == "eemetric" &
+           CDL_mode_group==CropGroup & 
+           IrrCompare == "Both Irrigated" &
+           Year %in% yrs_comp &
+           CDL_mode_group %in% c("Corn", "Soybeans", "Sorghum", "Winter Wheat")) %>% 
+  ggplot(aes(y = ET_ann_mm, x = (PPT_ann_mm + IRR_ann_mm - RCH_ann_mm))) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, aes(color = CropGroup)) +
+  stat_smooth(method = "lm") +
+  scale_y_continuous(name = "SALUS Annual ET [mm]") +
+  scale_x_continuous(name = "SALUS Annual Irrigation + Precip - Deep Perc [mm]") +
+  scale_color_manual(name = NULL, values = pal_crops) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "SALUSvSALUS_CompareIrr+Prec-Perc.png"), width = 120, height = 120, units = "mm")
+
+# water rights groups volumes - eeMETRIC vs WIMAS
+# ET surplus
+ggplot(subset(alldata_wrg, Algorithm == "eemetric"), 
+       aes(x = Irrigation_m3/1e+05, y = (ET_m3 - ET_m3_nonirr)/1e+05)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Year))) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  scale_x_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]") +
+  scale_y_continuous(name = "eeMETRIC ET Surplus (ET - non-irrigated ET for same crops) [x10\u2075 m\u00b3]") +
+  scale_color_manual(name = "Year", values = c("2016" = col.cat.org, "2017" = col.cat.grn)) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "WIMASvMETRIC_CompareWIMAS-METRICsurplusByWRG.png"),
+         width = 120, height = 120, units = "mm")
+
+# ET - precip
+ggplot(subset(alldata_wrg, Algorithm == "eemetric"), 
+       aes(x = Irrigation_m3/1e+05, y = (ET_m3-precip_m3)/1e+05)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Year))) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  scale_x_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]") +
+  scale_y_continuous(name = "eeMETRIC ET - Precip [x10\u2075 m\u00b3]") +
+  scale_color_manual(name = "Year", values = c("2016" = col.cat.org, "2017" = col.cat.grn)) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "WIMASvMETRIC_CompareWIMAS-METRICetDeficitByWRG.png"),
+         width = 120, height = 120, units = "mm")
+
+## water rights groups depths - eeMETRIC vs WIMAS
+# ET surplus
+ggplot(subset(alldata_wrg, Algorithm == "eemetric"), 
+       aes(x = 1000*Irrigation_m3/area_m2_wrg, y = 1000*(ET_m3 - ET_m3_nonirr)/area_m2_wrg)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Year))) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  scale_x_continuous(name = "Reported Irrigation [mm]") +
+  scale_y_continuous(name = "eeMETRIC ET Surplus (ET - non-irrigated ET for same crops) [mm]") +
+  scale_color_manual(name = "Year", values = c("2016" = col.cat.org, "2017" = col.cat.grn)) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "WIMASvMETRICdepth_CompareWIMAS-METRICsurplusByWRG.png"),
+         width = 120, height = 120, units = "mm")
+
+# ET - precip
+ggplot(subset(alldata_wrg, Algorithm == "eemetric"), 
+       aes(x = 1000*Irrigation_m3/area_m2_wrg, y = 1000*(ET_m3-precip_m3)/area_m2_wrg)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Year))) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  scale_x_continuous(name = "Reported Irrigation [mm]") +
+  scale_y_continuous(name = "eeMETRIC ET - Precip [mm]") +
+  scale_color_manual(name = "Year", values = c("2016" = col.cat.org, "2017" = col.cat.grn)) +
+  theme(legend.position = "bottom") +
+  ggsave(file.path("plots", "WIMASvMETRICdepth_CompareWIMAS-METRICetDeficitByWRG.png"),
+         width = 120, height = 120, units = "mm")
