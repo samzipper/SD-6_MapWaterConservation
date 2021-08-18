@@ -63,9 +63,9 @@ alldata_fields %>%
                     labels = c("0" = "Non-Irrigated", "1" = "Irrigated")) +
   labs(title = "ET rates for dominant crops (LEMA and buffer area)") +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  ggsave(file.path("plots", "IrrigationFromET_ETrateIrrNonirr.png"),
-         width = 190, height = 190, units = "mm")
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+ggsave(file.path("plots", "IrrigationFromET_ETrateIrrNonirr.png"),
+       width = 190, height = 190, units = "mm")
 
 alldata_fields %>% 
   subset(UID %in% UIDs_keep & CropGroup %in% CropGroup_keep) %>% 
@@ -80,9 +80,9 @@ alldata_fields %>%
                     labels = c("0" = "Non-Irrigated", "1" = "Irrigated")) +
   labs(title = "Precipitation deficit (ET-P) for dominant crops (LEMA and buffer area)") +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  ggsave(file.path("plots", "IrrigationFromET_PrecipDeficitIrrNonirr.png"),
-         width = 190, height = 190, units = "mm")
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+ggsave(file.path("plots", "IrrigationFromET_PrecipDeficitIrrNonirr.png"),
+       width = 190, height = 190, units = "mm")
 
 ## plot witihn vs outside LEMA ET rates
 alldata_fields %>% 
@@ -97,9 +97,9 @@ alldata_fields %>%
                     labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
   labs(title = "Field-resolution irrigated ET rates for dominant crops") +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  ggsave(file.path("plots", "IrrigationFromET_IrrigatedETrateByCrop.png"),
-         width = 190, height = 190, units = "mm")
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+ggsave(file.path("plots", "IrrigationFromET_IrrigatedETrateByCrop.png"),
+       width = 190, height = 190, units = "mm")
 
 alldata_fields %>% 
   subset(UID %in% UIDs_keep & CropGroup %in% CropGroup_keep & Irrigation == 1) %>% 
@@ -114,25 +114,25 @@ alldata_fields %>%
                     labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
   labs(title = "Irrigated field precipitation deficit (ET-P) for dominant crops") +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  ggsave(file.path("plots", "IrrigationFromET_IrrigatedPrecipDeficitByCrop.png"),
-         width = 190, height = 190, units = "mm")
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+ggsave(file.path("plots", "IrrigationFromET_IrrigatedPrecipDeficitByCrop.png"),
+       width = 190, height = 190, units = "mm")
 
 alldata_fields %>% 
   subset(UID %in% UIDs_keep & CropGroup %in% CropGroup_keep & Irrigation == 1) %>% 
-  ggplot(aes(x = Algorithm, y = (ET_mm - ET_mm_crop_nonirr_median), fill = factor(within_lema))) +
-  geom_hline(yintercept = 0, color = col.gray) +
-  geom_boxplot() +
-  facet_grid(Year ~ CropGroup) +
-  scale_x_discrete(name = "ET Algorithm") +
-  scale_y_continuous(name = "Mean ET Surplus (ET - Nonirrigated ET) [mm]") +
-  scale_fill_manual(name = "Location", 
-                    values = c("FALSE" = col.cat.red, "TRUE" = col.cat.blu),
-                    labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
-  labs(title = "Irrigated field ET surplus (ET - non-irrigated ET for same crop)") +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  ggsave(file.path("plots", "IrrigationFromET_IrrigatedETsurplusByCrop.png"),
+  {ggplot(data = ., aes(x = Algorithm, y = (ET_mm - ET_mm_crop_nonirr_median), fill = factor(within_lema))) +
+      geom_hline(yintercept = 0, color = col.gray) +
+      geom_boxplot() +
+      facet_grid(Year ~ CropGroup) +
+      scale_x_discrete(name = "ET Algorithm") +
+      scale_y_continuous(name = "Mean ET Surplus (ET - Nonirrigated ET) [mm]") +
+      scale_fill_manual(name = "Location", 
+                        values = c("FALSE" = col.cat.red, "TRUE" = col.cat.blu),
+                        labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
+      labs(title = "Irrigated field ET surplus (ET - non-irrigated ET for same crop)") +
+      theme(legend.position = "bottom",
+            axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))} %>% 
+  ggsave(file.path("plots", "IrrigationFromET_IrrigatedETsurplusByCrop.png"), plot = .,
          width = 190, height = 190, units = "mm")
 
 ## compare by water rights group
@@ -165,20 +165,20 @@ ggplot(trimmed_wrg, aes(x = PrecipDefc_m3, y = ET_m3_surplus,
   geom_point() +
   scale_color_manual(values = pal_crops)
 
-ggplot(trimmed_wrg, aes(x = CropGroup, y = ET_mm_surplus,
-                        fill = (WR_GROUP %in% wrg_lema))) +
-  geom_hline(yintercept = 0, color = col.gray) +
-  geom_boxplot() +
-  facet_wrap(~ Algorithm, scales = "free") +
-  scale_x_discrete(name = "Main Crop Type") +
-  scale_y_continuous(name = "Annual ET Surplus [mm]") +
-  scale_fill_manual(name = "Location", 
-                    values = c("FALSE" = col.cat.red, "TRUE" = col.cat.blu),
-                    labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
-  labs(title = "ET surplus (actual ET - median nonirrigated ET for that crop)",
-       subtitle = "2016-2018 data, trimmed water rights groups") +
-  theme(legend.position = "bottom") +
-  ggsave(file.path("plots", "IrrigationFromET_ETsurplusByAlgorithm.png"),
+{ggplot(trimmed_wrg, aes(x = CropGroup, y = ET_mm_surplus,
+                         fill = (WR_GROUP %in% wrg_lema))) +
+    geom_hline(yintercept = 0, color = col.gray) +
+    geom_boxplot() +
+    facet_wrap(~ Algorithm, scales = "free") +
+    scale_x_discrete(name = "Main Crop Type") +
+    scale_y_continuous(name = "Annual ET Surplus [mm]") +
+    scale_fill_manual(name = "Location", 
+                      values = c("FALSE" = col.cat.red, "TRUE" = col.cat.blu),
+                      labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
+    labs(title = "ET surplus (actual ET - median nonirrigated ET for that crop)",
+         subtitle = "2016-2018 data, trimmed water rights groups") +
+    theme(legend.position = "bottom")} %>% 
+  ggsave(file.path("plots", "IrrigationFromET_ETsurplusByAlgorithm.png"), plot = .,
          width = 190, height = 120, units = "mm")
 
 ggplot(trimmed_wrg, aes(x = CropGroup, y = PrecipDefc_mm,
@@ -193,6 +193,6 @@ ggplot(trimmed_wrg, aes(x = CropGroup, y = PrecipDefc_mm,
                     labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
   labs(title = "Precipitation deficit (ET-P) for dominant crops",
        subtitle = "2016-2018 data, trimmed water rights groups") +
-  theme(legend.position = "bottom") +
-  ggsave(file.path("plots", "IrrigationFromET_PrecipDeficitByAlgorithm.png"),
-         width = 190, height = 120, units = "mm")
+  theme(legend.position = "bottom")
+ggsave(file.path("plots", "IrrigationFromET_PrecipDeficitByAlgorithm.png"),
+       width = 190, height = 120, units = "mm")
