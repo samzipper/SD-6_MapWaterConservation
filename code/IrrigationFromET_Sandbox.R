@@ -10,7 +10,8 @@ alldata_wrg <- readr::read_csv(file.path("data", "WRgroups_AnnualData.csv")) %>%
                 ET_m3_surplus = ET_m3 - ET_m3_nonirr,
                 ET_mm_surplus = 1000*ET_m3_surplus/area_m2_wrg,
                 PrecipDefc_m3 = ET_m3 - precip_m3,
-                PrecipDefc_mm = 1000*PrecipDefc_m3/area_m2_wrg) %>% 
+                PrecipDefc_mm = 1000*PrecipDefc_m3/area_m2_wrg,
+                Irrigation_mm = 1000*Irrigation_m3/IrrArea_m2) %>% 
   dplyr::left_join(crop_names.groups, by = c("CropCode_maincrop" = "CropCode"))
 et_fields_yr <- readr::read_csv(file.path("data", "Fields_AnnualET.csv"))
 
@@ -145,27 +146,64 @@ alldata_wrg$area_diff_prc <- (alldata_wrg$IrrArea_m2 - alldata_wrg$area_m2_wrg)/
 
 # crop types that are common in both irrigated and non-irrigated land
 CropGroup_keep <- c("Corn", "Sorghum", "Soybeans")  
+pal_crops_keep <- subset(pal_crops, names(pal_crops) %in% CropGroup_keep)
 
 trimmed_wrg <- 
   alldata_wrg %>% 
   subset(WR_GROUP %in% c(wrg_lema, wrg_buffer)) %>% 
   subset(CropGroup %in% CropGroup_keep) %>% 
-  subset(abs(area_diff_prc) > 0.2) %>% 
-  subset(area_m2_maincrop/area_m2_wrg > 0.8)
+  subset(abs(area_diff_prc) < 0.10) %>% 
+  subset(area_m2_maincrop/area_m2_wrg > 0.8) %>% 
+  subset(Algorithm == "eemetric")
 
-ggplot(trimmed_wrg, aes(x = Irrigation_m3, y = ET_m3_surplus,
-                        color = CropGroup)) +
+ggplot(trimmed_wrg, aes(x = IrrArea_m2, y = area_m2_wrg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point() +
-  scale_color_manual(values = pal_crops)
+  stat_smooth(method = "lm")
 
-ggplot(trimmed_wrg, aes(x = PrecipDefc_m3, y = ET_m3_surplus,
-                        color = CropGroup)) +
+p_surplus_m3 <- 
+  ggplot(trimmed_wrg, aes(x = Irrigation_m3, y = ET_m3_surplus)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point() +
-  scale_color_manual(values = pal_crops)
+  geom_point(aes(color = CropGroup)) +
+  scale_color_manual(values = pal_crops_keep) +
+  scale_x_continuous(name = "Reported Irrigation [m3]") +
+  scale_y_continuous(name = "ET Surplus (Irr - Nonirr) [m3]") +
+  stat_smooth(method = "lm")
 
-{ggplot(trimmed_wrg, aes(x = CropGroup, y = ET_mm_surplus,
+p_surplus_mm <-
+  ggplot(trimmed_wrg, aes(x = Irrigation_mm, y = ET_mm_surplus)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = CropGroup)) +
+  scale_color_manual(values = pal_crops_keep) +
+  scale_x_continuous(name = "Reported Irrigation [mm]") +
+  scale_y_continuous(name = "ET Surplus (Irr - Nonirr) [mm]") +
+  stat_smooth(method = "lm")
+
+p_defc_m3 <-
+  ggplot(trimmed_wrg, aes(x = Irrigation_m3, y = PrecipDefc_m3)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = CropGroup)) +
+  scale_color_manual(values = pal_crops_keep) +
+  scale_x_continuous(name = "Reported Irrigation [m3]") +
+  scale_y_continuous(name = "Precip Defc (ET - P) [m3]") +
+  stat_smooth(method = "lm")
+
+p_defc_mm <-
+  ggplot(trimmed_wrg, aes(x = Irrigation_mm, y = PrecipDefc_mm)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = CropGroup)) +
+  scale_color_manual(values = pal_crops_keep) +
+  scale_x_continuous(name = "Reported Irrigation [mm]") +
+  scale_y_continuous(name = "Precip Defc (ET - P) [m3]") +
+  stat_smooth(method = "lm")
+
+(p_surplus_m3 + p_surplus_mm + 
+  p_defc_m3 + p_defc_mm) +
+  plot_layout(ncol = 2, guides = "collect")
+ggsave(file.path("plots", "IrrigationFromET_HighConfidenceArea.png"),
+       width = 240, height = 190, units = "mm")
+
+ggplot(trimmed_wrg, aes(x = CropGroup, y = ET_mm_surplus,
                          fill = (WR_GROUP %in% wrg_lema))) +
     geom_hline(yintercept = 0, color = col.gray) +
     geom_boxplot() +
@@ -177,8 +215,8 @@ ggplot(trimmed_wrg, aes(x = PrecipDefc_m3, y = ET_m3_surplus,
                       labels = c("FALSE" = "Buffer", "TRUE" = "LEMA")) +
     labs(title = "ET surplus (actual ET - median nonirrigated ET for that crop)",
          subtitle = "2016-2018 data, trimmed water rights groups") +
-    theme(legend.position = "bottom")} %>% 
-  ggsave(file.path("plots", "IrrigationFromET_ETsurplusByAlgorithm.png"), plot = .,
+    theme(legend.position = "bottom")
+  ggsave(file.path("plots", "IrrigationFromET_ETsurplusByAlgorithm.png"),
          width = 190, height = 120, units = "mm")
 
 ggplot(trimmed_wrg, aes(x = CropGroup, y = PrecipDefc_mm,
