@@ -59,3 +59,70 @@ ggplot(subset(df_data, CropGroup == "Corn"),
                      values = c("0" = col.cat.org, "1" = col.cat.blu)) +
   ggsave(file.path("plots", "OpenET_Sandbox_CornBoxplots.png"),
          width = 140, height = 95, units = "mm")
+
+## plot monthly ET from corn inside/outside lema
+df_mo <-
+  et_fields_mo %>% 
+  mutate(Year = year(date)) %>% 
+  left_join(fields_irrigation, by = c("Year", "UID")) %>% 
+  left_join(fields_landcover, by = c("Year", "UID")) %>% 
+  left_join(fields_spatial, by = c("UID")) %>% 
+  subset(Year %in% c(2016, 2017) &
+           (within_lema | within_buffer))
+
+df_mo_crop <- 
+  subset(df_mo, Year == 2016 & CropCode %in% c(1, 4, 5)) %>% 
+  group_by(date, Algorithm, CropName, Irrigation) %>% 
+  summarize(ET_min = min(mean),
+            ET_prc25 = quantile(mean, 0.25),
+            ET_prc50 = quantile(mean, 0.5),
+            ET_prc75 = quantile(mean, 0.75),
+            ET_max = max(mean))
+
+# plot only corn
+df_mo_corn <- 
+  subset(df_mo, Year == 2016 & CropCode == 1 & Irrigation == 1)
+
+df_mo_corn_median <- 
+  df_mo_corn %>% 
+  group_by(date) %>% 
+  summarize(ET_mean = mean(mean),
+            ET_median = median(mean))
+
+
+p_corn <-
+  ggplot() +
+  geom_line(data = df_mo_corn, aes(x = date, y = mean, group = UID), alpha = 0.25, color = col.gray) +
+  geom_line(data = df_mo_corn_median, aes(x = date, y = ET_mean), color = pal_crops[1]) +
+  scale_x_date(name = "Month", expand = c(0,0),
+               date_breaks = "1 month",
+               labels = c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D", "J")) +
+  scale_y_continuous(name = "ET [mm],OpenET\nEnsemble Mean",
+                     limits = c(0, max(df_mo_corn$mean)), 
+                     expand = c(0,0))
+
+p_comparecrops <-
+  ggplot(df_mo_crop, aes(x = date)) +
+  geom_line(aes(y = ET_prc50, color = CropName, linetype = factor(Irrigation))) +
+  scale_color_manual(name = "Crop", values = pal_crops[1:3]) +
+  scale_x_date(name = "Month", expand = c(0,0),
+               date_breaks = "1 month",
+               labels = c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D", "J")) +
+  scale_y_continuous(name = "ET [mm],OpenET\nEnsemble Mean",
+                     limits = c(0, max(df_mo_corn$mean)), 
+                     expand = c(0,0)) +
+  scale_linetype_manual(name = "Irrigation Status", labels = c("0" = "Rainfed", "1" = "Irrigated"),
+                        values = c("0" = "dashed", "1" = "solid")) +
+  theme(legend.position = "bottom") +
+  guides(linetype = guide_legend(direction = "vertical", order = 2),
+         color = guide_legend(direction = "vertical", order = 1))
+
+p_combo <-
+  (p_corn + p_comparecrops) +
+  plot_layout(ncol = 1) +
+  plot_annotation(tag_levels = "a",
+                  tag_prefix = "(",
+                  tag_suffix = ")")
+ggsave(file.path("plots", "OpenET_CompareCropTimeseries.png"),
+       p_combo, 
+       width = 95, height = 125, units = "mm")

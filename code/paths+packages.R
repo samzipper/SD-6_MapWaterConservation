@@ -4,6 +4,7 @@
 library(tidyverse)
 library(sf)
 library(patchwork)
+library(lubridate)
 
 # path to GIS data
 dir_data <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data"
