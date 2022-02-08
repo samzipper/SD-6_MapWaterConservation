@@ -20,6 +20,8 @@ fields_nodups <-
 
 length(unique(fields_nodups$UID)) == dim(fields_nodups)[1]
 
+st_write(fields_nodups, file.path("data", "Fields_NoDups.shp"))
+
 # reduce the buffer area
 domain <- 
   st_union(SD6, buffer) %>% 
