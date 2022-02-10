@@ -15,36 +15,40 @@ fields_landcover <-
   pivot_longer(-UID, names_prefix = "cls", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "CropCode") %>% 
   dplyr::left_join(crop_names.groups, by = "CropCode")
 
-# ET rates
-yr_range <- seq(2016,2020)
-alg <- "ensemble"
-for (yr in yr_range){
-  et_fields_y <- 
-    file.path(dir_data, "OpenET", paste0("testing_multi_mean_ythsn82poy_", alg, "_et_", yr, ".csv")) %>% 
-    readr::read_csv() %>% 
-    dplyr::select(-.geo, -`system:index`) %>% 
-    dplyr::mutate(Algorithm = alg)
-  
-  if (yr == yr_range[1]){
-    et_fields_mo <- et_fields_y
-  } else {
-    et_fields_mo <- dplyr::bind_rows(et_fields_mo, et_fields_y)
-  }
-}
+# shapefiles
+fields_sf <- st_read(file.path("data", "Fields_NoDups.shp"))
+lema_sf <- st_read(file.path("data", "SD6_outline.gpkg"))
+buffer_sf <- st_read(file.path("data", "SD6-buffer_outline.gpkg"))
 
+# ET rates
+et_fields_mo <- 
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv") %>% 
+  read_csv() %>% 
+  pivot_longer(starts_with("ET_mm_"), values_to = "ET_mm") %>% 
+  mutate(Algorithm = str_sub(name, start = 12)) %>% 
+  dplyr::select(-name)
+  
 et_fields_yr <- 
-  et_fields_mo %>% 
-  dplyr::mutate(Year = lubridate::year(date)) %>% 
-  dplyr::group_by(UID, Year, Algorithm) %>% 
-  dplyr::summarize(ET_mm = sum(mean)) %>% 
-  dplyr::ungroup()
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv") %>% 
+  read_csv()
+
+# plot fields
+fields_sf_with_et <-
+  left_join(et_fields_yr, fields_sf, by = "UID")
+
+ggplot(subset(fields_sf_with_et, Algorithm == "ensemble" & Year == 2016)) +
+  geom_sf(aes(fill = ET_mm, geometry = geometry), color = NA) +
+  geom_sf(data = buffer_sf, color = "red", fill = NA) +
+  geom_sf(data = lema_sf, color = "blue", fill = NA) +
+  facet_wrap(~Year) +
+  scale_fill_viridis_c(name = "Annual ET [mm]")
 
 # combine everything to plot
 df_data <- 
   dplyr::left_join(fields_irrigation, fields_landcover, by = c("Year", "UID")) %>% 
   dplyr::left_join(fields_spatial, by = "UID") %>% 
   dplyr::left_join(et_fields_yr, by = c("Year", "UID")) %>% 
-  subset(Year %in% c(2016, 2017) &
+  subset(Year %in% c(2016, 2017, 2018) &
            (within_lema | within_buffer))
 
 # compare irrigated/nonirrigated corn, inside and outside buffer
