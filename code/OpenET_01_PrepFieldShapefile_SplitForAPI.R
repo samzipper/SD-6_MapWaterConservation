@@ -1,4 +1,4 @@
-## OpenET_PrepFieldShapefile_SplitForAPI.R
+## OpenET_01_PrepFieldShapefile_SplitForAPI.R
 # This loads the field boundary shapefile and splits into individual shapefiles 
 # totaling <1500 fields each, which is the max allowed by the OpenET API.
 
@@ -20,6 +20,7 @@ fields_nodups <-
 
 length(unique(fields_nodups$UID)) == dim(fields_nodups)[1]
 
+# make a single file with no duplicates to send to Will
 st_write(fields_nodups, file.path("data", "Fields_NoDups.shp"))
 
 # reduce the buffer area
