@@ -34,14 +34,23 @@ et_fields_yr <-
 
 # plot fields
 fields_sf_with_et <-
-  left_join(et_fields_yr, fields_sf, by = "UID")
+  right_join(fields_sf, et_fields_yr, by = "UID")
 
-ggplot(subset(fields_sf_with_et, Algorithm == "ensemble" & Year == 2016)) +
+# figure out extent
+bound <- sf::st_buffer(st_transform(buffer_sf, st_crs(fields_sf_with_et)), dist = units::set_units(8000, "m"))
+extent <- sf::st_bbox(st_transform(buffer_sf, st_crs(fields_sf_with_et)))
+
+p_annualET <- 
+  ggplot(fields_sf_with_et) +
   geom_sf(aes(fill = ET_mm, geometry = geometry), color = NA) +
   geom_sf(data = buffer_sf, color = "red", fill = NA) +
   geom_sf(data = lema_sf, color = "blue", fill = NA) +
-  facet_wrap(~Year) +
-  scale_fill_viridis_c(name = "Annual ET [mm]")
+  facet_grid(Algorithm~Year) +
+  coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
+  scale_fill_viridis_c(name = "Annual ET [mm]") +
+  theme(axis.text = element_blank())
+ggsave(file.path("plots", "OpenET_AnnualETbyAlgorithm.png"), p_annualET,
+       width = 380, height = 250, units = "mm")
 
 # combine everything to plot
 df_data <- 
