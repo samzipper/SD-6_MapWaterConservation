@@ -52,6 +52,8 @@ p_annualET <-
 ggsave(file.path("plots", "OpenET_AnnualETbyAlgorithm.png"), p_annualET,
        width = 380, height = 250, units = "mm")
 
+
+
 # combine everything to plot
 df_data <- 
   dplyr::left_join(fields_irrigation, fields_landcover, by = c("Year", "UID")) %>% 
