@@ -14,6 +14,7 @@ fields_landcover <-
   dplyr::select(-starts_with("pctcov")) %>% 
   pivot_longer(-UID, names_prefix = "cls", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "CropCode") %>% 
   dplyr::left_join(crop_names.groups, by = "CropCode")
+met_yearly_fields <- readr::read_csv(file.path("data", "gridmet_AnnualByField.csv"))
 
 # shapefiles
 fields_sf <- st_read(file.path("data", "Fields_NoDups.shp"))
@@ -26,20 +27,26 @@ et_fields_mo <-
   read_csv() %>% 
   pivot_longer(starts_with("ET_mm_"), values_to = "ET_mm") %>% 
   mutate(Algorithm = str_sub(name, start = 12)) %>% 
-  dplyr::select(-name)
+  dplyr::select(-name) %>% 
+  subset(year(Date) <= 2020)
   
 et_fields_yr <- 
   file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv") %>% 
-  read_csv()
+  read_csv() %>% 
+  subset(Year <= 2020)
 
-# plot fields
+# combine data for all fields/years
 fields_sf_with_et <-
-  right_join(fields_sf, et_fields_yr, by = "UID")
+  right_join(fields_sf, et_fields_yr, by = "UID") %>% 
+  left_join(met_yearly_fields, by = c("UID", "Year")) %>% 
+  mutate(PrecipDefc_mm = ET_mm - precip_mm) %>% 
+  left_join(fields_spatial, by = "UID")
 
 # figure out extent
 bound <- sf::st_buffer(st_transform(buffer_sf, st_crs(fields_sf_with_et)), dist = units::set_units(8000, "m"))
 extent <- sf::st_bbox(st_transform(buffer_sf, st_crs(fields_sf_with_et)))
 
+# map annual ET
 p_annualET <- 
   ggplot(fields_sf_with_et) +
   geom_sf(aes(fill = ET_mm, geometry = geometry), color = NA) +
@@ -47,10 +54,49 @@ p_annualET <-
   geom_sf(data = lema_sf, color = "blue", fill = NA) +
   facet_grid(Algorithm~Year) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
-  scale_fill_viridis_c(name = "Annual ET [mm]") +
+  scale_fill_viridis_c(name = "[mm]") +
+  labs(title = "Annual ET by year and algorithm") +
   theme(axis.text = element_blank())
-ggsave(file.path("plots", "OpenET_AnnualETbyAlgorithm.png"), p_annualET,
-       width = 380, height = 250, units = "mm")
+ggsave(file.path("plots", "OpenET_MapAnnualETbyAlgorithm.png"), p_annualET,
+       width = 250, height = 180, units = "mm")
+
+# map annual precipitation deficit
+p_annualDefc <- 
+  ggplot(fields_sf_with_et) +
+  geom_sf(aes(fill = PrecipDefc_mm, geometry = geometry), color = NA) +
+  geom_sf(data = buffer_sf, color = "red", fill = NA) +
+  geom_sf(data = lema_sf, color = "blue", fill = NA) +
+  facet_grid(Algorithm~Year) +
+  coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
+  scale_fill_gradient2(name = "[mm]") +
+  labs(title = "Annual (ET - precipitation) by year and algorithm") +
+  theme(axis.text = element_blank())
+ggsave(file.path("plots", "OpenET_MapAnnualDefcByAlgorithm.png"), p_annualDefc,
+       width = 250, height = 180, units = "mm")
+
+# density plot annual ET
+p_annualETdens <- 
+  ggplot(subset(fields_sf_with_et, within_lema)) +
+  geom_density(aes(x = ET_mm, color = Algorithm, fill = Algorithm), alpha = 0.2) +
+  facet_wrap(~Year) +
+  scale_color_brewer(name = "Algorithm", type = "qual") +
+  scale_fill_brewer(name = "Algorithm", type = "qual") +
+  labs(title = "Annual ET by year and algorithm", subtitle = "LEMA only")
+ggsave(file.path("plots", "OpenET_DensAnnualETByAlgorithm.png"), p_annualETdens,
+       width = 150, height = 120, units = "mm")
+
+# density plot annual precipitation deficit
+p_annualETdens <- 
+  ggplot(subset(fields_sf_with_et, within_lema)) +
+  geom_vline(xintercept = 0, color = col.gray) +
+  geom_density(aes(x = PrecipDefc_mm, color = Algorithm, fill = Algorithm), alpha = 0.2) +
+  facet_wrap(~Year) +
+  scale_color_brewer(name = "Algorithm", type = "qual") +
+  scale_fill_brewer(name = "Algorithm", type = "qual") +
+  labs(title = "Annual (ET - precipitation) by year and algorithm", subtitle = "LEMA only")
+ggsave(file.path("plots", "OpenET_DensAnnualDefcByAlgorithm.png"), p_annualETdens,
+       width = 150, height = 120, units = "mm")
+
 
 
 

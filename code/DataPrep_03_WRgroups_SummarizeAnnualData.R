@@ -23,35 +23,20 @@ att_fields <-
 ## summarize ET data
 # ET rates
 yr_range <- seq(2016,2018) # only years that have LULC data
-alg_all <- c("ensemble", "disalexi", "eemetric", "ptjpl", "sims", "ssebop")
-for (alg in alg_all){
-  for (yr in yr_range){
-    et_fields_y <- 
-      file.path(dir_data, "OpenET", paste0("testing_multi_mean_ythsn82poy_", alg, "_et_", yr, ".csv")) %>% 
-      readr::read_csv() %>% 
-      dplyr::select(-.geo, -`system:index`) %>% 
-      # because of duplicated polygons (see bottom of DataPrep_Fields_01_SeparateBoundaries+Attributes.R for more info)
-      # there are a few duplicated UIDs. take the mean of these to get a single value for UID because all other data
-      # are aggregated to the UID scale.
-      dplyr::group_by(UID, date) %>% 
-      dplyr::summarize(et_field_mean = mean(mean)) %>% 
-      dplyr::ungroup() %>% 
-      dplyr::mutate(Algorithm = alg)
-    
-    if (alg == alg_all[1] & yr == yr_range[1]){
-      et_fields_mo <- et_fields_y
-    } else {
-      et_fields_mo <- dplyr::bind_rows(et_fields_mo, et_fields_y)
-    }
-  }
-}
+
+# ET rates
+et_fields_mo <- 
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv") %>% 
+  read_csv() %>% 
+  pivot_longer(starts_with("ET_mm_"), values_to = "ET_mm") %>% 
+  mutate(Algorithm = str_sub(name, start = 12)) %>% 
+  dplyr::select(-name) %>% 
+  subset(year(Date) %in% yr_range)
 
 et_fields_yr <- 
-  et_fields_mo %>% 
-  dplyr::mutate(Year = lubridate::year(date)) %>% 
-  dplyr::group_by(UID, Year, Algorithm) %>% 
-  dplyr::summarize(ET_mm = round(sum(et_field_mean), 2)) %>% 
-  dplyr::ungroup()
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv") %>% 
+  read_csv() %>% 
+  subset(Year %in% yr_range)
 
 ## summarize meteorological data
 met_keys <- 
@@ -64,18 +49,18 @@ readr::write_csv(met_keys, file.path("data", "gridmet_GridmetToFieldsKey.csv"))
 met_eto <- 
   file.path(dir_data, "gridMET", "monthly_eto.csv") %>% 
   readr::read_csv() %>% 
-  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "ETo_mm") %>% 
-  dplyr::rename(datetime = X1)
+  tidyr::pivot_longer(cols = -`...1`, names_to = "masterid", values_to = "ETo_mm") %>% 
+  dplyr::rename(datetime = `...1`)
 met_etr <- 
   file.path(dir_data, "gridMET", "monthly_etr.csv") %>% 
   readr::read_csv() %>% 
-  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "ETr_mm") %>% 
-  dplyr::rename(datetime = X1)
+  tidyr::pivot_longer(cols = -`...1`, names_to = "masterid", values_to = "ETr_mm") %>% 
+  dplyr::rename(datetime = `...1`)
 met_precip <- 
   file.path(dir_data, "gridMET", "monthly_precip.csv") %>% 
   readr::read_csv() %>% 
-  tidyr::pivot_longer(cols = -X1, names_to = "masterid", values_to = "precip_mm") %>% 
-  dplyr::rename(datetime = X1)
+  tidyr::pivot_longer(cols = -`...1`, names_to = "masterid", values_to = "precip_mm") %>% 
+  dplyr::rename(datetime = `...1`)
 
 met_monthly <- 
   dplyr::left_join(met_eto, met_etr, by = c("datetime", "masterid")) %>% 
@@ -181,9 +166,9 @@ ggplot(subset(alldata_wrg, Algorithm == "ensemble"), aes(x = IrrArea_m2/10000, y
   stat_smooth(method = "lm", color = col.cat.blu) +
   scale_x_continuous(name = "Irrigated area [ha], reported") +
   scale_y_continuous(name = "Irrigated area [ha], inferred") +
-  labs(title = "Irrigated area within each water rights group") +
-  ggsave(file.path("plots", "WRgroups_CompareIrrigatedAcres.png"),
-         width = 95, height = 95, units = "mm")
+  labs(title = "Irrigated area within each water rights group")
+ggsave(file.path("plots", "WRgroups_CompareIrrigatedAcres.png"),
+       width = 95, height = 95, units = "mm")
 
 # compare wrg irrigation volume to ET volume
 ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3)) +
@@ -193,9 +178,9 @@ ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3)) +
   facet_grid(Algorithm ~ Year) +
   scale_x_continuous(name = "Reported Irrigation [m\u00b3]") +
   scale_y_continuous(name = "Estimated ET [m\u00b3]") +
-  labs(title = "Comparison of irrigation vs. ET volumes by water rights group") +
-  ggsave(file.path("plots", "WRgroups_CompareETtoIrrigation.png"),
-         width = 190, height = 240, units = "mm")
+  labs(title = "Comparison of irrigation vs. ET volumes by water rights group")
+ggsave(file.path("plots", "WRgroups_CompareETtoIrrigation.png"),
+       width = 190, height = 240, units = "mm")
 
 # compare wrg irrigation volume to (ET - ET_nonirr) volume
 alldata_wrg$ET_m3_surplus <- alldata_wrg$ET_m3 - alldata_wrg$ET_m3_nonirr
@@ -207,6 +192,6 @@ ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3_surplus)) +
   facet_grid(Algorithm ~ Year) +
   scale_x_continuous(name = "Reported Irrigation [m\u00b3]") +
   scale_y_continuous(name = "Estimated ET Surplus (actual ET - nonirrigated ET for those crops) [m\u00b3]") +
-  labs(title = "Comparison of irrigation vs. ET surplus volumes by water rights group") +
-  ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigation.png"),
-         width = 190, height = 240, units = "mm")
+  labs(title = "Comparison of irrigation vs. ET surplus volumes by water rights group")
+ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigation.png"),
+       width = 190, height = 240, units = "mm")
