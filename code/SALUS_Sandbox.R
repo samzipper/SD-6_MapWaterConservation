@@ -3,7 +3,7 @@
 
 source(file.path("code", "paths+packages.R"))
 
-## years to compare (overlap between SALUS and OpenET are 2016 and 2016)
+## years to compare (overlap between SALUS and OpenET are 2016 and 2017)
 yrs_comp <- c(2016, 2017)
 
 ## field boundaries
