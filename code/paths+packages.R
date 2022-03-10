@@ -93,5 +93,3 @@ pal_crops <- c("Corn" = "#ffd300",
                "Other Small Grains" = "#d69ebc", 
                "Other Crops" = "#00af49", 
                "Double Crop" = "#707000")
-
-
