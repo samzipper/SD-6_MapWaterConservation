@@ -45,7 +45,7 @@ col.gray <- "gray65"       # gray for annotation lines, etc
 crop_names.groups <- 
   tibble::tibble(CropCode = c(1, 4, 5, 6, 24, 61, 510, 520, 530, 540, 550, 560,
                               21, 23, 25, 27, 28, 29, 205,
-                              2, 31, 33, 42, 43, 54,
+                              2, 31, 33, 42, 43, 53,
                               26, 225, 226, 235, 236, 237, 238),
                  CropName = c("Corn", 
                               "Sorghum", 

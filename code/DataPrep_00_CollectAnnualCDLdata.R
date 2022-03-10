@@ -1,7 +1,7 @@
 ## DataPrep_00_CollectAnnualCDLdata.R
 # This script compiles and cleans CDL data extracted from Google Earth Engine.
 # GEE script saves data to Google Drive and then I manually downloaded and put
-# into 
+# into a large file data directory.
 #
 # Based on script by Jill:
 #   https://github.com/jdeines/Deines_etal_2019_LEMA/blob/master/code/data_preparation/00.40_makeMasterDataFile.md
@@ -49,12 +49,47 @@ dataLong <- dataLong[!is.na(dataLong$area_m2),]
 # add a crop type column using cdl key
 dataLong$cdlCode <- as.numeric(substr(dataLong$cdlCode, start = 2, 
                                       stop = nchar(dataLong$cdlCode)))
-cdlkey$cdlClassName <- as.character(cdlkey$CLASS_NAME)
-dataLong2 <- merge(dataLong, cdlkey[,c('VALUE','cdlClassName')],
-                   by.x = 'cdlCode', by.y = 'VALUE')
+
+# add a derived CropCode column which groups some of the minor CDL categories together
+# this will match the crop_names.groups data frame
+# see spreadsheet from Jude: clu_zon_maj_cdl2006_2018_legend.xlsx
+dataLong$CropCode <- dataLong$cdlCode
+dataLong$CropCode[dataLong$cdlCode %in% c(36, 37)] <- 510             # Alfalfa/hay
+dataLong$CropCode[dataLong$cdlCode %in% c(152, 176, 59)] <- 520       # Grass/shrub
+dataLong$CropCode[dataLong$cdlCode %in% c(141, 142, 143)] <- 530      # Forest
+dataLong$CropCode[dataLong$cdlCode %in% c(190, 195)] <- 540           # Wetland
+dataLong$CropCode[dataLong$cdlCode %in% c(121, 122, 123, 124)] <- 550 # Developed
+dataLong$CropCode[dataLong$cdlCode %in% c(111, 131)] <- 560           # Water/barren
+dataLong$CropCode[dataLong$cdlCode %in% c(44, 63)] <- 25              # Other small grains
+# check: table(dataLong$CropCode[!(dataLong$CropCode %in% crop_names.groups$CropCode)])
 
 # reorganize
-cdlLong <- dataLong2 %>%
-  select(c(masterid, Year, status, cdlCode, cdlClassName, area_m2))
+cdlLong <- 
+  dataLong %>%
+  select(c(masterid, Year, status, CropCode, area_m2)) %>% 
+  rename(UID = masterid)
 
-write_csv(cdlLong, file.path(dir_data, "GIS", "cdl_tables_lema", "CDL_AnnualYearFieldCropIrrigation.csv"))
+# save overall output
+write_csv(cdlLong, file.path(dir_data, "GIS", "cdl_tables_lema", "CDL_AnnualYearFieldCropIrrigationAll.csv"))
+
+# identify dominant crop in each field/year
+fieldArea <-
+  cdlLong %>% 
+  group_by(UID, Year) %>% 
+  summarize(area_m2_field = sum(area_m2))
+
+cdlFieldWithTotal <-
+  cdlLong %>% 
+  group_by(UID, Year, CropCode) %>% 
+  summarize(area_m2_crop = sum(area_m2)) %>% 
+  left_join(fieldArea, by = c("UID", "Year")) %>% 
+  mutate(pctcov = round(area_m2_crop/area_m2_field, 3))
+
+cdlFieldCropMode <-
+  cdlFieldWithTotal %>% 
+  group_by(UID, Year) %>% 
+  filter(pctcov == max(pctcov)) %>% 
+  select(-area_m2_crop, -area_m2_field)
+
+# save output
+write_csv(cdlFieldCropMode, file.path("data", "Fields_Attributes-LandCover-AnnualCDL.csv"))
