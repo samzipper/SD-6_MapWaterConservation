@@ -52,26 +52,26 @@ write_csv(irr_openet_wimas, file.path("data", "OpenET_05_CompareToWIMAS_AnnualTo
 
 # plot
 p_scatter <- 
-  ggplot(irr_openet_wimas, aes(x = Irr_m3_OpenET, y = Irr_m3_WIMAS)) +
+  ggplot(irr_openet_wimas, aes(x = Irr_m3_OpenET/1e6, y = Irr_m3_WIMAS/1e6)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(aes(color = Algorithm)) +
-  scale_x_continuous(name = "OpenET Estimated Irrigation [m\u00b3]") +
-  scale_y_continuous(name = "WIMAS Reported Irrigation [m\u00b3]") +
-  scale_color_brewer(name = "Algorithm", type = "qual") +
+  scale_x_continuous(name = "OpenET Estimated Irrigation [million m\u00b3]") +
+  scale_y_continuous(name = "WIMAS Reported Irrigation [million m\u00b3]") +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
   stat_smooth(method = "lm") +
   theme(legend.position = "bottom")
 
 p_line <-
   ggplot(irr_openet_wimas) +
   # WIMAS data
-  geom_point(aes(x = Year, y = Irr_m3_WIMAS), color = "black", size = 2) +
-  geom_line(aes(x = Year, y = Irr_m3_WIMAS), color = "black", size = 2) +
+  geom_point(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
+  geom_line(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
   # OpenET data
-  geom_point(aes(x = Year, y = Irr_m3_OpenET, color = Algorithm)) + 
-  geom_line(aes(x = Year, y = Irr_m3_OpenET, color = Algorithm), show.legend = F) +
+  geom_point(aes(x = Year, y = Irr_m3_OpenET/1e6, color = Algorithm)) + 
+  geom_line(aes(x = Year, y = Irr_m3_OpenET/1e6, color = Algorithm), show.legend = F) +
   # aesthetics
-  scale_y_continuous(name = "Irrigation [m\u00b3]") +
-  scale_color_brewer(name = "Algorithm", type = "qual") +
+  scale_y_continuous(name = "Irrigation [million m\u00b3]") +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
   theme(legend.position = "bottom")
 
 p_combo <-

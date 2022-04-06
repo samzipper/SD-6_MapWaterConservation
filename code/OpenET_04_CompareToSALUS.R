@@ -51,39 +51,53 @@ compare_fields <-
   subset(CropGroup %in% c("Corn", "Sorghum", "Soybeans"))  # crop types that are common in both irrigated and non-irrigated land)
 
 # compare irrigation and ET
-ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm, y = IRR_ann_mm)) +
+p_irr_compare <-
+  ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm, y = IRR_ann_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
-  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 150, ymax = 300, color = NA, fill = col.cat.blu, alpha = 0.25) +
-  annotate("rect", ymin = -Inf, ymax = Inf, xmin = 150, xmax = 300, color = NA, fill = col.cat.blu, alpha = 0.25) +
+  #annotate("rect", xmin = -Inf, xmax = Inf, ymin = 150, ymax = 300, color = NA, fill = col.cat.blu, alpha = 0.25) +
+  #annotate("rect", ymin = -Inf, ymax = Inf, xmin = 150, xmax = 300, color = NA, fill = col.cat.blu, alpha = 0.25) +
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm) +
-  scale_x_continuous(name = "Irrigation [mm], OpenET (ET - Precip)") +
-  scale_y_continuous(name = "Irrigation [mm], SALUS") +
+  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  scale_x_continuous(name = "OpenET Irrigation [mm]", breaks = seq(0, 600, 300)) +
+  scale_y_continuous(name = "SALUS Irrigation [mm]") +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
-  coord_equal() +
+  #coord_equal() +
   theme(legend.position = "bottom") +
-  labs(title = "Comparison of SALUS and OpenET Field-Resolution Irrigation Depth",
-       subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_AnnualIrr.png"),
-       width = 280, height = 100, units = "mm")
+  #labs(title = "Comparison of SALUS and OpenET Field-Resolution Irrigation Depth",
+  #     subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops") +
+  NULL
+#ggsave(file.path("plots", "OpenET_04_CompareToSALUS_AnnualIrr.png"),
+#      width = 280, height = 100, units = "mm")
 
 
-ggplot(compare_fields, aes(x = ET_mm, y = ET_ann_mm)) +
+p_ET_compare <-
+  ggplot(compare_fields, aes(x = ET_mm, y = ET_ann_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup, shape = Irrigation==1)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm) +
-  scale_x_continuous(name = "ET [mm], OpenET") +
-  scale_y_continuous(name = "ET [mm], SALUS") +
+  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  scale_x_continuous(name = "OpenET ET [mm]", breaks = seq(400, 1200, 400)) +
+  scale_y_continuous(name = "SALUS ET [mm]", breaks = seq(400, 1200, 200)) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
-  scale_shape_manual(name = "Irrigation", values = c("TRUE" = 16, "FALSE" = 1)) +
-  coord_equal() +
+  scale_shape_manual(name = "Irrigation Status", values = c("TRUE" = 16, "FALSE" = 1), 
+                     labels = c("TRUE" = "Irrigated", "FALSE" = "Non-Irrigated")) +
+  #coord_equal() +
   theme(legend.position = "bottom") +
-  labs(title = "Comparison of SALUS and OpenET Field-Resolution ET Depth",
-       subtitle = "Subset to: LEMA, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_AnnualET.png"),
-       width = 280, height = 100, units = "mm")
+  #labs(title = "Comparison of SALUS and OpenET Field-Resolution ET Depth",
+  #     subtitle = "Subset to: LEMA, 3 most common crops") +
+  NULL
+#ggsave(file.path("plots", "OpenET_04_CompareToSALUS_AnnualET.png"),
+#       width = 280, height = 100, units = "mm")
+
+p_combo <-
+  (p_ET_compare + p_irr_compare) +
+  plot_layout(ncol = 1, guides = "collect") &
+  theme(legend.position = "bottom")
+p_combo
+
+ggsave(file.path("plots", "OpenET_04_CompareToSALUS.png"),
+       p_combo, width = 190, height = 120, units = "mm")
 
 # compare RMSE for irrigation and ET
 rsq <- function(x, y) summary(lm(y~x))$r.squared

@@ -43,14 +43,14 @@ fields_sf_with_et <-
   left_join(fields_spatial, by = "UID")
 
 # figure out extent
-bound <- sf::st_buffer(st_transform(buffer_sf, st_crs(fields_sf_with_et)), dist = units::set_units(8000, "m"))
-extent <- sf::st_bbox(st_transform(buffer_sf, st_crs(fields_sf_with_et)))
+bound <- sf::st_buffer(st_transform(lema_sf, st_crs(fields_sf_with_et)), dist = units::set_units(7000, "m"))
+extent <- sf::st_bbox(st_transform(lema_sf, st_crs(fields_sf_with_et)))
 
 # map annual ET
 p_annualET <- 
   ggplot(fields_sf_with_et) +
   geom_sf(aes(fill = ET_mm, geometry = geometry), color = NA) +
-  geom_sf(data = buffer_sf, color = "red", fill = NA) +
+  #geom_sf(data = buffer_sf, color = "red", fill = NA) +
   geom_sf(data = lema_sf, color = "blue", fill = NA) +
   facet_grid(Algorithm~Year) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
@@ -64,7 +64,7 @@ ggsave(file.path("plots", "OpenET_MapAnnualETbyAlgorithm.png"), p_annualET,
 p_annualDefc <- 
   ggplot(fields_sf_with_et) +
   geom_sf(aes(fill = PrecipDefc_mm, geometry = geometry), color = NA) +
-  geom_sf(data = buffer_sf, color = "red", fill = NA) +
+  #geom_sf(data = buffer_sf, color = "red", fill = NA) +
   geom_sf(data = lema_sf, color = "blue", fill = NA) +
   facet_grid(Algorithm~Year) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
@@ -89,6 +89,7 @@ ggsave(file.path("plots", "OpenET_DensAnnualETByAlgorithm.png"), p_annualETdens,
 p_annualETdens <- 
   ggplot(subset(fields_sf_with_et, within_lema)) +
   geom_vline(xintercept = 0, color = col.gray) +
+  annotate("rect", xmin = 200, xmax = 300, ymin = -Inf, ymax = Inf, fill = col.gray, color = NA, alpha = 0.5) +
   geom_density(aes(x = PrecipDefc_mm, color = Algorithm, fill = Algorithm), alpha = 0.2) +
   facet_wrap(~Year) +
   scale_color_brewer(name = "Algorithm", type = "qual") +
