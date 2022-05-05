@@ -23,6 +23,41 @@ et_fields_yr <-
   read_csv() %>% 
   subset(Year <= 2020)
 
+et_fields_mo <-
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv") %>% 
+  read_csv() %>% 
+  mutate(Year = year(Date)) %>% 
+  subset(Year <= 2020)
+
+# run some checks on irrigation status
+et_fields_mo_irr <-
+  et_fields_mo %>% 
+  left_join(fields_irrigation, by = c("UID", "Year")) %>% 
+  left_join(fields_landcover, by = c("UID", "Year"))
+
+# inspect a single crop/year combo
+et_mo_cropyr <- subset(et_fields_mo_irr, Year == 2017 & CropGroupCoarse == "Corn")
+et_pk_cropyr <- 
+  et_mo_cropyr %>% 
+  group_by(UID) %>% 
+  filter(ET_mm_mean_ensemble == max(ET_mm_mean_ensemble))
+
+ggplot(et_mo_cropyr, aes(x = Date, y = ET_mm_mean_ensemble, color = (Irrigation == 1), group = UID)) +
+  geom_line()
+
+ggplot(et_pk_cropyr, aes(x = (Irrigation == 1), y = ET_mm_mean_ensemble)) +
+  geom_boxplot()
+
+# define a crop/irrigation confidence variable
+#  - low  = for irrigated, peak ET < 75th percentile of non-irrigated ET
+#           for non-irrigated, peak ET > 75th percentile of irrigated ET
+#  - high = for irrigated, peak ET > 75th percentile of non-irrigated ET
+#           for non-irrigtaed, peak ET < 75th percentile of irrigated ET
+et_pk_75p_irr <- quantile(subset(et_pk_cropyr, Irrigation == 1)$ET_mm_mean_ensemble, 0.75)
+et_pk_75p_nonirr <- quantile(subset(et_pk_cropyr, Irrigation == 0)$ET_mm_mean_ensemble, 0.75)
+
+
+
 ## get all data together
 fields_alldata <-
   left_join(et_fields_yr, met_yearly_fields, by = c("Year", "UID")) %>% 

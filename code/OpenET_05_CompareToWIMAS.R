@@ -1,4 +1,4 @@
-## OpenET_05_CompareToSD6.R
+## OpenET_05_CompareToWIMAS.R
 # This script is supposed to get total irrigation within SD-6 LEMA 
 # and compare to WIMAS output.
 
