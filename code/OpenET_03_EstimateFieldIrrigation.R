@@ -115,10 +115,9 @@ et_yr_irrconf_long <-
 ## get all data together
 fields_alldata <-
   left_join(et_yr_irrconf_long, met_yearly_fields, by = c("Year", "UID")) |> 
-  left_join(fields_spatial, by = "UID") |> 
-  mutate(irr_mm = round(ET_mm - precip_mm, 3),
-         irr_m3 = round((irr_mm/1000)*area_m2, 1))
+  left_join(fields_spatial, by = "UID")
 
+## calculate irrigation using two approaches (ET - precip, ET - nonirr ET) 
 # find UIDs where we want to set irrigation = 0 across all years because 
 # they are in CropGroup that is not irrigated (assume that it doesn't change for future year)
 cropgroup_nonirr <- c("Wetland", "Forest", "Developed", "Barren/Water")
@@ -126,16 +125,55 @@ UIDs_0_landcover <- unique(fields_alldata$UID[fields_alldata$CropGroup %in% crop
 
 fields_alldata$Irrigation[fields_alldata$UID %in% UIDs_0_landcover] <- 0
 fields_alldata$IrrConfidence[fields_alldata$UID %in% UIDs_0_landcover] <- "Low"
-fields_alldata$irr_m3[fields_alldata$UID %in% UIDs_0_landcover] <- 0
-fields_alldata$irr_mm[fields_alldata$UID %in% UIDs_0_landcover] <- 0
 
-# negative irrigation is impossible: set all negative values to 0
-fields_alldata$irr_m3[fields_alldata$irr_m3 < 0] <- 0
-fields_alldata$irr_mm[fields_alldata$irr_mm < 0] <- 0
+# approach 1: ET - precip
+fields_alldata$irr_mm_fromPrec <- round(fields_alldata$ET_mm - fields_alldata$precip_mm, 3)
+
+# approach 2: based on non-irrigated ET for same crops/year/algorithm
+nonirr_avg_ET <- 
+  fields_alldata |> 
+  subset(IrrConfidence == "High" & Irrigation == 0) |> 
+  group_by(Year, Algorithm, CropGroupCoarse) |> 
+  summarize(nonirr_ET_mm_mean = mean(ET_mm, na.rm = T))
+
+fields_alldata <- 
+  fields_alldata |> 
+  left_join(nonirr_avg_ET, by = c("Year", "Algorithm", "CropGroupCoarse")) |> 
+  mutate(irr_mm_fromNonIrr = ET_mm - nonirr_ET_mm_mean)
+
+# some logical clean-up: set 0 irr based on land cover and no negative values allowed
+fields_alldata$irr_mm_fromPrec[fields_alldata$UID %in% UIDs_0_landcover] <- 0
+fields_alldata$irr_mm_fromNonIrr[fields_alldata$UID %in% UIDs_0_landcover] <- 0
+
+fields_alldata$irr_mm_fromPrec[fields_alldata$irr_mm_fromPrec < 0] <- 0
+fields_alldata$irr_mm_fromNonIrr[fields_alldata$irr_mm_fromNonIrr < 0] <- 0
+
+# calculate irrigation volume
+fields_alldata$irr_m3_fromPrec <- round((fields_alldata$irr_mm_fromPrec/1000)*fields_alldata$area_m2, 1)
+fields_alldata$irr_m3_fromNonIrr <- round((fields_alldata$irr_mm_fromNonIrr/1000)*fields_alldata$area_m2, 1)
 
 ## select desired output and save
 fields_openet <-
   fields_alldata |> 
-  dplyr::select(UID, Year, Algorithm, ET_mm, precip_mm, IrrConfidence, irr_mm, irr_m3)
+  dplyr::select(UID, Year, Algorithm, ET_mm, precip_mm, IrrigatedPrc, IrrConfidence, 
+                irr_mm_fromPrec, irr_m3_fromPrec, irr_mm_fromNonIrr, irr_m3_fromNonIrr)
 
 write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv"))
+
+## compare methods
+ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x = irr_mm_fromPrec, y = irr_mm_fromNonIrr)) + 
+  geom_abline(intercept = 0, slope = 1, color = col.gray) + 
+  geom_point(aes(color = CropGroup)) +
+  stat_smooth(method = "lm") +
+  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017",
+                                                        "2018" = "2018", "2019" = "2019", "2020" = "2020"))) +
+  scale_x_continuous(name = "ET - Precip [mm]") +
+  scale_y_continuous(name = "ET - mean nonirrigated ET [mm]") +
+  scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
+  #coord_equal() +
+  theme(legend.position = "bottom") +
+  #labs(title = "Comparison of SALUS and OpenET Field-Resolution ET Depth",
+  #     subtitle = "Subset to: LEMA, 3 most common crops") +
+  NULL
+ggsave(file.path("plots", "OpenET_03_CompareToIrrEstimationApproaches.png"),
+       width = 280, height = 120, units = "mm")
