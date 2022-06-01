@@ -15,7 +15,7 @@ source(file.path("code", "paths+packages.R"))
 #   of use.  The last set of fields lists the a unique number for a water right grouping (Wr_group) 
 #   and how many water rights (Grp_wr_cnt) and points of diversion (Grp_pd_cnt) make up the group.
 #### NOT NEEDED I DON'T THINK
-sf_wrg <- sf::st_read(file.path(dir_GIS, "WaterRightsGroupTables", "wimas_pdfile_sd6.shp")) %>% 
+sf_wrg <- sf::st_read(file.path(dir_GIS, "WaterRightsGroupTables", "wimas_pdfile_sd6.shp")) |> 
   dplyr::select(-OBJECTID)
 
 ## read in the DBF files that link field UIDs to WIMAS water rights group
@@ -36,14 +36,14 @@ sf_wrg <- sf::st_read(file.path(dir_GIS, "WaterRightsGroupTables", "wimas_pdfile
 yr_range <- seq(2006, 2018)
 for (yr in yr_range){
   wrg_fields_yr <- 
-    foreign::read.dbf(file.path(dir_GIS, "WaterRightsGroupTables", paste0("clu_irr_wimas_puse_", yr, ".dbf"))) %>% 
-    dplyr::select(-OBJECTID) %>% 
+    foreign::read.dbf(file.path(dir_GIS, "WaterRightsGroupTables", paste0("clu_irr_wimas_puse_", yr, ".dbf"))) |> 
+    dplyr::select(-OBJECTID) |> 
     # eliminate duplicated UIDs following Brownie's suggestion (highest OVLP_PCT)
-    dplyr::group_by(UID) %>% 
-    dplyr::filter(OVLP_PCT == max(OVLP_PCT)) %>% 
+    dplyr::group_by(UID) |> 
+    dplyr::filter(OVLP_PCT == max(OVLP_PCT)) |> 
     # which(duplicated(wrg_fields_yr_trimmed$UID)) # there 2 UIDs that remain in 2 groups - these are very small (< 3 acres), just choose one
-    subset(!duplicated(UID)) %>% 
-    dplyr::mutate(Year = yr) %>% 
+    subset(!duplicated(UID)) |> 
+    dplyr::mutate(Year = yr) |> 
     dplyr::arrange(WR_GROUP, Year)
   
   if (yr == yr_range[1]){
@@ -61,7 +61,7 @@ for (yr in yr_range){
 #   - Irr_YYYY = irrigation water use in that year [acre-feet]
 #   - Acres_YYYY = irrigated acreage in that year [acres]
 wrg_dbf <- 
-  foreign::read.dbf(file.path(dir_GIS, "WaterRightsGroupTables", "wimas_group_summaries.dbf")) %>% 
+  foreign::read.dbf(file.path(dir_GIS, "WaterRightsGroupTables", "wimas_group_summaries.dbf")) |> 
   dplyr::select(-OBJECTID)
 
 for (yr in yr_range){
@@ -81,10 +81,10 @@ for (yr in yr_range){
 readr::write_csv(wrg_fields, file.path("data", "WRgroups_FieldByYear.csv"))
 
 # WRgroups_UseByWRG.csv = CSV file with water use by group
-wrg_summary %>% 
+wrg_summary |> 
   dplyr::mutate(WaterUse_m3 = Wuse_af*1233.48185532,
                 Irrigation_m3 = Irr_af*1233.48185532,
-                IrrArea_m2 = Irr_Acres*4046.8564) %>% 
-  dplyr::select(WR_GROUP, Year, WaterUse_m3, Irrigation_m3, IrrArea_m2) %>% 
-  dplyr::arrange(Year, WR_GROUP) %>% 
+                IrrArea_m2 = Irr_Acres*4046.8564) |> 
+  dplyr::select(WR_GROUP, Year, WaterUse_m3, Irrigation_m3, IrrArea_m2) |> 
+  dplyr::arrange(Year, WR_GROUP) |> 
   readr::write_csv(file.path("data", "WRgroups_UseByWRG.csv"))
