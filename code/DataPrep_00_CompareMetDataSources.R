@@ -37,3 +37,8 @@ ggplot(subset(df_combo, Year >= 2016), aes(x = precip_mm.SALUS, y = precip_mm.GE
   geom_point() +
   scale_color_viridis_d() +
   geom_abline(intercept = 0, slope = 1, color = "red")
+
+ggplot(subset(df_combo, Year %in% c(2016, 2017)), aes(x = precip_mm.Tom, y = precip_mm.GEE, color = factor(Year))) +
+  geom_point() +
+  scale_color_viridis_d() +
+  geom_abline(intercept = 0, slope = 1, color = "red")
