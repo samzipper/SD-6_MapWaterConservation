@@ -6,7 +6,7 @@ source(file.path("code", "paths+packages.R"))
 
 # load daily met data
 df_daily <-
-  file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_4000m_2016-2021.csv") |>
+  file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_4000m_2016.csv") |>
   read_csv() |>
   mutate(UID = as.integer(UID),
          date_ymd = ymd(date_ymd),
@@ -22,6 +22,16 @@ df_monthly <-
             ETr_mm = sum(etr),
             ETo_mm = sum(eto))
 
+# aggregate to growing season by field
+df_gs <-
+  df_monthly |> 
+  subset(Month >= 5 & Month <= 10) |> 
+  select(-date, -Month) |> 
+  group_by(UID, Year) |> 
+  summarize(precip_mm = sum(precip_mm),
+            ETr_mm = sum(ETr_mm),
+            ETo_mm = sum(ETo_mm))
+
 # aggregate to year by field
 df_yearly <-
   df_monthly |>
@@ -32,6 +42,7 @@ df_yearly <-
 
 # save output
 write_csv(df_yearly, file.path("data", "gridmet_AnnualByField.csv"))
+write_csv(df_gs, file.path("data", "gridmet_GrowingSeasonByField.csv"))
 write_csv(df_monthly, file.path(dir_data, "gridMET", "gridmet_MonthlyByField.csv"))
 
 ## compare to data from tom

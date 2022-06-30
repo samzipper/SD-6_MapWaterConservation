@@ -35,6 +35,15 @@ et_fields_mo <-
   mutate(Year = year(Date)) |> 
   subset(Year <= 2020)
 
+# summarize to growing season only
+et_fields_gs <-
+  et_fields_mo |> 
+  mutate(Month = month(Date)) |> 
+  subset(Month >= 5 & Month <= 10) |> 
+  select(-Date, -Month) |> 
+  group_by(UID, Year) |> 
+  summarize(across(starts_with("ET_"), list(sum = sum)))
+
 # run some checks on irrigation status
 et_fields_mo_irr <-
   et_fields_mo |> 
