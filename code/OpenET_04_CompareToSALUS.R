@@ -43,6 +43,7 @@ alldata_fields <-
 # subset to final data frame for comparison
 compare_fields <-
   alldata_fields |> 
+  subset(Year == 2016) |> # 2016 comparison only due to precipitation differences in 2017
   subset(within_lema) |> # within LEMA only
   subset(is.finite(ET_ann_mm)) |>   # finite SALUS data (only years where SALUS was run)
   #subset(area_m2 > 40468) |>  # 40468 m2 = 10 acres
@@ -57,7 +58,7 @@ p_irr_fromPrec_compare <-
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
   scale_x_continuous(name = "OpenET ET - Precip [mm]", breaks = seq(0, 600, 300)) +
   scale_y_continuous(name = "SALUS Irrigation [mm]") +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
@@ -70,8 +71,8 @@ p_irr_fromNonIrr_compare <-
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
-  scale_x_continuous(name = "OpenET ET - Nonirrigated ET for Crop/Year/Algorithm [mm]", breaks = seq(0, 600, 300)) +
+  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  scale_x_continuous(name = "OpenET ET - Nonirrigated ET [mm]", breaks = seq(0, 600, 300)) +
   scale_y_continuous(name = "SALUS Irrigation [mm]") +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
   #coord_equal() +
@@ -79,8 +80,9 @@ p_irr_fromNonIrr_compare <-
   NULL
 
 p_combo <-
-  (p_irr_fromPrec_compare + p_irr_fromNonIrr_compare) +
-  plot_layout(ncol = 1, guides = "collect") &
+  ((p_irr_fromPrec_compare + labs(title = "(a) Precipitation-based Irrigation Estimate")) + 
+     (p_irr_fromNonIrr_compare + labs(title = "(b) Nonirrigated Crop-based Irrigation Estimate"))) +
+  plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "bottom")
 p_combo
 
@@ -92,7 +94,7 @@ p_ET_compare <-
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup, shape = Irrigation==1)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
   scale_x_continuous(name = "OpenET ET [mm]", breaks = seq(400, 1200, 400)) +
   scale_y_continuous(name = "SALUS ET [mm]", breaks = seq(400, 1200, 200)) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
@@ -110,7 +112,7 @@ p_ET.P_compare <-
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
+  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
   scale_x_continuous(name = "OpenET ET - Precip [mm]", breaks = seq(0, 600, 300)) +
   scale_y_continuous(name = "SALUS ET - Precip [mm]") +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
@@ -120,8 +122,9 @@ p_ET.P_compare <-
 
 
 p_ET_combo <-
-  (p_ET_compare + p_ET.P_compare) +
-  plot_layout(ncol = 1, guides = "collect") &
+  ((p_ET_compare + labs(title = "(a) ET Comparison")) + 
+     p_ET.P_compare + labs(title = "(b) ET - Precip Comparison")) +
+  plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "bottom")
 p_ET_combo
 
