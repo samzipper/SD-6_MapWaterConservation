@@ -7,7 +7,11 @@ library(patchwork)
 library(lubridate)
 
 # path to GIS data
-dir_data <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data"
+if (Sys.getenv("COMPUTERNAME") == "KGS-M414W01"){
+  dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data"
+} else {
+  dir_data <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data"
+}
 dir_GIS <- file.path(dir_data, "GIS")
 
 ## plotting controls
@@ -17,7 +21,7 @@ theme_scz <- function(...){
   theme_bw(base_size=10, base_family="Arial") + 
     theme(
       text=element_text(color="black"),
-      plot.title=element_text(face="bold", size=rel(1)),
+      plot.title=element_text(size=rel(1)),
       axis.title=element_text(face="bold", size=rel(1)),
       axis.text=element_text(size=rel(1)),
       strip.text=element_text(size=rel(1)),
@@ -52,7 +56,7 @@ crop_names.groups <-
                               "Soybeans", 
                               "Sunflower", 
                               "Winter Wheat", 
-                              "Fallow/Idle Cropland", 
+                              "Fallow/Idle", 
                               "Alfalfa/Hay", 
                               "Grass/Shrub", 
                               "Forest", 
@@ -68,7 +72,7 @@ crop_names.groups <-
                                "Soybeans", 
                                "Sunflower", 
                                "Winter Wheat", 
-                               "Fallow/Idle Cropland", 
+                               "Fallow/Idle", 
                                "Alfalfa/Hay", 
                                "Grass/Shrub", 
                                "Forest", 
@@ -83,7 +87,7 @@ crop_names.groups <-
                                      "Soybeans", 
                                      "Other Crops", 
                                      "Winter Wheat", 
-                                     "Fallow/Idle Cropland", 
+                                     "Fallow/Idle", 
                                      "Alfalfa/Hay", 
                                      "Grass/Shrub", 
                                      "Grass/Shrub", 
@@ -98,7 +102,7 @@ pal_crops <- c("Corn" = "#ffd300",
                "Soybeans" = "#267000", 
                "Sunflower" = "#ffff00", 
                "Winter Wheat" = "#a57000", 
-               "Fallow/Idle Cropland" = "#bfbf77", 
+               "Fallow/Idle" = "#bfbf77", 
                "Alfalfa/Hay" = "#ffa5e2", 
                "Grass/Shrub" = "#e8ffbf", 
                "Forest" = "#93cc93", 
@@ -113,7 +117,7 @@ pal_crops_coarse <- c("Corn" = "#ffd300",
                       "Sorghum" = "#ff9e0a", 
                       "Soybeans" = "#267000", 
                       "Winter Wheat" = "#a57000", 
-                      "Fallow/Idle Cropland" = "#bfbf77", 
+                      "Fallow/Idle" = "#bfbf77", 
                       "Alfalfa/Hay" = "#ffa5e2", 
                       "Grass/Shrub" = "#e8ffbf", 
                       "Wetland" = "#7cafaf", 

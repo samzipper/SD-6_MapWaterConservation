@@ -48,7 +48,8 @@ p_et <-
   scale_fill_viridis_c(name = "Annual ET [mm]", direction = -1, limits = c(500, 1000), breaks = c(500, 750, 1000)) +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        legend.title = element_text(vjust = 0.75)) +
   NULL
 
 p_irr <-
@@ -61,7 +62,8 @@ p_irr <-
   scale_fill_viridis_c(name = "Irrigation %", breaks = c(0, 0.5, 1), labels = scales::percent, option = "E", direction = -1) +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        legend.title = element_text(vjust = 0.75)) +
   NULL
 
 table(subset(sf_subset, Algorithm == "ensemble")$CropGroupCoarse)
@@ -83,5 +85,5 @@ p_combo <-
   (p_et + p_irr + p_lc) +
   plot_layout(ncol = 1, heights = c(1, 1, 1))
 
-ggsave(file.path("figures+tables", "Map_AnnualInputData.png"),
-       p_combo, width = 190, height = 150, units = "mm")
+ggsave(file.path("figures+tables", "Map-AnnualInputData.png"),
+       p_combo, width = 17.15, height = 14.5, units = "cm")
