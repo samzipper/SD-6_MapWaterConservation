@@ -25,7 +25,7 @@ df_monthly <-
 # aggregate to growing season by field
 df_gs <-
   df_monthly |> 
-  subset(Month >= 5 & Month <= 10) |> 
+  subset(Month %in% gs_months) |> 
   select(-date, -Month) |> 
   group_by(UID, Year) |> 
   summarize(precip_mm = sum(precip_mm),

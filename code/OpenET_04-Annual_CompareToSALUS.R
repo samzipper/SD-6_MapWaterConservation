@@ -1,9 +1,9 @@
-## OpenET_04_CompareToSALUS.R
+## OpenET_04-Annual_CompareToSALUS.R
 
 source(file.path("code", "paths+packages.R"))
 
 # load data
-fields_openet <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv"))
+fields_openet <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-Annual_FieldsNoDups.csv"))
 fields_spatial <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 fields_irrigation <- 
@@ -86,7 +86,7 @@ p_combo <-
   theme(legend.position = "bottom")
 p_combo
 
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_Irr.png"),
+ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_Irr.png"),
        p_combo, width = 190, height = 120, units = "mm")
 
 p_ET_compare <-
@@ -128,7 +128,7 @@ p_ET_combo <-
   theme(legend.position = "bottom")
 p_ET_combo
 
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_ET.png"),
+ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_ET.png"),
        p_ET_combo, width = 190, height = 120, units = "mm")
 
 # compare precip
@@ -155,7 +155,7 @@ ggplot(summary_fit, aes(x = et_rmsd, y = irr_rmsd)) +
   geom_text(aes(label = Algorithm)) +
   labs(title = "Root mean squared difference from SALUS",
        subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_FitRMSDbyModel.png"),
+ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_FitRMSDbyModel.png"),
        width = 95, height = 95, units = "mm")
 
 ggplot(summary_fit, aes(x = et_r2, y = irr_r2)) +
@@ -163,5 +163,5 @@ ggplot(summary_fit, aes(x = et_r2, y = irr_r2)) +
   geom_text(aes(label = Algorithm)) +
   labs(title = "R^2 with SALUS",
        subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04_CompareToSALUS_FitR2byModel.png"),
+ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_FitR2byModel.png"),
        width = 95, height = 95, units = "mm")

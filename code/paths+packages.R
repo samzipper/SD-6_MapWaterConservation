@@ -6,6 +6,9 @@ library(sf)
 library(patchwork)
 library(lubridate)
 
+# common variables
+gs_months <- seq(4, 10) # define growing season months
+
 # path to GIS data
 if (Sys.getenv("COMPUTERNAME") == "KGS-M414W01"){
   dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data"

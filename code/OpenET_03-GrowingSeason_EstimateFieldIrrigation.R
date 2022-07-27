@@ -1,5 +1,5 @@
-## OpenET_03_EstimateFieldIrrigation.R
-# This script will estimate irrigation at the field level.
+## OpenET_03-GrowingSeason_EstimateFieldIrrigation.R
+# This script will estimate irrigation at the field level based on annual data.
 
 source(file.path("code", "paths+packages.R"))
 
@@ -7,7 +7,7 @@ source(file.path("code", "paths+packages.R"))
 # field attributes
 fields_spatial <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
-met_yearly_fields <- readr::read_csv(file.path("data", "gridmet_AnnualByField.csv"))
+met_gs_fields <- readr::read_csv(file.path("data", "gridmet_GrowingSeasonByField.csv"))
 fields_irrigation <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Irrigation-AnnualAIM.csv")) |> 
   mutate(Irrigation = IrrigatedPrc > 0.5)
@@ -24,8 +24,8 @@ fields_landcover <-
 #  dplyr::left_join(crop_names.groups, by = "CropCode")
 
 # ET rates
-et_fields_yr <- 
-  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv") |> 
+et_fields_gs <-
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_GrowingSeason_All_FieldsNoDups.csv") |> 
   read_csv() |> 
   subset(Year <= 2020)
 
@@ -34,15 +34,6 @@ et_fields_mo <-
   read_csv() |> 
   mutate(Year = year(Date)) |> 
   subset(Year <= 2020)
-
-# summarize to growing season only
-et_fields_gs <-
-  et_fields_mo |> 
-  mutate(Month = month(Date)) |> 
-  subset(Month >= 5 & Month <= 10) |> 
-  select(-Date, -Month) |> 
-  group_by(UID, Year) |> 
-  summarize(across(starts_with("ET_"), list(sum = sum)))
 
 # run some checks on irrigation status
 et_fields_mo_irr <-
@@ -114,16 +105,18 @@ et_mo_irrconf_long <-
   pivot_longer(starts_with("ET_mm_mean_"), values_to = "ET_mm_mo", names_to = "Algorithm") |> 
   mutate(Algorithm = str_sub(Algorithm, start = 12))
 
-et_yr_irrconf_long <-
+et_gs_irrconf_long <-
   et_mo_irrconf_long |> 
-  select(-Date) |> 
+  mutate(Month = month(Date)) |> 
+  subset(Month %in% gs_months) |> 
+  select(-Date, -Month) |> 
   group_by(UID, Year, IrrigatedPrc, Irrigation, IrrConfidence, CropCode, CropName, CropGroup, CropGroupCoarse, Algorithm) |> 
   summarize(ET_mm = sum(ET_mm_mo)) |> 
   ungroup()
 
 ## get all data together
 fields_alldata <-
-  left_join(et_yr_irrconf_long, met_yearly_fields, by = c("Year", "UID")) |> 
+  left_join(et_gs_irrconf_long, met_gs_fields, by = c("Year", "UID")) |> 
   left_join(fields_spatial, by = "UID")
 
 ## calculate irrigation using two approaches (ET - precip, ET - nonirr ET) 
@@ -167,7 +160,7 @@ fields_openet <-
   dplyr::select(UID, Year, Algorithm, ET_mm, precip_mm, IrrigatedPrc, IrrConfidence, 
                 irr_mm_fromPrec, irr_m3_fromPrec, irr_mm_fromNonIrr, irr_m3_fromNonIrr)
 
-write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv"))
+write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv"))
 
 ## compare methods
 ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x = irr_mm_fromPrec, y = irr_mm_fromNonIrr)) + 
@@ -184,5 +177,5 @@ ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x 
   #labs(title = "Comparison of SALUS and OpenET Field-Resolution ET Depth",
   #     subtitle = "Subset to: LEMA, 3 most common crops") +
   NULL
-ggsave(file.path("plots", "OpenET_03_CompareToIrrEstimationApproaches.png"),
+ggsave(file.path("plots", "OpenET_03-GrowingSeason_CompareToIrrEstimationApproaches.png"),
        width = 280, height = 120, units = "mm")
