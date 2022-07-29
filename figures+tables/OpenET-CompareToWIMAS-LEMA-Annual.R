@@ -1,6 +1,7 @@
-## OpenET_05_CompareToWIMAS-LEMAtotal.R
+## OpenET-CompareToWIMAS-LEMA-Annual.R
 # This script is supposed to get total irrigation within SD-6 LEMA 
-# and compare to WIMAS output.
+# and compare to WIMAS output. Uses irrigation estimates based on 
+# annual ET and met data.
 
 source(file.path("code", "paths+packages.R"))
 
@@ -10,7 +11,7 @@ fields_spatial <-
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 
 # et data
-df_et_yr <- readr::read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv")) # 2016-2021
+df_et_yr <- readr::read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-Annual_FieldsNoDups.csv")) # 2016-2021
 
 # wimas data
 wimas_wuse <- readr::read_csv(file.path(dir_data, "WIMAS_WaterUse_1990to2020_SD6+10mi_Summarize.csv"))
@@ -40,7 +41,7 @@ irr_openet_wimas <-
   rename(Irr_m3_WIMAS = TotalVolume_m3)
 
 # save
-write_csv(irr_openet_wimas, file.path("data", "OpenET_05_CompareToWIMAS_AnnualTotals.csv"))
+write_csv(irr_openet_wimas, file.path("data", "OpenET-CompareToWIMAS-LEMA-Annual_TotalIrrigation.csv"))
 
 # plot
 p_scatter_fromPrec <- 
@@ -72,8 +73,8 @@ p_combo_fromPrec <-
   theme(legend.position = "bottom")
 p_combo_fromPrec
 
-ggsave(file.path("plots", "OpenET_05_IrrFromPrec_CompareToWIMAS.png"),
-       p_combo_fromPrec, width = 190, height = 120, units = "mm")
+ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-Annual_IrrFromPrecip.png"),
+       p_combo_fromPrec, width = 17.15, height = 11.15, units = "cm")
 
 
 
@@ -106,5 +107,5 @@ p_combo_fromNonIrr <-
   theme(legend.position = "bottom")
 p_combo_fromNonIrr
 
-ggsave(file.path("plots", "OpenET_05_IrrFromNonIrr_CompareToWIMAS.png"),
-       p_combo_fromNonIrr, width = 190, height = 120, units = "mm")
+ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-Annual_IrrFromNonIrr.png"),
+       p_combo_fromNonIrr, width = 17.15, height = 11.15, units = "cm")
