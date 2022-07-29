@@ -6,12 +6,34 @@ source(file.path("code", "paths+packages.R"))
 
 # load daily met data
 df_daily <-
-  file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_4000m_2016.csv") |>
+  file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_500m_2016.csv") |>
   read_csv() |>
   mutate(UID = as.integer(UID),
          date_ymd = ymd(date_ymd),
          Year = year(date_ymd),
          Month = month(date_ymd))
+
+# some tiny fields do not have data - find the nearest one
+sf_fields <- st_read(file.path("data", "Fields_NoDups.shp"))
+length(unique(sf_fields$UID))
+length(unique(df_yearly$UID))
+UID_nodata <- sf_fields$UID[!(sf_fields$UID %in% df_daily$UID)]
+sf_fields_data <- sf_fields[!(sf_fields$UID %in% UID_nodata), ]
+
+for (UID in UID_nodata){
+  # find closest UID
+  UID_dist <- st_distance(sf_fields[sf_fields$UID == UID, ], sf_fields_data)
+  UID_closest <- sf_fields_data$UID[which.min(UID_dist)]
+  
+  # extract met data
+  df_daily_closest <- subset(df_daily, UID == UID_closest)
+  
+  # replace UID
+  df_daily_closest$UID <- UID
+  
+  # add to overall data frame
+  df_daily <- bind_rows(df_daily, df_daily_closest)
+}
 
 # aggregate to month by field
 df_monthly <-
@@ -40,10 +62,22 @@ df_yearly <-
             ETo_mm = sum(ETo_mm),
             ETr_mm = sum(ETr_mm))
 
+# check to make sure all fields have data
+if (length(sf_fields$UID[!(sf_fields$UID %in% df_daily$UID)]) > 0) { stop("error - missing fields in daily") }
+if (length(sf_fields$UID[!(sf_fields$UID %in% df_monthly$UID)]) > 0) { stop("error - missing fields in monthly") }
+if (length(sf_fields$UID[!(sf_fields$UID %in% df_gs$UID)]) > 0) { stop("error - missing fields in gs") }
+if (length(sf_fields$UID[!(sf_fields$UID %in% df_yearly$UID)]) > 0) { stop("error - missing fields in yearly") }
+
 # save output
 write_csv(df_yearly, file.path("data", "gridmet_AnnualByField.csv"))
 write_csv(df_gs, file.path("data", "gridmet_GrowingSeasonByField.csv"))
 write_csv(df_monthly, file.path(dir_data, "gridMET", "gridmet_MonthlyByField.csv"))
+
+# visualize output
+sf_fields |> 
+  left_join(subset(df_yearly, Year == 2016), by = "UID") |> 
+  ggplot(aes(fill = precip_mm)) + 
+  geom_sf()
 
 ## compare to data from tom
 df_yearly_fromTom <-

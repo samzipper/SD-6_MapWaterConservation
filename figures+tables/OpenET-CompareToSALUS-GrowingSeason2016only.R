@@ -1,11 +1,11 @@
-## OpenET-CompareToSALUS-2016only.R
+## OpenET-CompareToSALUS-GrowingSeason2016only.R
 # Create figure comparing OpenET-based estimates of irrigation and SALUS-based estimates.
 # Very similar to code/OpenET_04_CompareToSALUS.R
 
 source(file.path("code", "paths+packages.R"))
 
 # load data
-fields_openet <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv"))
+fields_openet <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv"))
 fields_spatial <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 fields_irrigation <- 
@@ -60,7 +60,7 @@ compare_fields_irr <- subset(compare_fields, Irrigation == 1)
 p_irr_min <- min(c(compare_fields_irr$irr_mm_fromPrec, compare_fields_irr$irr_mm_fromNonIrr, compare_fields_irr$IRR_ann_mm))
 p_irr_max <- max(c(compare_fields_irr$irr_mm_fromPrec, compare_fields_irr$irr_mm_fromNonIrr, compare_fields_irr$IRR_ann_mm))
 p_irr_limits <- c(floor(p_irr_min), ceiling(p_irr_max))
-p_irr_breaks <- seq(0, 750, 250)
+p_irr_breaks <- seq(0, 600, 150)
 
 p_irr_fromPrec_compare <-
   ggplot(compare_fields_irr, aes(x = irr_mm_fromPrec, y = IRR_ann_mm)) +
@@ -99,56 +99,7 @@ p_combo <-
   theme(legend.position = "bottom")
 p_combo
 
-ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-2016only_IrrigationComparison.png"),
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-GrowingSeason2016only_IrrigationComparison.png"),
        p_combo, width = 17.15, height = 17.15, units = "cm")
 
-# ET comparison
-p_ET_min <- min(c(compare_fields$ET_mm, compare_fields$ET_ann_mm))
-p_ET_max <- max(c(compare_fields$ET_mm, compare_fields$ET_ann_mm))
-p_ET_limits <- c(floor(p_ET_min), ceiling(p_ET_max))
-p_ET_breaks <- seq(400, 1300, 300)
-
-p_ET_compare <-
-  ggplot(compare_fields, aes(x = ET_mm, y = ET_ann_mm)) +
-  geom_abline(intercept = 0, slope = 1, color = col.gray) + 
-  geom_point(aes(color = CropGroup, shape = Irrigation==1)) +
-  stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, 
-             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
-             nrow = 2) +
-  scale_x_continuous(name = "OpenET ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
-  scale_y_continuous(name = "SALUS ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
-  scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
-  scale_shape_manual(name = "Irrigation Status", 
-                     values = c("TRUE" = 16, "FALSE" = 1), 
-                     labels = c("TRUE" = "Irrigated", "FALSE" = "Non-Irrigated")) +
-  #coord_equal() +
-  theme(legend.position = "bottom") +
-  NULL
-
-compare_fields_irr$SALUS_ET.P_mm <- compare_fields_irr$ET_ann_mm - compare_fields_irr$PPT_ann_mm
-compare_fields_irr$SALUS_ET.P_mm[compare_fields_irr$SALUS_ET.P_mm < 0] <- 0
-p_ET.P_compare <-
-  ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm_fromPrec, y = SALUS_ET.P_mm)) +
-  geom_abline(intercept = 0, slope = 1, color = col.gray) + 
-  geom_point(aes(color = CropGroup)) +
-  stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, 
-             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
-             nrow = 2) +
-  scale_x_continuous(name = "OpenET ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
-  scale_y_continuous(name = "SALUS ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
-  scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
-  #coord_equal() +
-  theme(legend.position = "bottom") +
-  NULL
-
-p_ET_combo <-
-  ((p_ET_compare + labs(title = "(a) ET Comparison")) + 
-     p_ET.P_compare + labs(title = "(b) ET - Precip Comparison (Irrigated Fields Only)")) +
-  plot_layout(ncol = 1, guides = "collect") &
-  theme(legend.position = "bottom")
-p_ET_combo
-
-ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-2016only_ETComparison.png"),
-       p_ET_combo, width = 17.15, height = 17.15, units = "cm")
+# ET comparison not valid since we only have annual ET

@@ -1,4 +1,6 @@
-## OpenET_04-Annual_CompareToSALUS.R
+## OpenET-CompareToSALUS-Annual2016only.R
+# Create figure comparing OpenET-based estimates of irrigation and SALUS-based estimates.
+# Very similar to code/OpenET_04_CompareToSALUS.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -52,28 +54,39 @@ compare_fields <-
   subset(CropGroup %in% c("Corn", "Sorghum", "Soybeans")) |>  # crop types that are common in both irrigated and non-irrigated land)
   subset(IrrConfidence == "High")  # high degree of confidence in irrigation status
 
-# compare irrigation and ET
+## compare irrigation and ET
+# irrigation comparison
+compare_fields_irr <- subset(compare_fields, Irrigation == 1)
+p_irr_min <- min(c(compare_fields_irr$irr_mm_fromPrec, compare_fields_irr$irr_mm_fromNonIrr, compare_fields_irr$IRR_ann_mm))
+p_irr_max <- max(c(compare_fields_irr$irr_mm_fromPrec, compare_fields_irr$irr_mm_fromNonIrr, compare_fields_irr$IRR_ann_mm))
+p_irr_limits <- c(floor(p_irr_min), ceiling(p_irr_max))
+p_irr_breaks <- seq(0, 750, 250)
+
 p_irr_fromPrec_compare <-
-  ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm_fromPrec, y = IRR_ann_mm)) +
+  ggplot(compare_fields_irr, aes(x = irr_mm_fromPrec, y = IRR_ann_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
-  scale_x_continuous(name = "OpenET ET - Precip [mm]", breaks = seq(0, 600, 300)) +
-  scale_y_continuous(name = "SALUS Irrigation [mm]") +
+  facet_wrap(. ~ Algorithm, 
+             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
+             nrow = 2) +
+  scale_x_continuous(name = "OpenET ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
+  scale_y_continuous(name = "SALUS Irrigation [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
   #coord_equal() +
   theme(legend.position = "bottom") +
   NULL
 
 p_irr_fromNonIrr_compare <-
-  ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm_fromNonIrr, y = IRR_ann_mm)) +
+  ggplot(compare_fields_irr, aes(x = irr_mm_fromNonIrr, y = IRR_ann_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
-  scale_x_continuous(name = "OpenET ET - Nonirrigated ET [mm]", breaks = seq(0, 600, 300)) +
-  scale_y_continuous(name = "SALUS Irrigation [mm]") +
+  facet_wrap(. ~ Algorithm, 
+             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
+             nrow = 2) +
+  scale_x_continuous(name = "OpenET ET - Nonirrigated ET [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
+  scale_y_continuous(name = "SALUS Irrigation [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
   #coord_equal() +
   theme(legend.position = "bottom") +
@@ -82,86 +95,60 @@ p_irr_fromNonIrr_compare <-
 p_combo <-
   ((p_irr_fromPrec_compare + labs(title = "(a) Precipitation-based Irrigation Estimate")) + 
      (p_irr_fromNonIrr_compare + labs(title = "(b) Nonirrigated Crop-based Irrigation Estimate"))) +
-  plot_layout(ncol = 2, guides = "collect") &
+  plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "bottom")
 p_combo
 
-ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_Irr.png"),
-       p_combo, width = 190, height = 120, units = "mm")
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-Annual2016only_IrrigationComparison.png"),
+       p_combo, width = 17.15, height = 17.15, units = "cm")
+
+# ET comparison
+p_ET_min <- min(c(compare_fields$ET_mm, compare_fields$ET_ann_mm))
+p_ET_max <- max(c(compare_fields$ET_mm, compare_fields$ET_ann_mm))
+p_ET_limits <- c(floor(p_ET_min), ceiling(p_ET_max))
+p_ET_breaks <- seq(400, 1300, 300)
 
 p_ET_compare <-
   ggplot(compare_fields, aes(x = ET_mm, y = ET_ann_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup, shape = Irrigation==1)) +
   stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
-  scale_x_continuous(name = "OpenET ET [mm]", breaks = seq(400, 1200, 400)) +
-  scale_y_continuous(name = "SALUS ET [mm]", breaks = seq(400, 1200, 200)) +
+  facet_wrap(. ~ Algorithm, 
+             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
+             nrow = 2) +
+  scale_x_continuous(name = "OpenET ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
+  scale_y_continuous(name = "SALUS ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
-  scale_shape_manual(name = "Irrigation Status", values = c("TRUE" = 16, "FALSE" = 1), 
+  scale_shape_manual(name = "Irrigation Status", 
+                     values = c("TRUE" = 16, "FALSE" = 1), 
                      labels = c("TRUE" = "Irrigated", "FALSE" = "Non-Irrigated")) +
   #coord_equal() +
   theme(legend.position = "bottom") +
   NULL
 
-compare_fields$SALUS_ET.P_mm <- compare_fields$ET_ann_mm - compare_fields$PPT_ann_mm
-compare_fields$SALUS_ET.P_mm[compare_fields$SALUS_ET.P_mm < 0] <- 0
-
+compare_fields_irr$SALUS_ET.P_mm <- compare_fields_irr$ET_ann_mm - compare_fields_irr$PPT_ann_mm
+compare_fields_irr$SALUS_ET.P_mm[compare_fields_irr$SALUS_ET.P_mm < 0] <- 0
 p_ET.P_compare <-
-  ggplot(subset(compare_fields, Irrigation == 1), aes(x = irr_mm_fromPrec, y = SALUS_ET.P_mm)) +
+  ggplot(subset(compare_fields_irr, Irrigation == 1), aes(x = irr_mm_fromPrec, y = SALUS_ET.P_mm)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_wrap(. ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017"))) +
-  scale_x_continuous(name = "OpenET ET - Precip [mm]", breaks = seq(0, 600, 300)) +
-  scale_y_continuous(name = "SALUS ET - Precip [mm]") +
+  facet_wrap(. ~ Algorithm, 
+             labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
+             nrow = 2) +
+  scale_x_continuous(name = "OpenET ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
+  scale_y_continuous(name = "SALUS ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
   #coord_equal() +
   theme(legend.position = "bottom") +
   NULL
 
-
 p_ET_combo <-
   ((p_ET_compare + labs(title = "(a) ET Comparison")) + 
-     p_ET.P_compare + labs(title = "(b) ET - Precip Comparison")) +
-  plot_layout(ncol = 2, guides = "collect") &
+     p_ET.P_compare + labs(title = "(b) ET - Precip Comparison (Irrigated Fields Only)")) +
+  plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "bottom")
 p_ET_combo
 
-ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_ET.png"),
-       p_ET_combo, width = 190, height = 120, units = "mm")
-
-# compare precip
-subset(alldata_fields, Algorithm == "ensemble") |> 
-  ggplot(aes(x = precip_mm, y = PPT_ann_mm, color = factor(Year))) +
-  geom_abline(intercept = 0, slope = 1, color = col.gray) + 
-  geom_point() +
-  scale_x_continuous(name = "Precip Tom got from gridMET [mm]") +
-  scale_y_continuous(name = "Precip used in SALUS [mm]")
-
-# compare RMSE for irrigation and ET
-rsq <- function(x, y) summary(lm(y~x))$r.squared
-summary_fit <-
-  compare_fields |> 
-  subset(Irrigation == 1) |> 
-  group_by(Algorithm) |> 
-  summarize(et_rmsd = hydroGOF::rmse(ET_ann_mm, ET_mm),
-            irr_rmsd = hydroGOF::rmse(IRR_ann_mm, irr_mm),
-            et_r2 = rsq(ET_ann_mm, ET_mm),
-            irr_r2 = rsq(IRR_ann_mm, irr_mm))
-
-ggplot(summary_fit, aes(x = et_rmsd, y = irr_rmsd)) +
-  geom_point(color = "red") +
-  geom_text(aes(label = Algorithm)) +
-  labs(title = "Root mean squared difference from SALUS",
-       subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_FitRMSDbyModel.png"),
-       width = 95, height = 95, units = "mm")
-
-ggplot(summary_fit, aes(x = et_r2, y = irr_r2)) +
-  geom_point(color = "red") +
-  geom_text(aes(label = Algorithm)) +
-  labs(title = "R^2 with SALUS",
-       subtitle = "Subset to: LEMA, irrigated fields, 3 most common crops")
-ggsave(file.path("plots", "OpenET_04-Annual_CompareToSALUS_FitR2byModel.png"),
-       width = 95, height = 95, units = "mm")
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-Annual2016only_ETComparison.png"),
+       p_ET_combo, width = 17.15, height = 17.15, units = "cm")
