@@ -1,5 +1,2 @@
-Notes 7/27/2022
- - Found that gridMET extractions were missing some data for small fields (field corners, etc.)
-   presumably due to size < gridMET pixels. Relaunched GEE extraction, need to carry forward
-   into irrigation estimation and subsequent comparison scripts once complete.
- - Try adjusting histograms somehow based on 11" typical irrigation
+Notes 7/29/2022
+ - Try adjusting histograms somehow based on 11" allowed irrigation (or 55" total across 5 years)
