@@ -140,8 +140,75 @@ p_timeseries <-
   theme(legend.position = "bottom")
 p_timeseries
 
+# make final plots
+p_scatter_fromPrec <- 
+  ggplot(irr_openet_wimas, aes(y = irr_m3_fromPrec_total/1e6, x = Irr_m3_WIMAS/1e6)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = Algorithm)) +
+  scale_y_continuous(name = "Estimated Irrigation\n[million m\u00b3]", 
+                     limits = c(min(irr_openet_wimas$irr_m3_fromPrec_total/1e6), 
+                                max(irr_openet_wimas$irr_m3_fromPrec_total/1e6))) +
+  scale_x_continuous(name = "WIMAS Reported Irrigation [million m\u00b3]", 
+                     limits = c(min(irr_openet_wimas$irr_m3_fromPrec_total/1e6), 
+                                max(irr_openet_wimas$irr_m3_fromPrec_total/1e6))) +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
+  stat_smooth(method = "lm") +
+  theme(legend.position = "bottom")
+p_scatter_fromPrec
+
+p_line_fromPrec <-
+  ggplot(irr_openet_wimas) +
+  # WIMAS data
+  geom_line(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
+  geom_point(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
+  # OpenET data
+  geom_line(aes(x = Year, y = irr_m3_fromPrec_total/1e6, color = Algorithm), show.legend = F) +
+  geom_point(aes(x = Year, y = irr_m3_fromPrec_total/1e6, color = Algorithm)) + 
+  # aesthetics
+  scale_y_continuous(name = "Estimated Irrigation\n[million m\u00b3]") +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
+  theme(legend.position = "bottom")
+p_line_fromPrec
+
+p_scatter_fromPrec_shifted <- 
+  ggplot(irr_openet_wimas, aes(y = irr_m3_fromPrec_shifted_total/1e6, x = Irr_m3_WIMAS/1e6)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = Algorithm)) +
+  scale_y_continuous(name = "Allocation-Shifted\nIrrigation [million m\u00b3]", 
+                     limits = layer_scales(p_scatter_fromPrec)$y$get_limits()) +
+  scale_x_continuous(name = "WIMAS Reported Irrigation [million m\u00b3]", 
+                     limits = layer_scales(p_scatter_fromPrec)$x$get_limits()) +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
+  stat_smooth(method = "lm") +
+  theme(legend.position = "bottom")
+p_scatter_fromPrec_shifted
+
+p_line_fromPrec_shifted <-
+  ggplot(irr_openet_wimas) +
+  # WIMAS data
+  geom_line(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
+  geom_point(aes(x = Year, y = Irr_m3_WIMAS/1e6), color = "black", size = 2) +
+  # OpenET data
+  geom_line(aes(x = Year, y = irr_m3_fromPrec_shifted_total/1e6, color = Algorithm), show.legend = F) +
+  geom_point(aes(x = Year, y = irr_m3_fromPrec_shifted_total/1e6, color = Algorithm)) + 
+  # aesthetics
+  scale_y_continuous(name = "Allocation-Shifted\nIrrigation [million m\u00b3]", 
+                     limits = layer_scales(p_line_fromPrec)$y$get_limits()) +
+  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
+  theme(legend.position = "bottom")
+p_line_fromPrec_shifted
+
+# make combo and save
+p_combo <- 
+  (p_line_fromPrec + p_scatter_fromPrec +
+  p_line_fromPrec_shifted + p_scatter_fromPrec_shifted) +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "bottom")
+p_combo
+
 # save
 ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-Annual-MeanShift_IrrFromPrecip.png"),
-       p_timeseries, width = 8.25, height = 17.15, units = "cm")
+       p_combo, width = 17.15, height = 12.15, units = "cm")
 
 write_csv(irr_openet_wimas_long, file.path("data", "OpenET-CompareToWIMAS-LEMA-Annual-MeanShift_TotalIrrigation.csv"))
