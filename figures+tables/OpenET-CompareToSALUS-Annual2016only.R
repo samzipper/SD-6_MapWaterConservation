@@ -69,13 +69,15 @@ p_irr_fromPrec_compare <-
   stat_smooth(method = "lm") +
   facet_wrap(. ~ Algorithm, 
              labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
-             nrow = 2) +
+             nrow = 2, scales = "free_x") +
   scale_x_continuous(name = "OpenET ET - Precip [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
   scale_y_continuous(name = "SALUS Irrigation [mm]", limits = p_irr_limits, breaks = p_irr_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
   #coord_equal() +
   theme(legend.position = "bottom") +
   NULL
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-Annual2016only_IrrigationComparison-FromPrecOnly.png"),
+       p_irr_fromPrec_compare, width = 17.15, height = 9.5, units = "cm")
 
 p_irr_fromNonIrr_compare <-
   ggplot(compare_fields_irr, aes(x = irr_mm_fromNonIrr, y = IRR_ann_mm)) +
@@ -115,7 +117,7 @@ p_ET_compare <-
   stat_smooth(method = "lm") +
   facet_wrap(. ~ Algorithm, 
              labeller = as_labeller(c(labs_algorithms, "2016" = "2016")),
-             nrow = 2) +
+             nrow = 2, scales = "free_x") +
   scale_x_continuous(name = "OpenET ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
   scale_y_continuous(name = "SALUS ET [mm]", limits = p_ET_limits, breaks = p_ET_breaks) +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
@@ -152,3 +154,13 @@ p_ET_combo
 
 ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-Annual2016only_ETComparison.png"),
        p_ET_combo, width = 17.15, height = 17.15, units = "cm")
+
+## final good plot!
+p_final <-
+  ((p_ET_compare + labs(title = "(a) ET Comparison")) + 
+     (p_irr_fromPrec_compare + labs(title = "(b) Irrigation Estimate Comparison"))) +
+  plot_layout(ncol = 1, guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-Annual2016only_ET+IrrigationComparison.png"),
+       p_final, width = 17.15, height = 17.15, units = "cm")
