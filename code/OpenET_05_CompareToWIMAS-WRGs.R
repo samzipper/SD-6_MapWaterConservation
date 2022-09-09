@@ -13,6 +13,13 @@ wrg_best <-
            n_IrrConfHigh == 1 &
            abs(IrrArea_m2 - area_m2_wrg)/area_m2_wrg < 0.1)
 
+# figure out which wrg have good data in # of years
+wrg_summary <-
+  wrg_best |> 
+  subset(Algorithm == "ensemble") |> 
+  group_by(WR_GROUP) |> 
+  summarize(n_years = n())
+
 # compare wrg irrigated area and fields irrigated area
 ggplot(subset(wrg_best, Algorithm == "ensemble"), aes(x = IrrArea_m2/10000, y = area_m2_wrg/10000)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
