@@ -1,6 +1,5 @@
 ## OpenET-CompareToSALUS-GrowingSeason2016only.R
 # Create figure comparing OpenET-based estimates of irrigation and SALUS-based estimates.
-# Very similar to code/OpenET_04_CompareToSALUS.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -76,6 +75,8 @@ p_irr_fromPrec_compare <-
   #coord_equal() +
   theme(legend.position = "bottom") +
   NULL
+ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-GrowingSeason2016only_IrrigationComparison-FromPrecOnly.png"),
+       p_irr_fromPrec_compare, width = 17.15, height = 9.5, units = "cm")
 
 p_irr_fromNonIrr_compare <-
   ggplot(compare_fields_irr, aes(x = irr_mm_fromNonIrr, y = IRR_ann_mm)) +
@@ -101,5 +102,3 @@ p_combo
 
 ggsave(file.path("figures+tables", "OpenET-CompareToSALUS-GrowingSeason2016only_IrrigationComparison.png"),
        p_combo, width = 17.15, height = 17.15, units = "cm")
-
-# ET comparison not valid since we only have annual ET

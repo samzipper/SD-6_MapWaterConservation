@@ -1,4 +1,4 @@
-## DataPrep_03_WRgroups_SummarizeAnnualData.R
+## DataPrep_03_WRgroups_Summarize-Annual.R
 # This script is intended to summarize annual ET, land cover, and irrigation status for each WR group.
 
 source(file.path("code", "paths+packages.R"))
@@ -10,19 +10,12 @@ wrg_summary <- readr::read_csv(file.path("data", "WRgroups_UseByWRG.csv"))
 
 ## first: summarize land cover and irrigation status
 # output from script DataPrep_01_Fields_SeparateBoundaries+Attributes.R
-fields_irrigation <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation_FieldsNoDups.csv"))
+fields_irrigation <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-Annual_FieldsNoDups.csv"))
 
 fields_landcover <- 
   readr::read_csv(file.path("data", "Fields_Attributes-LandCover-AnnualCDL.csv")) |> 
   dplyr::left_join(crop_names.groups, by = "CropCode")
 
-#irr_fields <- 
-#  readr::read_csv(file.path("data", "Fields_Attributes-Irrigation.csv")) |> 
-#  pivot_longer(-UID, names_prefix = "irr", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "Irrigation")
-#lc_fields <- 
-#  readr::read_csv(file.path("data", "Fields_Attributes-LandCover.csv")) |> 
-#  dplyr::select(-starts_with("pctcov")) |> 
-#  pivot_longer(-UID, names_prefix = "cls", names_to = "Year", names_transform = list(Year = as.numeric), values_to = "CropCode")
 att_fields <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 
@@ -68,7 +61,7 @@ alldata_wrg <-
 # round some files
 alldata_wrg$IrrArea_m2 <- round(alldata_wrg$IrrArea_m2, 2)
 
-# drop WaterUse_m3, which included non-irrigaiton water
+# drop WaterUse_m3, which included non-irrigation water
 alldata_wrg$WaterUse_m3 <- NULL
 
 # rename Irrigation_m3 to irr_m3_fromWIMAS
@@ -76,7 +69,7 @@ names(alldata_wrg)[names(alldata_wrg) == "Irrigation_m3"] <- "irr_m3_fromWIMAS"
 
 ## save output
 # data by water rights group
-readr::write_csv(alldata_wrg, file.path("data", "WRgroups_AnnualData.csv"))
+readr::write_csv(alldata_wrg, file.path("data", "WRgroups_Summarize-Annual.csv"))
 
 ## QA/QC
 # more high confidence fields than irrigated fields?

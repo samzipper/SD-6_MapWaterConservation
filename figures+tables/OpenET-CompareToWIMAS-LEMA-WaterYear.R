@@ -1,4 +1,4 @@
-## OpenET-CompareToWIMAS-LEMA-GrowingSeason.R
+## OpenET-CompareToWIMAS-LEMA-WaterYear.R
 # This script is supposed to get total irrigation within SD-6 LEMA 
 # and compare to WIMAS output. Uses irrigation estimates based on 
 # growing season ET and met data and shifts the mean based on pumping allocations.
@@ -12,7 +12,7 @@ fields_spatial <-
 
 # et data
 df_et_yr <- 
-  readr::read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv")) |>  # 2016-2021
+  readr::read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-WaterYear_FieldsNoDups.csv")) |>  # 2016-2021
   # re-calculate here so that you allow negative values (full distribution, not cut off at 0)
   mutate(irr_mm_fromPrec = ET_mm - precip_mm) |> 
   select(-irr_m3_fromPrec, -irr_mm_fromNonIrr, -irr_m3_fromNonIrr)
@@ -76,14 +76,14 @@ ggplot(lema_irr_fields_withShift, aes(x = irr_mm_fromPrec_shifted, color = Algor
 # calculate 5th/95th percentiles to scale elasticity
 algorithm_year_bounds <- 
   lema_irr_fields_withShift |> 
-  group_by(Algorithm, Year) |> 
+  group_by(Algorithm, WaterYear) |> 
   summarize(irr_mm_fromPrec_shifted_lower = quantile(irr_mm_fromPrec_shifted, 0.05),
             irr_mm_fromPrec_shifted_upper = quantile(irr_mm_fromPrec_shifted, 0.95))
 
 # scale
 lema_irr_fields_withShiftScale <-
   lema_irr_fields_withShift |> 
-  left_join(algorithm_year_bounds, by = c("Algorithm", "Year")) |> 
+  left_join(algorithm_year_bounds, by = c("Algorithm", "WaterYear")) |> 
   mutate(irr_mm_fromPrec_shifted_scaled = (allocated_mm_yr - elasticity_mm_yr) + 
            ((allocated_mm_yr + elasticity_mm_yr) - (allocated_mm_yr - elasticity_mm_yr))*
            (irr_mm_fromPrec_shifted-irr_mm_fromPrec_shifted_lower)/(irr_mm_fromPrec_shifted_upper-irr_mm_fromPrec_shifted_lower))
@@ -103,7 +103,7 @@ lema_irr_fields_withShiftScale$irr_mm_fromPrec_shifted_scaled[lema_irr_fields_wi
 # sum by year and algorithm
 lema_irr_totals <-
   lema_irr_fields_withShiftScale |> 
-  group_by(Year, Algorithm) |> 
+  group_by(WaterYear, Algorithm) |> 
   summarize(irr_m3_fromPrec_total = sum(area_m2*irr_mm_fromPrec/1000),
             irr_m3_fromPrec_shifted_total = sum(area_m2*irr_mm_fromPrec_shifted/1000),
             irr_m3_fromPrec_shifted_scaled_total = sum(area_m2*irr_mm_fromPrec_shifted_scaled/1000),
@@ -111,9 +111,10 @@ lema_irr_totals <-
 
 # combine with wimas
 irr_openet_wimas <-
-  left_join(lema_irr_totals, wimas_wuse, by = "Year") |> 
+  left_join(lema_irr_totals, wimas_wuse, by = c("WaterYear"="Year")) |> 
+  rename(Year = WaterYear) |> 
   rename(Irr_m3_WIMAS = TotalVolume_m3)
-write_csv(irr_openet_wimas, file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-GrowingSeason_TotalIrrigation.csv"))
+write_csv(irr_openet_wimas, file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-WaterYear_TotalIrrigation.csv"))
 
 
 irr_openet_wimas_long <-
@@ -210,5 +211,5 @@ p_combo <-
 p_combo
 
 # save
-ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-GrowingSeason-MeanShift_IrrFromPrecip.png"),
+ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-WaterYear-MeanShift_IrrFromPrecip.png"),
        p_combo, width = 17.15, height = 12.15, units = "cm")

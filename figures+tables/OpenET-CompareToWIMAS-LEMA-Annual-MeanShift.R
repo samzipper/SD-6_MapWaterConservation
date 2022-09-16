@@ -113,6 +113,8 @@ lema_irr_totals <-
 irr_openet_wimas <-
   left_join(lema_irr_totals, wimas_wuse, by = "Year") |> 
   rename(Irr_m3_WIMAS = TotalVolume_m3)
+write_csv(irr_openet_wimas, file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-Annual_TotalIrrigation.csv"))
+
 
 irr_openet_wimas_long <-
   irr_openet_wimas |> 
@@ -210,5 +212,3 @@ p_combo
 # save
 ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-LEMA-Annual-MeanShift_IrrFromPrecip.png"),
        p_combo, width = 17.15, height = 12.15, units = "cm")
-
-write_csv(irr_openet_wimas_long, file.path("data", "OpenET-CompareToWIMAS-LEMA-Annual-MeanShift_TotalIrrigation.csv"))

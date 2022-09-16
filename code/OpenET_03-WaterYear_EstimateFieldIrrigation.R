@@ -1,5 +1,5 @@
-## OpenET_03-GrowingSeason_EstimateFieldIrrigation.R
-# This script will estimate irrigation at the field level based on growing season data.
+## OpenET_03-WaterYear_EstimateFieldIrrigation.R
+# This script will estimate irrigation at the field level based on water year data.
 
 source(file.path("code", "paths+packages.R"))
 
@@ -7,7 +7,7 @@ source(file.path("code", "paths+packages.R"))
 # field attributes
 fields_spatial <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
-met_gs_fields <- readr::read_csv(file.path("data", "gridmet_GrowingSeasonByField.csv"))
+met_wyear_fields <- readr::read_csv(file.path("data", "gridmet_WaterYearByField.csv"))
 fields_irrigation <- 
   readr::read_csv(file.path("data", "Fields_Attributes-Irrigation-AnnualAIM.csv")) |> 
   mutate(Irrigation = IrrigatedPrc > 0.5)
@@ -24,10 +24,13 @@ fields_landcover <-
 #  dplyr::left_join(crop_names.groups, by = "CropCode")
 
 # ET rates
-et_fields_gs <-
-  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_GrowingSeason_All_FieldsNoDups.csv") |> 
+et_fields_wyear <-
+  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_WaterYear_All_FieldsNoDups.csv") |> 
   read_csv() |> 
-  subset(Year <= 2020)
+  subset(WaterYear <= 2020) |>
+  left_join(fields_irrigation, by = c("UID", "WaterYear"="Year")) |> 
+  left_join(fields_landcover, by = c("UID", "WaterYear"="Year")) |> 
+  mutate(IrrConfidence = "Unknown")
 
 et_fields_mo <-
   file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv") |> 
@@ -38,13 +41,15 @@ et_fields_mo <-
 # run some checks on irrigation status
 et_fields_mo_irr <-
   et_fields_mo |> 
-  left_join(fields_irrigation, by = c("UID", "Year")) |> 
+  left_join(fields_irrigation, by = c("UID",  "Year")) |> 
   left_join(fields_landcover, by = c("UID", "Year"))
 
 # loop through crop/year combos
 all_years <- unique(et_fields_mo_irr$Year)
 all_crops <- c("Corn", "Sorghum", "Soybeans")
 
+## need to set this loop up differently for water year compared to annual or GS because
+## one water year spans multiple calendar years
 for (c in all_crops){
   for (y in all_years){
     # inspect a single crop/year combo
@@ -71,10 +76,10 @@ for (c in all_crops){
     # classify confidence
     UID_conf_irr.low <- et_pk_cropyr$UID[et_pk_cropyr$Irrigation == 1 & 
                                            (et_pk_cropyr$IrrigatedPrc < 0.9 | 
-                                           et_pk_cropyr$ET_mm_mean_ensemble < et_pk_75p_nonirr)]
+                                              et_pk_cropyr$ET_mm_mean_ensemble < et_pk_75p_nonirr)]
     UID_conf_nonirr.low <- et_pk_cropyr$UID[et_pk_cropyr$Irrigation == 0 & 
                                               (et_pk_cropyr$IrrigatedPrc > 0.1 |
-                                              et_pk_cropyr$ET_mm_mean_ensemble > et_pk_25p_irr)]
+                                                 et_pk_cropyr$ET_mm_mean_ensemble > et_pk_25p_irr)]
     
     UID_conf_irr.high <- et_pk_cropyr$UID[et_pk_cropyr$Irrigation == 1 & 
                                             et_pk_cropyr$IrrigatedPrc >= 0.9 & 
@@ -83,47 +88,19 @@ for (c in all_crops){
                                                et_pk_cropyr$IrrigatedPrc <= 0.1 & 
                                                et_pk_cropyr$ET_mm_mean_ensemble <= et_pk_25p_irr]
     
-    et_mo_cropyr$IrrConfidence <- "High"
-    et_mo_cropyr$IrrConfidence[et_mo_cropyr$UID %in% c(UID_conf_irr.low, UID_conf_nonirr.low)] <- "Low"
-    
-    #ggplot(et_mo_cropyr, aes(x = Date, y = ET_mm_mean_ensemble, color = IrrConfidence, group = UID)) +
-    #  geom_line() +
-    #  facet_wrap(~Irrigation)
-    
-    # combine with other crop/years
-    if (c == all_crops[1] & y == all_years[1]){
-      et_mo_irrconf <- et_mo_cropyr
-    } else {
-      et_mo_irrconf <- bind_rows(et_mo_irrconf, et_mo_cropyr)
-    }
+    et_fields_wyear$IrrConfidence[et_fields_wyear$WaterYear == y &
+                                    et_fields_wyear$UID %in% c(UID_conf_irr.low, UID_conf_nonirr.low)] <- "Low"
+    et_fields_wyear$IrrConfidence[et_fields_wyear$WaterYear == y &
+                                    et_fields_wyear$UID %in% c(UID_conf_irr.high, UID_conf_nonirr.high)] <- "High"
   }
 }
 
-# some years and crops are missing. grab these and combine
-et_mo_irrconf_missing <- subset(et_fields_mo_irr, Year %in% all_years & !(CropGroupCoarse %in% all_crops))
-et_mo_irrconf_missing$IrrConfidence <- "Unknown"
-
-et_mo_irrconf <- bind_rows(et_mo_irrconf, et_mo_irrconf_missing)
-
-# extract algorithm, summarize by year
-et_mo_irrconf_long <-
-  et_mo_irrconf |> 
-  pivot_longer(starts_with("ET_mm_mean_"), values_to = "ET_mm_mo", names_to = "Algorithm") |> 
-  mutate(Algorithm = str_sub(Algorithm, start = 12))
-
-et_gs_irrconf_long <-
-  et_mo_irrconf_long |> 
-  mutate(Month = month(Date)) |> 
-  subset(Month %in% gs_months) |> 
-  select(-Date, -Month) |> 
-  group_by(UID, Year, IrrigatedPrc, Irrigation, IrrConfidence, CropCode, CropName, CropGroup, CropGroupCoarse, Algorithm) |> 
-  summarize(ET_mm = sum(ET_mm_mo)) |> 
-  ungroup()
 
 ## get all data together
 fields_alldata <-
-  left_join(et_gs_irrconf_long, met_gs_fields, by = c("Year", "UID")) |> 
-  left_join(fields_spatial, by = "UID")
+  left_join(et_fields_wyear, met_wyear_fields, by = c("WaterYear"="Year", "UID")) |> 
+  left_join(fields_spatial, by = "UID") |> 
+  dplyr::select(-pctcov)
 
 ## calculate irrigation using two approaches (ET - precip, ET - nonirr ET) 
 # find UIDs where we want to set irrigation = 0 across all years because 
@@ -141,12 +118,12 @@ fields_alldata$irr_mm_fromPrec <- round(fields_alldata$ET_mm - fields_alldata$pr
 nonirr_avg_ET <- 
   fields_alldata |> 
   subset(IrrConfidence == "High" & Irrigation == 0) |> 
-  group_by(Year, Algorithm, CropGroupCoarse) |> 
+  group_by(WaterYear, Algorithm, CropGroupCoarse) |> 
   summarize(nonirr_ET_mm_mean = mean(ET_mm, na.rm = T))
 
 fields_alldata <- 
   fields_alldata |> 
-  left_join(nonirr_avg_ET, by = c("Year", "Algorithm", "CropGroupCoarse")) |> 
+  left_join(nonirr_avg_ET, by = c("WaterYear", "Algorithm", "CropGroupCoarse")) |> 
   mutate(irr_mm_fromNonIrr = ET_mm - nonirr_ET_mm_mean)
 
 # some logical clean-up: set 0 irr based on land cover and no negative values allowed
@@ -163,18 +140,18 @@ fields_alldata$irr_m3_fromNonIrr <- round((fields_alldata$irr_mm_fromNonIrr/1000
 ## select desired output and save
 fields_openet <-
   fields_alldata |> 
-  dplyr::select(UID, Year, Algorithm, ET_mm, precip_mm, IrrigatedPrc, IrrConfidence, 
+  dplyr::select(UID, WaterYear, Algorithm, ET_mm, precip_mm, IrrigatedPrc, IrrConfidence, 
                 irr_mm_fromPrec, irr_m3_fromPrec, irr_mm_fromNonIrr, irr_m3_fromNonIrr)
 
-write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv"))
+write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-WaterYear_FieldsNoDups.csv"))
 
 ## compare methods
 ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x = irr_mm_fromPrec, y = irr_mm_fromNonIrr)) + 
   geom_abline(intercept = 0, slope = 1, color = col.gray) + 
   geom_point(aes(color = CropGroup)) +
   stat_smooth(method = "lm") +
-  facet_grid(Year ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017",
-                                                        "2018" = "2018", "2019" = "2019", "2020" = "2020"))) +
+  facet_grid(WaterYear ~ Algorithm, labeller = as_labeller(c(labs_algorithms, "2016" = "2016", "2017" = "2017",
+                                                        "2018" = "2018", "2019" = "2019", "2020" = "2020", "2021" = "2021"))) +
   scale_x_continuous(name = "ET - Precip [mm]") +
   scale_y_continuous(name = "ET - mean nonirrigated ET [mm]") +
   scale_color_manual(name = "Crop", values = pal_crops[1:3], drop = TRUE) +
@@ -183,5 +160,5 @@ ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x 
   #labs(title = "Comparison of SALUS and OpenET Field-Resolution ET Depth",
   #     subtitle = "Subset to: LEMA, 3 most common crops") +
   NULL
-ggsave(file.path("plots", "OpenET_03-GrowingSeason_CompareToIrrEstimationApproaches.png"),
+ggsave(file.path("plots", "OpenET_03-WaterYear_CompareToIrrEstimationApproaches.png"),
        width = 280, height = 120, units = "mm")

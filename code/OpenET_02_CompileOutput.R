@@ -38,6 +38,16 @@ et_gs_out <-
   group_by(UID, Year, Algorithm) |> 
   summarize(ET_mm = round(sum(value), 2))
 
+# sum to water year
+et_wyear_out <-
+  et_mo_out |> 
+  pivot_longer(starts_with("ET_mm_")) |> 
+  mutate(WaterYear = year(Date + days(92)),
+         Month = month(Date),
+         Algorithm = str_sub(name, start = 12)) |> 
+  group_by(UID, WaterYear, Algorithm) |> 
+  summarize(ET_mm = round(sum(value), 2))
+
 # sum to annual
 et_yr_out <-
   et_mo_out |> 
@@ -50,6 +60,7 @@ et_yr_out <-
 # save output
 write_csv(et_mo_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv"))
 write_csv(et_gs_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_GrowingSeason_All_FieldsNoDups.csv"))
+write_csv(et_wyear_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_WaterYear_All_FieldsNoDups.csv"))
 write_csv(et_yr_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv"))
 
 # compare growing season and annual

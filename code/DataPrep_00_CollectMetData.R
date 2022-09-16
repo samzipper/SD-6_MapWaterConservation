@@ -16,7 +16,7 @@ df_daily <-
 # some tiny fields do not have data - find the nearest one
 sf_fields <- st_read(file.path("data", "Fields_NoDups.shp"))
 length(unique(sf_fields$UID))
-length(unique(df_yearly$UID))
+length(unique(df_daily$UID))
 UID_nodata <- sf_fields$UID[!(sf_fields$UID %in% df_daily$UID)]
 sf_fields_data <- sf_fields[!(sf_fields$UID %in% UID_nodata), ]
 
@@ -35,10 +35,13 @@ for (UID in UID_nodata){
   df_daily <- bind_rows(df_daily, df_daily_closest)
 }
 
+# create water year column
+df_daily$WaterYear <- year(df_daily$date_ymd + days(92))
+
 # aggregate to month by field
 df_monthly <-
   df_daily |>
-  group_by(UID, Year, Month) |>
+  group_by(UID, WaterYear, Year, Month) |>
   summarize(date = max(date_ymd),
             precip_mm = sum(pr),
             ETr_mm = sum(etr),
@@ -50,6 +53,15 @@ df_gs <-
   subset(Month %in% gs_months) |> 
   select(-date, -Month) |> 
   group_by(UID, Year) |> 
+  summarize(precip_mm = sum(precip_mm),
+            ETr_mm = sum(ETr_mm),
+            ETo_mm = sum(ETo_mm))
+
+# aggregate to water year by field
+df_wyear <-
+  df_monthly |> 
+  select(-date, -Month) |> 
+  group_by(UID, WaterYear) |> 
   summarize(precip_mm = sum(precip_mm),
             ETr_mm = sum(ETr_mm),
             ETo_mm = sum(ETo_mm))
@@ -66,11 +78,13 @@ df_yearly <-
 if (length(sf_fields$UID[!(sf_fields$UID %in% df_daily$UID)]) > 0) { stop("error - missing fields in daily") }
 if (length(sf_fields$UID[!(sf_fields$UID %in% df_monthly$UID)]) > 0) { stop("error - missing fields in monthly") }
 if (length(sf_fields$UID[!(sf_fields$UID %in% df_gs$UID)]) > 0) { stop("error - missing fields in gs") }
+if (length(sf_fields$UID[!(sf_fields$UID %in% df_wyear$UID)]) > 0) { stop("error - missing fields in gs") }
 if (length(sf_fields$UID[!(sf_fields$UID %in% df_yearly$UID)]) > 0) { stop("error - missing fields in yearly") }
 
 # save output
 write_csv(df_yearly, file.path("data", "gridmet_AnnualByField.csv"))
 write_csv(df_gs, file.path("data", "gridmet_GrowingSeasonByField.csv"))
+write_csv(df_gs, file.path("data", "gridmet_WaterYearByField.csv"))
 write_csv(df_monthly, file.path(dir_data, "gridMET", "gridmet_MonthlyByField.csv"))
 
 # visualize output

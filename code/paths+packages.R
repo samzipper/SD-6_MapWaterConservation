@@ -10,11 +10,7 @@ library(lubridate)
 gs_months <- seq(4, 10) # define growing season months
 
 # path to GIS data
-if (Sys.getenv("COMPUTERNAME") == "KGS-M414W01"){
-  dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data"
-} else {
-  dir_data <- "C:/Users/samzipper/OneDrive - The University of Kansas/Research/LEMA_Sheridan-6/data"
-}
+dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data"
 dir_GIS <- file.path(dir_data, "GIS")
 
 ## plotting controls

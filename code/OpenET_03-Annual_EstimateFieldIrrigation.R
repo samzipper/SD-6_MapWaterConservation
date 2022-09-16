@@ -104,6 +104,12 @@ for (c in all_crops){
   }
 }
 
+# some years and crops are missing. grab these and combine
+et_mo_irrconf_missing <- subset(et_fields_mo_irr, Year %in% all_years & !(CropGroupCoarse %in% all_crops))
+et_mo_irrconf_missing$IrrConfidence <- "Unknown"
+
+et_mo_irrconf <- bind_rows(et_mo_irrconf, et_mo_irrconf_missing)
+
 # extract algorithm, summarize by year
 et_mo_irrconf_long <-
   et_mo_irrconf |> 
