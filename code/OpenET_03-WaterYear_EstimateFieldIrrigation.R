@@ -25,7 +25,7 @@ fields_landcover <-
 
 # ET rates
 et_fields_wyear <-
-  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_WaterYear_All_FieldsNoDups.csv") |> 
+  file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction", "ET_WaterYear_All_FieldsNoDups.csv") |> 
   read_csv() |> 
   subset(WaterYear <= 2020) |>
   left_join(fields_irrigation, by = c("UID", "WaterYear"="Year")) |> 
@@ -33,7 +33,7 @@ et_fields_wyear <-
   mutate(IrrConfidence = "Unknown")
 
 et_fields_mo <-
-  file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv") |> 
+  file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction", "ET_Monthly_All_FieldsNoDups.csv") |> 
   read_csv() |> 
   mutate(Year = year(Date)) |> 
   subset(Year <= 2020)
@@ -143,7 +143,7 @@ fields_openet <-
   dplyr::select(UID, WaterYear, Algorithm, ET_mm, precip_mm, IrrigatedPrc, IrrConfidence, 
                 irr_mm_fromPrec, irr_m3_fromPrec, irr_mm_fromNonIrr, irr_m3_fromNonIrr)
 
-write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-WaterYear_FieldsNoDups.csv"))
+write_csv(fields_openet, file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction", "OpenET_EstimateFieldIrrigation-WaterYear_FieldsNoDups.csv"))
 
 ## compare methods
 ggplot(subset(fields_alldata, Irrigation == 1 & IrrConfidence == "High"), aes(x = irr_mm_fromPrec, y = irr_mm_fromNonIrr)) + 

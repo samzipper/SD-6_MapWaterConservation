@@ -6,11 +6,13 @@ source(file.path("code", "paths+packages.R"))
 # define name of ET algorithms
 ETalgs <- c("disalexi", "eemetric", "ensemble", "geesebal", "ptjpl", "sims", "ssebop")
 
+dir_openet <- file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction")
+
 # loop through algorithms
 for (alg in ETalgs){
   # read in data
   et_alg_in <- 
-    file.path(dir_data, "OpenET", "Monthly_2016-2021", paste0("ET_Monthly_", alg, "_FieldsNoDups.csv")) |> 
+    file.path(dir_openet, paste0("ET_Monthly_", alg, "_FieldsNoDups.csv")) |> 
     read_csv()
   
   # reorganize and trim
@@ -58,10 +60,10 @@ et_yr_out <-
   summarize(ET_mm = round(sum(value), 2))
 
 # save output
-write_csv(et_mo_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Monthly_All_FieldsNoDups.csv"))
-write_csv(et_gs_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_GrowingSeason_All_FieldsNoDups.csv"))
-write_csv(et_wyear_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_WaterYear_All_FieldsNoDups.csv"))
-write_csv(et_yr_out, file.path(dir_data, "OpenET", "Monthly_2016-2021", "ET_Annual_All_FieldsNoDups.csv"))
+write_csv(et_mo_out, file.path(dir_openet, "ET_Monthly_All_FieldsNoDups.csv"))
+write_csv(et_gs_out, file.path(dir_openet, "ET_GrowingSeason_All_FieldsNoDups.csv"))
+write_csv(et_wyear_out, file.path(dir_openet, "ET_WaterYear_All_FieldsNoDups.csv"))
+write_csv(et_yr_out, file.path(dir_openet, "ET_Annual_All_FieldsNoDups.csv"))
 
 # compare growing season and annual
 gs_yr <- left_join(subset(et_gs_out, Year == 2016), subset(et_yr_out, Year == 2016), 
