@@ -12,6 +12,7 @@ gs_months <- seq(4, 10) # define growing season months
 # path to GIS data
 dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data"
 dir_GIS <- file.path(dir_data, "GIS")
+dir_openet <- file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction") # current version of OpenET data
 
 ## plotting controls
 # ggplot theme

@@ -6,8 +6,6 @@ source(file.path("code", "paths+packages.R"))
 # define name of ET algorithms
 ETalgs <- c("disalexi", "eemetric", "ensemble", "geesebal", "ptjpl", "sims", "ssebop")
 
-dir_openet <- file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction")
-
 # loop through algorithms
 for (alg in ETalgs){
   # read in data

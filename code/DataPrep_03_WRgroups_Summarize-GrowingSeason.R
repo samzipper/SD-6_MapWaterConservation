@@ -5,12 +5,12 @@ source(file.path("code", "paths+packages.R"))
 
 ## load WR groups
 # output from script DataPrep_02_WRgroups_SummarizeUse+Fields.R
-wrg_fields <- readr::read_csv(file.path("data", "WRgroups_FieldByYear.csv"))
+wrg_fields <- readr::read_csv(file.path("data", "WRgroups_WRGbyField.csv"))
 wrg_summary <- readr::read_csv(file.path("data", "WRgroups_UseByWRG.csv"))
 
 ## first: summarize land cover and irrigation status
 # output from script DataPrep_01_Fields_SeparateBoundaries+Attributes.R
-fields_irrigation <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv"))
+fields_irrigation <- read_csv(file.path(dir_openet, "OpenET_EstimateFieldIrrigation-GrowingSeason_FieldsNoDups.csv"))
 
 fields_landcover <- 
   readr::read_csv(file.path("data", "Fields_Attributes-LandCover-AnnualCDL.csv")) |> 
@@ -23,7 +23,7 @@ att_fields <-
 alldata_fields <- 
   fields_irrigation |> 
   dplyr::left_join(att_fields, by = "UID") |> 
-  dplyr::left_join(wrg_fields, by = c("UID", "Year")) |> 
+  dplyr::left_join(wrg_fields, by = c("UID")) |> 
   dplyr::left_join(fields_landcover, by = c("UID", "Year"))
 
 ## aggregate to WR group

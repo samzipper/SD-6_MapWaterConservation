@@ -5,12 +5,12 @@ source(file.path("code", "paths+packages.R"))
 
 ## load WR groups
 # output from script DataPrep_02_WRgroups_SummarizeUse+Fields.R
-wrg_fields <- readr::read_csv(file.path("data", "WRgroups_FieldByYear.csv"))
+wrg_fields <- readr::read_csv(file.path("data", "WRgroups_WRGbyField.csv"))
 wrg_summary <- readr::read_csv(file.path("data", "WRgroups_UseByWRG.csv"))
 
 ## first: summarize land cover and irrigation status
 # output from script DataPrep_01_Fields_SeparateBoundaries+Attributes.R
-fields_irrigation <- read_csv(file.path(dir_data, "OpenET", "Monthly_2016-2021", "OpenET_EstimateFieldIrrigation-Annual_FieldsNoDups.csv"))
+fields_irrigation <- read_csv(file.path(dir_openet, "OpenET_EstimateFieldIrrigation-Annual_FieldsNoDups.csv"))
 
 fields_landcover <- 
   readr::read_csv(file.path("data", "Fields_Attributes-LandCover-AnnualCDL.csv")) |> 
@@ -23,7 +23,7 @@ att_fields <-
 alldata_fields <- 
   fields_irrigation |> 
   dplyr::left_join(att_fields, by = "UID") |> 
-  dplyr::left_join(wrg_fields, by = c("UID", "Year")) |> 
+  dplyr::left_join(wrg_fields, by = c("UID")) |> 
   dplyr::left_join(fields_landcover, by = c("UID", "Year"))
 
 ## aggregate to WR group
@@ -87,7 +87,7 @@ ggsave(file.path("plots", "WRgroups_CompareIrrigatedAcres.png"),
        width = 95, height = 95, units = "mm")
 
 # compare wrg irrigation volume to ET volume
-ggplot(alldata_wrg, aes(x = Irrigation_m3, y = ET_m3)) +
+ggplot(alldata_wrg, aes(x = irr_m3_fromWIMAS, y = ET_m3)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
   stat_smooth(method = "lm", color = col.cat.blu) +
@@ -99,7 +99,7 @@ ggsave(file.path("plots", "WRgroups_CompareETtoIrrigation.png"),
        width = 190, height = 240, units = "mm")
 
 # compare wrg irrigation volume to (ET - ET_nonirr) volume
-ggplot(alldata_wrg, aes(x = Irrigation_m3, y = irr_m3_fromNonIrr)) +
+ggplot(alldata_wrg, aes(x = irr_m3_fromWIMAS, y = irr_m3_fromNonIrr)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
   stat_smooth(method = "lm", color = col.cat.blu) +
@@ -107,5 +107,17 @@ ggplot(alldata_wrg, aes(x = Irrigation_m3, y = irr_m3_fromNonIrr)) +
   scale_x_continuous(name = "Reported Irrigation [m\u00b3]") +
   scale_y_continuous(name = "Estimated ET Surplus (actual ET - nonirrigated ET for those crops) [m\u00b3]") +
   labs(title = "Comparison of irrigation vs. ET surplus volumes by water rights group")
-ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigation.png"),
+ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigationFromNonirr.png"),
+       width = 190, height = 240, units = "mm")
+
+# compare wrg irrigation volume to (ET - P) volume
+ggplot(alldata_wrg, aes(x = irr_m3_fromWIMAS, y = irr_m3_fromPrec)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1) +
+  stat_smooth(method = "lm", color = col.cat.blu) +
+  facet_grid(Algorithm ~ Year) +
+  scale_x_continuous(name = "Reported Irrigation [m\u00b3]") +
+  scale_y_continuous(name = "Estimated Irrigation from ET - P [m\u00b3]") +
+  labs(title = "Comparison of irrigation vs. ET surplus volumes by water rights group")
+ggsave(file.path("plots", "WRgroups_CompareETsurplustoIrrigationFromPrec.png"),
        width = 190, height = 240, units = "mm")
