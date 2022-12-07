@@ -28,9 +28,9 @@ sf_all <-
 ## maps of input data
 
 # figure out extent
-# if you want to include buffer in plot, switch to sf_buff instead of sf_lema here
-bound <- sf::st_buffer(st_transform(sf_lema, st_crs(sf_all)), dist = units::set_units(7000, "m"))
-extent <- sf::st_bbox(st_transform(sf_lema, st_crs(sf_all)))
+# if you want to include buffer use sf_buff; if just lema, use sf_lema here
+bound <- sf::st_buffer(st_transform(sf_buff, st_crs(sf_all)), dist = units::set_units(8000, "m"))
+extent <- sf::st_bbox(st_transform(sf_buff, st_crs(sf_all)))
 sf_subset <- sf_all[bound, op = st_intersects]
 
 quantile(subset(sf_subset, Year %in% yr_plot & Algorithm == "ensemble")$ET_mm, c(0,1))
@@ -52,10 +52,12 @@ library("ggspatial") # for scale bar
 p_et <-
   ggplot() +
   geom_sf(data = subset(sf_subset, Year %in% yr_plot & Algorithm == "ensemble"), aes(fill = ET_mm_bound), color = NA) +
+  geom_sf(data = sf_buff, color = col.cat.blu, fill = NA, linewidth = 1) +
   geom_sf(data = sf_lema, color = col.cat.red, fill = NA, linewidth = 1) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_viridis_c(name = NULL, direction = -1, breaks = seq(500, 900, 100), 
-                       labels = c("<500", "600", "700", "800", ">900")) +
+                       labels = c("<500", "600", "700", "800", ">900"),
+                       option = "C") +
   annotation_scale(location = "br", text_col = "white", text_family = "Arial") +
   labs(title = "(a) Annual ET") +
   theme(axis.text = element_blank(),
@@ -73,6 +75,7 @@ sf_subset$IrrigatedPrc_cut <- cut(sf_subset$IrrigatedPrc,
 p_irr <-
   ggplot() +
   geom_sf(data = subset(sf_subset, Year %in% yr_plot), aes(fill = IrrigatedPrc_cut), color = NA) +
+  geom_sf(data = sf_buff, color = col.cat.blu, fill = NA, linewidth = 1) +
   geom_sf(data = sf_lema, color = col.cat.red, fill = NA, linewidth = 1) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_manual(name = NULL, values = c(col.cat.yel, col.cat.grn)) +
@@ -99,6 +102,7 @@ pal_crops_coarse_lumped <- c("Corn" = "#ffd300",
 p_lc <-
   ggplot() +
   geom_sf(data = subset(sf_subset, Year %in% yr_plot), aes(fill = CropGroupCoarse), color = NA) +
+  geom_sf(data = sf_buff, color = col.cat.blu, fill = NA, linewidth = 1) +
   geom_sf(data = sf_lema, color = col.cat.red, fill = NA, linewidth = 1) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_manual(name = NULL, values = pal_crops_coarse_lumped, drop = T) +
@@ -121,7 +125,7 @@ p_state <-
   geom_sf(data = sf_state, color = "black", fill = NA) +
   geom_sf(data = sf_lema, color = col.cat.red, fill = col.cat.red) +
   annotate("text", x = -99.5, y = 38.75, hjust = 0, vjust = 0, 
-           label = "High Plains Aquifer extent", color = "gray45") +
+           label = "High Plains Aquifer", color = "gray45") +
   scale_x_continuous(expand = c(0,0), breaks = seq(-95, -101, -2)) +
   scale_y_continuous(expand = c(0,0), breaks = seq(37, 40, 1)) +
   labs(title = "(d) Position within Kansas") +
@@ -132,5 +136,5 @@ p_combo <-
   (p_et + p_irr + p_lc + p_state) +
   plot_layout(ncol = 2)
 
-ggsave(file.path("figures+tables", "ZipperEtAl_Fig1_MapInputData.png"),
+ggsave(file.path("figures+tables", "Map-InputData.png"),
        p_combo, width = 190, height = 165, units = "mm")

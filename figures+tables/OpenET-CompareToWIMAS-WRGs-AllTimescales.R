@@ -49,15 +49,17 @@ for (ts in c("Annual", "WaterYear", "GrowingSeason")){
 }
 
 ## plot fit by year and ts
+df_fit$ts <- factor(df_fit$ts, levels = c("GrowingSeason", "Annual", "WaterYear"),
+                    labels = c("Growing Season (Apr-Oct)", "Calendar Year (Jan-Dec)", "Water Year (Oct-Sep)"))
 ggplot(subset(df_fit, Algorithm == "ensemble"), aes(x = Year, y = NRMSE, fill = ts)) +
   geom_col(position = "dodge") +
-  scale_y_continuous(name = "Normalized RMSE [%]", expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(name = "Timescale of ET-P Aggregation",
-                    values = c(col.cat.yel, col.cat.blu, col.cat.red),
-                    labels = c("Calendar Year (Jan-Dec)",
-                               "Growing Season (Apr-Oct)",
-                               "Water Year (Oct-Sep)")) +
-  theme(legend.position = "bottom")
+  scale_y_continuous(name = "Normalized RMSE [%],\nReported vs. Estimated Irrigation", 
+                     expand = expansion(mult = c(0, 0.05))) +
+  scale_fill_brewer(name = "Timescale of ET-P Aggregation", type = "qual", palette = "Set2") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(direction = "vertical"))
+ggsave(file.path("figures+tables", "OpenET-CompareToWIMAS-WRGs_FitByTimescale.png"),
+       width = 95, height = 125, units = "mm")
 
 # figure out which wrg have good data in # of years
 wrg_summary <-
