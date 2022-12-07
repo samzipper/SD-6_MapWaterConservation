@@ -5,6 +5,7 @@ library(tidyverse)
 library(sf)
 library(patchwork)
 library(lubridate)
+library(hydroGOF)
 
 # common variables
 gs_months <- seq(4, 10) # define growing season months
