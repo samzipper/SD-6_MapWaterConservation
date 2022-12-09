@@ -393,6 +393,9 @@ df_OpenET_irr_total <-
   fields_lema_irr %>% 
   group_by(Year, Algorithm) %>% 
   summarize(TotalIrrigation_m3 = sum(FieldIrrigation_m3))
+
+# save OpenET estimates
+write_csv(df_OpenET_irr_total, file.path("..", "data", "OpenET_LEMAtotalIrrigation.csv"))
 ```
 
 # 3. Merge WIMAS and OpenET estimates to compare
