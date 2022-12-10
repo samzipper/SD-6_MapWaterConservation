@@ -398,16 +398,71 @@ df_OpenET_irr_total <-
 write_csv(df_OpenET_irr_total, file.path("..", "data", "OpenET_LEMAtotalIrrigation.csv"))
 ```
 
+## 2.5 Test allocation-shifting to a mean of 55” over 5 years
+
+``` r
+# set allocation
+allocated_mm_yr <- 11*25.4 # target: 11"; Deines et al. estimated, 9.6"
+
+# sum to total irrigation depth over 5 years
+fields_lema_irr_5yr <-
+  fields_lema_irr |> 
+  group_by(UID, Algorithm) |> 
+  summarize(ET.P_mm_5yrSum = sum(ET.P_mm),
+            ET.P_mm_5yrMean = mean(ET.P_mm),
+            n_yrs = n()) |> 
+  subset(n_yrs == 5)
+
+# check distributions
+ggplot(fields_lema_irr_5yr, aes(x = ET.P_mm_5yrMean, color = Algorithm)) +
+  geom_vline(xintercept = allocated_mm_yr) + # 11 inches
+  geom_density() +
+  scale_color_brewer(name = NULL, type = "qual", labels = labs_algorithms)
+```
+
+![](OpenET-CompareToWIMAS-LEMA-Annual_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+# calculate bias
+algorithm_shift <-
+  fields_lema_irr_5yr |> 
+  group_by(Algorithm) |> 
+  summarize(mean_bias_mm = mean(ET.P_mm_5yrMean - allocated_mm_yr))
+
+# shift based on bias
+fields_lema_irr_withShift <-
+  fields_lema_irr |> 
+  left_join(algorithm_shift, by = "Algorithm") |> 
+  mutate(ET.P_mm_shifted = ET.P_mm - mean_bias_mm)
+
+# convert to irrigation volume
+fields_lema_irr_withShift$FieldIrrigation_mm_shifted <- 
+  ifelse(fields_lema_irr_withShift$ET.P_mm_shifted < 0, 0, fields_lema_irr_withShift$ET.P_mm_shifted)
+
+fields_lema_irr_withShift$FieldIrrigation_m3_shifted <-
+  (fields_lema_irr_withShift$FieldIrrigation_mm_shifted/1000)*fields_lema_irr_withShift$area_m2
+
+# sum by year and algorithm
+df_OpenET_irr_total_withShift <-
+  fields_lema_irr_withShift |> 
+  group_by(Year, Algorithm) |> 
+  summarize(TotalIrrigation_m3 = sum(FieldIrrigation_m3),
+            TotalIrrigation_m3_shifted = sum(FieldIrrigation_m3_shifted),
+            n_fields = n())
+```
+
 # 3. Merge WIMAS and OpenET estimates to compare
 
 ``` r
 # merge data
-df_merge <- left_join(df_OpenET_irr_total, df_wimas_irr_LEMA_fromWRG, by = "Year",
+df_merge <- left_join(df_OpenET_irr_total_withShift, df_wimas_irr_LEMA_fromWRG, by = "Year",
                       suffix = c("_OpenET", "_WIMAS")) |> 
   subset(Year >= 2016)
 
+## raw plots
 # plot time series
-ggplot(df_merge) +
+p_ts <-
+  ggplot(df_merge) +
   # WIMAS data
   geom_point(aes(x = Year, y = TotalIrrigation_m3_WIMAS/1e6), color = "black", size = 2) +
   geom_line(aes(x = Year, y = TotalIrrigation_m3_WIMAS/1e6), color = "black", linewidth = 2) +
@@ -415,31 +470,70 @@ ggplot(df_merge) +
   geom_point(aes(x = Year, y = TotalIrrigation_m3_OpenET/1e6, color = Algorithm)) + 
   geom_line(aes(x = Year, y = TotalIrrigation_m3_OpenET/1e6, color = Algorithm), show.legend = F) +
   # aesthetics
-  scale_y_continuous(name = "Estimated Irrigation [million m\u00b3]") +
+  scale_y_continuous(name = "Irrigation\n[million m\u00b3]") +
   scale_color_brewer(name = NULL, type = "qual", labels = labs_algorithms) +
-  labs(title = "Estimated total annual irrigation in SD-6 LEMA",
-       subtitle = "Black line = WIMAS reported, colored lines = OpenET estimates") +
   theme(legend.position = "bottom")
-```
 
-![](OpenET-CompareToWIMAS-LEMA-Annual_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-``` r
 # scatter plot
-ggplot(df_merge, aes(x = TotalIrrigation_m3_WIMAS/1e6, y = TotalIrrigation_m3_OpenET/1e6)) +
+p_scatter <-
+  ggplot(df_merge, aes(x = TotalIrrigation_m3_WIMAS/1e6, y = TotalIrrigation_m3_OpenET/1e6)) +
   # WIMAS data
   geom_point(aes(color = Algorithm)) +  
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  scale_y_continuous(name = "Estimated Irrigation\n[million m\u00b3]", 
+  scale_y_continuous(name = "OpenET Irrigation\n[million m\u00b3]", 
                      limits = c(min(df_merge$TotalIrrigation_m3_OpenET/1e6), 
                                 max(df_merge$TotalIrrigation_m3_OpenET/1e6))) +
-  scale_x_continuous(name = "WIMAS Reported Irrigation [million m\u00b3]", 
+  scale_x_continuous(name = "Reported Irrigation [million m\u00b3]", 
                      limits = c(min(df_merge$TotalIrrigation_m3_OpenET/1e6), 
                                 max(df_merge$TotalIrrigation_m3_OpenET/1e6))) +
-  scale_color_brewer(name = "Algorithm", type = "qual", labels = labs_algorithms) +
+  scale_color_brewer(name = NULL, type = "qual", labels = labs_algorithms) +
   stat_smooth(method = "lm") +
-  theme(legend.position = "bottom") +
-  labs(title = "Estimated total annual irrigation in SD-6 LEMA")
+  theme(legend.position = "bottom")
+
+## shifted plots
+p_ts_shifted <- 
+  ggplot(df_merge) +
+  # WIMAS data
+  geom_point(aes(x = Year, y = TotalIrrigation_m3_WIMAS/1e6), color = "black", size = 2) +
+  geom_line(aes(x = Year, y = TotalIrrigation_m3_WIMAS/1e6), color = "black", linewidth = 2) +
+  # OpenET data
+  geom_point(aes(x = Year, y = TotalIrrigation_m3_shifted/1e6, color = Algorithm)) + 
+  geom_line(aes(x = Year, y = TotalIrrigation_m3_shifted/1e6, color = Algorithm), show.legend = F) +
+  # aesthetics
+  scale_y_continuous(name = "Allocation-Shifted\nIrrigation [million m\u00b3]", 
+                     limits = layer_scales(p_ts)$y$get_limits()) +
+  scale_color_brewer(name = NULL, type = "qual", labels = labs_algorithms) +
+  theme(legend.position = "bottom")
+
+p_scatter_shifted <-
+  ggplot(df_merge, aes(x = TotalIrrigation_m3_WIMAS/1e6, y = TotalIrrigation_m3_shifted/1e6)) +
+  # WIMAS data
+  geom_point(aes(color = Algorithm)) +  
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  scale_y_continuous(name = "Allocation-Shifted OpenET\nIrrigation [million m\u00b3]", 
+                     limits = c(min(df_merge$TotalIrrigation_m3_OpenET/1e6), 
+                                max(df_merge$TotalIrrigation_m3_OpenET/1e6))) +
+  scale_x_continuous(name = "Reported Irrigation [million m\u00b3]", 
+                     limits = c(min(df_merge$TotalIrrigation_m3_OpenET/1e6), 
+                                max(df_merge$TotalIrrigation_m3_OpenET/1e6))) +
+  scale_color_brewer(name = NULL, type = "qual", labels = labs_algorithms) +
+  stat_smooth(method = "lm") +
+  theme(legend.position = "bottom")
+
+# make combo and save
+p_combo <- 
+  (p_ts + p_scatter +
+  p_ts_shifted + p_scatter_shifted) +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "bottom")
+p_combo
 ```
 
-![](OpenET-CompareToWIMAS-LEMA-Annual_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](OpenET-CompareToWIMAS-LEMA-Annual_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+# save
+ggsave("OpenET-CompareToWIMAS-LEMA-Annual_ForAndreaPaper.png",
+       p_combo, width = 17.15, height = 12.15, units = "cm")
+```
