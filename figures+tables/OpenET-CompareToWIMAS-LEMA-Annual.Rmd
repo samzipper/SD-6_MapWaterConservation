@@ -160,7 +160,7 @@ ggplot() +
   labs(title = "Annual water use in SD-6 LEMA", subtitle = "Red: from WIMAS PDIVs located inside LEMA\nBlue = scaling by irrigated area within LEMA for each WRG")
 
 # save total volume of irrigation (WRG scaled version)
-write_csv(df_wimas_irr_LEMA_fromWRG, file.path("..", "data", "WIMAS_LEMAtotalIrrigation_fromWRGs.csv"))
+write_csv(df_wimas_irr_LEMA_fromWRG, file.path("..", "data", "WIMAS_LEMAtotalIrrigation_fromWRGs_ForAndreaPaper.csv"))
 
 ```
 
@@ -332,7 +332,7 @@ df_OpenET_irr_total <-
   summarize(TotalIrrigation_m3 = sum(FieldIrrigation_m3))
 
 # save OpenET estimates
-write_csv(df_OpenET_irr_total, file.path("..", "data", "OpenET_LEMAtotalIrrigation.csv"))
+write_csv(df_OpenET_irr_total, file.path("..", "data", "OpenET_LEMAtotalIrrigation_ForAndreaPaper.csv"))
 
 ```
 
