@@ -132,3 +132,12 @@ labs_algorithms <- c("disalexi" = "DisALEXI",
                      "geesebal" = "geeSEBAL",
                      "sims" = "SIMS",
                      "ssebop" = "SSEBop")
+
+pal_algorithms <- c("disalexi" = "#a6cee3", 
+                    "eemetric" = "#1f78b4",
+                    "ensemble" = "#e31a1c",
+                    "geesebal" = "#b2df8a",
+                    "ptjpl" = "#33a02c",
+                    "sims" = "#fb9a99",
+                    "ssebop" = "#fdbf6f",
+                    "Reported" = "black")
