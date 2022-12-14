@@ -129,7 +129,9 @@ p_state <-
   scale_x_continuous(expand = c(0,0), breaks = seq(-95, -101, -2)) +
   scale_y_continuous(expand = c(0,0), breaks = seq(37, 40, 1)) +
   labs(title = "(d) Position within Kansas") +
-  theme(panel.border = element_blank())
+  theme(panel.border = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_text(angle = 90, vjust = 0.5))
 
 ## combine and save
 p_combo <- 
@@ -137,4 +139,4 @@ p_combo <-
   plot_layout(ncol = 2)
 
 ggsave(file.path("figures+tables", "Map-InputData.png"),
-       p_combo, width = 190, height = 165, units = "mm")
+       p_combo, width = 190, height = 180, units = "mm")
