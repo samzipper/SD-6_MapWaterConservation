@@ -3,6 +3,10 @@
 
 source(file.path("code", "paths+packages.R"))
 
+# period to calculate/map
+yr_start <- 2016
+yr_end <- 2020 # no irrigation status for 2021 so cannot include
+
 ## load data
 # field attributes
 fields_spatial <- 
@@ -15,13 +19,10 @@ fields_landcover <-
   read_csv(file.path("data", "Fields_Attributes-LandCover-AnnualCDL.csv")) |> 
   dplyr::left_join(crop_names.groups, by = "CropCode")
 
-# join and trim to period of interest
-yr_start <- 2016
-yr_end <- 2021
+# join attributes
 fields_attributes <- 
   left_join(fields_irrigation, fields_landcover, by = c("Year", "UID")) |> 
-  left_join(fields_spatial, by = "UID") |> 
-  subset(Year >= yr_start & Year <= yr_end)
+  left_join(fields_spatial, by = "UID")
 
 ## first irrigation confidence check- look for land covers that are not irrigated mapped as irrigated
 #  could indicate either problem with land cover or irrigation status
@@ -63,7 +64,8 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   fields_alldata <-
     left_join(fields_et, fields_met, by = c("Year", "UID")) |> 
     left_join(fields_attributes, by = c("Year", "UID")) |> 
-    mutate(ET.P_mm = ET_mm - precip_mm)
+    mutate(ET.P_mm = ET_mm - precip_mm) |> 
+    subset(Year >= yr_start & Year <= yr_end)
   
   ## using ensemble mean, assess confidence in irrigation status for each year for dominant crops
   # loop through crop/year combos
@@ -134,9 +136,10 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   ## clean up fields_alldata and save
   fields_alldata_out <-
     fields_alldata |> 
-    subset(within_lema | within_buffer) |> 
+    #subset(within_lema | within_buffer) |> 
     select(UID, Year, Algorithm, Irrigation, IrrConfidence, CropGroupCoarse, ET_mm, ET.P_mm, 
            FieldIrrigation_mm, FieldIrrigation_m3, within_lema)
   
-  write_csv(fields_alldata_out, file.path("data", paste0("OpenET_FieldIrrigation_", ts, ".csv"))) 
+  # too big to save in repo - put in large data directory
+  write_csv(fields_alldata_out, file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, ".csv"))) 
 }
