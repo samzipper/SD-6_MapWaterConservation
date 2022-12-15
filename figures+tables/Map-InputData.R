@@ -1,4 +1,4 @@
-## ZipperEtAl_Fig1_MapInputData.R
+## Map-InputData.R
 # This script maps example input data for the SD-6 LEMA.
 
 source(file.path("code", "paths+packages.R"))

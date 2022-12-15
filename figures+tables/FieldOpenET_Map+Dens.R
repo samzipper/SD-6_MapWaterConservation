@@ -20,7 +20,7 @@ extent <- sf::st_bbox(st_transform(sf_buff, st_crs(sf_fields)))
 sf_subset <- sf_fields[bound, op = st_within]
 
 # load irrigation estimates
-df_irr <- read_csv(file.path(dir_openet, paste0("OpenET_FIeldIrrigation_", ts, ".csv")))
+df_irr <- read_csv(file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, ".csv")))
 
 # set factor order so Ensemble is first
 df_irr$Algorithm <- factor(df_irr$Algorithm, levels = c("ensemble", "disalexi", "eemetric", "geesebal",
@@ -123,13 +123,10 @@ p_et.p_box <-
            ymax = (11*25.4 + 11*25.4*0.2),
            fill = col.gray, alpha = 0.2) +
   geom_boxplot(aes(x = factor(Year), y = ET.P_mm, fill = Algorithm, color = Algorithm), alpha = 0.4) +
-  #facet_wrap( ~ Year, ncol = 3) +
   scale_y_continuous(name = "ET - Precipitation [mm]", expand = c(0,0)) +
   scale_x_discrete(name = "Year") +
   scale_color_manual(labels = labs_algorithms, values = pal_algorithms) +
   scale_fill_manual(labels = labs_algorithms, values = pal_algorithms) +
-  #theme(legend.position = c(0.84, 0.27)) +
-  #guides(color = guide_legend(ncol = 2, title.hjust = 0.5)) +
   NULL
 ggsave(file.path("figures+tables", "FieldOpenET_Box-Alg_ET-P.png"), 
        p_et.p_box, width = 190, height = 85, units = "mm")
@@ -179,7 +176,6 @@ p_et.p_irr_box <-
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated"), 
                     values = c(col.cat.yel, col.cat.grn)) +
   theme(legend.position = "bottom") +
-  #guides(color = guide_legend(ncol = 1, title.hjust = 0.5)) +
   NULL
 ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrCorn_ET-P.png"), 
        p_et.p_irr_box, width = 95, height = 95, units = "mm")
