@@ -138,7 +138,7 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
     fields_alldata |> 
     #subset(within_lema | within_buffer) |> 
     select(UID, Year, Algorithm, Irrigation, IrrConfidence, CropGroupCoarse, ET_mm, ET.P_mm, 
-           FieldIrrigation_mm, FieldIrrigation_m3, within_lema)
+           FieldIrrigation_mm, FieldIrrigation_m3, within_lema, within_buffer)
   
   # too big to save in repo - put in large data directory
   write_csv(fields_alldata_out, file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, ".csv"))) 

@@ -1,4 +1,4 @@
-## FieldOpenET_Map+Dens.R
+## FieldOpenET_Map+Dens+Box.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -11,8 +11,6 @@ sf_buff <- sf::st_read(file.path("data", "SD6-buffer_outline.gpkg"))
 
 # field boundaries and attributes
 sf_fields  <- sf::st_read(file.path("data", "Fields_NoDups.shp"))
-fields_spatial <- 
-  readr::read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 
 # figure out extent
 bound <- sf::st_buffer(st_transform(sf_buff, st_crs(sf_fields)), dist = units::set_units(8000, "m"))
@@ -74,7 +72,7 @@ p_et.p_map <-
 ggsave(file.path("figures+tables", "FieldOpenET_Map_ET-P.png"),
        p_et.p_map, width = 190, height = 210, units = "mm")
 
-## DENSITY PLOTS - only irrigated fields in LEMA
+## DENSITY PLOTS - compare among algorithms
 p_et_dens <-
   df_irr |> 
   subset(Irrigation & within_lema) |> 
@@ -179,3 +177,107 @@ p_et.p_irr_box <-
   NULL
 ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrCorn_ET-P.png"), 
        p_et.p_irr_box, width = 95, height = 95, units = "mm")
+
+## BOX PLOTS - compare LEMA and buffer
+p_et.p_irr_lemaBufferCorn <-
+  df_irr |> 
+  subset(CropGroupCoarse == "Corn" & 
+           Irrigation & 
+           (within_lema | within_buffer)) |> 
+  ggplot() +
+  geom_hline(yintercept = 0, color = col.gray) +
+  geom_boxplot(aes(x = Algorithm, y = ET.P_mm, fill = within_buffer, color = within_buffer), alpha = 0.4) +
+  facet_wrap( ~ Year, ncol = 3) +
+  scale_x_discrete(name = "Algorithm",
+                   labels = labs_algorithms) +
+  scale_y_continuous(name = "ET - Precipitation [mm]") +
+  coord_flip() +
+  scale_color_manual(name = "Location", 
+                     values = c(col.cat.red, col.cat.blu),
+                     labels = c("LEMA", "Buffer")) +
+  scale_fill_manual(name = "Location", 
+                    values = c(col.cat.red, col.cat.blu),
+                    labels = c("LEMA", "Buffer")) +
+  theme(legend.position = c(0.84, 0.27)) +
+  guides(color = guide_legend(ncol = 1, title.hjust = 0.5)) +
+  NULL
+
+ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrLEMAbuffer_CornET-P.png"), 
+       p_et.p_irr_lemaBufferCorn, width = 190, height = 110, units = "mm")
+
+p_irr_lemaBufferCorn <-
+  df_irr |> 
+  subset(CropGroupCoarse == "Corn" & 
+           Irrigation & 
+           (within_lema | within_buffer)) |> 
+  ggplot() +
+  geom_hline(yintercept = 0, color = col.gray) +
+  geom_boxplot(aes(x = Algorithm, y = FieldIrrigation_mm, fill = within_buffer, color = within_buffer), alpha = 0.4) +
+  facet_wrap( ~ Year, ncol = 3) +
+  scale_x_discrete(name = "Algorithm",
+                   labels = labs_algorithms) +
+  scale_y_continuous(name = "Irrigation [mm]") +
+  coord_flip() +
+  scale_color_manual(name = "Location", 
+                     values = c(col.cat.red, col.cat.blu),
+                     labels = c("LEMA", "Buffer")) +
+  scale_fill_manual(name = "Location", 
+                    values = c(col.cat.red, col.cat.blu),
+                    labels = c("LEMA", "Buffer")) +
+  theme(legend.position = c(0.84, 0.27)) +
+  guides(color = guide_legend(ncol = 1, title.hjust = 0.5)) +
+  NULL
+
+ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrLEMAbuffer_CornIrr.png"), 
+       p_irr_lemaBufferCorn, width = 190, height = 110, units = "mm")
+
+p_et.p_irr_lemaBufferCrops <-
+  df_irr |> 
+  subset(CropGroupCoarse %in% c("Corn", "Soybeans", "Sorghum") & 
+           Irrigation & 
+           (within_lema | within_buffer)) |> 
+  ggplot() +
+  geom_hline(yintercept = 0, color = col.gray) +
+  geom_boxplot(aes(x = Algorithm, y = ET.P_mm, fill = within_buffer, color = within_buffer), alpha = 0.4) +
+  facet_grid(Year ~ CropGroupCoarse) +
+  scale_x_discrete(name = "Algorithm",
+                   labels = labs_algorithms) +
+  scale_y_continuous(name = "ET - Precipitation [mm]") +
+  coord_flip() +
+  scale_color_manual(name = "Location", 
+                     values = c(col.cat.red, col.cat.blu),
+                     labels = c("LEMA", "Buffer")) +
+  scale_fill_manual(name = "Location", 
+                    values = c(col.cat.red, col.cat.blu),
+                    labels = c("LEMA", "Buffer")) +
+  theme(legend.position = "bottom") +
+  NULL
+
+ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrLEMAbuffer_CropsET-P.png"), 
+       p_et.p_irr_lemaBufferCrops, width = 190, height = 210, units = "mm")
+
+
+p_irr_lemaBufferCrops <-
+  df_irr |> 
+  subset(CropGroupCoarse %in% c("Corn", "Soybeans", "Sorghum") & 
+           Irrigation & 
+           (within_lema | within_buffer)) |> 
+  ggplot() +
+  geom_hline(yintercept = 0, color = col.gray) +
+  geom_boxplot(aes(x = Algorithm, y = FieldIrrigation_mm, fill = within_buffer, color = within_buffer), alpha = 0.4) +
+  facet_grid(Year ~ CropGroupCoarse) +
+  scale_x_discrete(name = "Algorithm",
+                   labels = labs_algorithms) +
+  scale_y_continuous(name = "Irrigation [mm]") +
+  coord_flip() +
+  scale_color_manual(name = "Location", 
+                     values = c(col.cat.red, col.cat.blu),
+                     labels = c("LEMA", "Buffer")) +
+  scale_fill_manual(name = "Location", 
+                    values = c(col.cat.red, col.cat.blu),
+                    labels = c("LEMA", "Buffer")) +
+  theme(legend.position = "bottom") +
+  NULL
+
+ggsave(file.path("figures+tables", "FieldOpenET_Box-IrrLEMAbuffer_CropsIrr.png"), 
+       p_irr_lemaBufferCrops, width = 190, height = 210, units = "mm")
