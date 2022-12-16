@@ -1,4 +1,4 @@
-# Compare_OpenET-WIMAS_WRG_IrrigatedArea.R
+# Compare_OpenET-WIMAS_WRG.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -9,27 +9,35 @@ ts <- "GrowingSeason"
 wrg_use <- 
   read_csv(file.path("data", "WRGs_UseByWRG.csv")) |> 
   mutate(irrFieldArea_m2 = LEMA_irrFieldArea_m2 + notLEMA_irrFieldArea_m2) |> 
-  subset(Year <= 2020) |> 
-  subset(is.finite(WRGirrAreaReported_m2)) # lots of missing values
+  subset(Year <= 2020)
+
+# identify NAs - these can occur when a WRG has no fields that are mapped as irrigated
+summary(wrg_use)
+wrg_use_trim <-
+  wrg_use |> 
+  subset(is.finite(LEMA_irrFieldArea_fraction))
 
 # set threshold of irrigated area agreement for "good fits"
 prc_thres <- 0.1  # 10%
 
 # identify good fits
-wrg_use$irrArea_pctDiff <- (wrg_use$irrFieldArea_m2 - wrg_use$WRGirrAreaReported_m2)/wrg_use$WRGirrAreaReported_m2
-wrg_use$irrArea_goodFit <- abs(wrg_use$irrArea_pctDiff) <= prc_thres
+wrg_use_trim$irrArea_pctDiff <- (wrg_use_trim$irrFieldArea_m2 - wrg_use_trim$WRGirrAreaReported_m2)/wrg_use_trim$WRGirrAreaReported_m2
+wrg_use_trim$irrArea_goodFit <- abs(wrg_use_trim$irrArea_pctDiff) <= prc_thres
+n_good <- sum(wrg_use_trim$irrArea_goodFit)
+n_total <- length(wrg_use_trim$irrArea_goodFit)
+print(paste0(n_good, " of ", n_total, " good (", 100*round(n_good/n_total, 2), "%)"))
 
 ## plot - comparison of irrigated area
 p_irrArea_compare <-
-  ggplot(wrg_use, aes(x = irrFieldArea_m2/1e4, y = WRGirrAreaReported_m2/1e4)) +
+  ggplot(wrg_use_trim, aes(x = irrFieldArea_m2/1e4, y = WRGirrAreaReported_m2/1e4)) +
   geom_point(aes(shape = irrArea_goodFit, color = irrArea_goodFit)) +
   geom_abline(intercept = 0, slope = 1, color = col.cat.red) +
   scale_x_continuous(name = "Irrigated Area, Sum of Fields [m\u00b2]",
                      expand = expansion(mult = c(0, 0.025)),
-                     limits = c(0, max(wrg_use$irrFieldArea_m2/1e4, na.rm = T))) +
+                     limits = c(0, max(wrg_use_trim$irrFieldArea_m2/1e4, na.rm = T))) +
   scale_y_continuous(name = "Irrigated Area, Reported [m\u00b2]",
                      expand = expansion(mult = c(0, 0.025)),
-                     limits = c(0, max(wrg_use$irrFieldArea_m2/1e4, na.rm = T))) +
+                     limits = c(0, max(wrg_use_trim$irrFieldArea_m2/1e4, na.rm = T))) +
   coord_equal() +
   scale_shape_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
                      values = c("FALSE" = 1, "TRUE" = 16)) +
@@ -43,7 +51,7 @@ ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_WRG_IrrArea.png"),
 
 ## subset to only good fits and compare OpenET irrigation and flowmeter irrigation
 # subset use to only good WRGs
-wrg_use_good <- subset(wrg_use, irrArea_goodFit)
+wrg_use_good <- subset(wrg_use_trim, irrArea_goodFit)
 
 # load field for each WRG and irrigation for each field
 wrg_fields <- 
