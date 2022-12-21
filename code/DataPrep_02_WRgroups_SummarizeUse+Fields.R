@@ -17,6 +17,11 @@ wrg_fields <-
   read_csv() |> 
   dplyr::select(-OBJECTID)
 
+# pdiv for each WR_GROUP
+wrg_pdiv <- 
+  file.path(dir_WRG, "wimas_pdfile_wrg_10mile_sd6.gpkg") |> 
+  st_read()
+
 # WRG use by year
 wrg_usebyyear <-
   file.path(dir_WRG, "water_use_qty_group_2016_2021.csv") |> 
@@ -149,12 +154,20 @@ wrg_irrigation_LEMA <-
   summarize(WIMASirrigationLEMA_m3 = sum(WRGirrigationLEMA_m3, na.rm = T))
 
 ## save output:
-# WRgroups_FieldByYear.csv = CSV file with group for each UID for each year
+# WRGs_FieldByYear.csv = CSV file with group for each UID for each year
 #  screen fields with minimal OVLP_PCT
 write_csv(wrg_fields_trim, file.path("data", "WRGs_WRGbyField.csv"))
 
-# WRgroups_UseByWRG.csv = CSV file with water use by group
+# WRGs_UseByWRG.csv = CSV file with water use by group
 write_csv(wrg_summary_out, file.path("data", "WRGs_UseByWRG.csv"))
 
-# WRgroups_LEMAtotalIrrigation.csv = CSV file with total LEMA reported water use by year
+# WRGs_PDIVbyWRG.gpkg = geopackage file with PDIV for each WR_GROUP
+wrg_pdiv |> 
+  dplyr::select(PDIV_ID, Wr_group, Grp_wr_cnt, Grp_pd_cnt, UMW_CODE) |> 
+  rename(WR_GROUP = Wr_group,
+         WRG_nWaterRight = Grp_wr_cnt,
+         WRG_nPDIV = Grp_pd_cnt) |> 
+  st_write(file.path("data", "WRGs_PDIVbyWRG.gpkg"))
+
+# WRGs_LEMAtotalIrrigation.csv = CSV file with total LEMA reported water use by year
 write_csv(wrg_irrigation_LEMA, file.path("data", "WRGs_LEMAtotalIrrigation.csv"))

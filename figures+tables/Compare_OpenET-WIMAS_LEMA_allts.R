@@ -41,7 +41,7 @@ ggplot(df_allts, aes(x = Year, y = Irrigation_m3/1e7, color = Algorithm)) +
                                       "Growing Season" = "(b) Growing Season (Apr-Oct)", 
                                       "Water Year" = "(c) Water Year (Oct-Sep)"))) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Irrigation [x1000 ha]") +
+  scale_y_continuous(name = "Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
   guides(color = guide_legend(nrow = 3))
