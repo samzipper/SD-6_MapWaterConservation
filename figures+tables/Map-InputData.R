@@ -131,7 +131,7 @@ p_state <-
   labs(title = "(d) Position within Kansas") +
   theme(panel.border = element_blank(),
         axis.title = element_blank(),
-        axis.text.y = element_text(angle = 90, vjust = 0.5))
+        axis.text.y = element_text(angle = 90, hjust = 0.5))
 
 ## combine and save
 p_combo <- 
