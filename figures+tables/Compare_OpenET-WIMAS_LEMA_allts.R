@@ -73,6 +73,46 @@ df_fit_wide <-
 
 write_csv(df_fit_wide, file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_FitStats.csv"))
 
+# pull in annual precip to plot fit vs. precipitation
+timestep <- "Annual"
+fields_spatial <- 
+  read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
+fields_met <- 
+  read_csv(file.path("data", paste0("gridmet_", timestep, "ByField.csv"))) |> 
+  left_join(fields_spatial, by = "UID") |> 
+  subset(within_lema) |> 
+  mutate(precip_m3 = (precip_mm/1000)*area_m2) |> 
+  group_by(Year) |> 
+  summarize(TotalPrecip_m3 = sum(precip_m3),
+            MeanPrecip_mm = mean(precip_mm))
+  
+df_fit_with_precip <-
+  df_allts |> 
+  # have to pivot wider then longer to grab out the WIMAS data
+  pivot_wider(id_cols = c("Year", "ts"), names_from = "Algorithm", values_from = "Irrigation_m3") |> 
+  pivot_longer(cols = -c("Year", "ts", "Reported"), names_to = "Algorithm", values_to = "Irrigation_m3") |> 
+  subset(ts == timestep) |> 
+  mutate(IrrDiff_m3 = Irrigation_m3 - Reported) |> 
+  left_join(fields_met, by = "Year")
+  
+p_fit_precip <-
+  ggplot(subset(df_fit_with_precip, Algorithm == "ensemble"), aes(x = MeanPrecip_mm, 
+                                                                y = IrrDiff_m3/1e7, 
+                                                                color = Algorithm)) +
+  geom_hline(yintercept = 0, color = col.gray) +
+  stat_smooth(method = "lm") +
+  geom_point() +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
+                     guide = NULL) +
+  scale_x_continuous(name = "Mean Precipitation [mm]", expand = expansion(mult = 0.06)) +
+  scale_y_continuous(name = "Estimated - Reported Irrigation [x10\u2077 m\u00b3]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0))
+ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
+       p_fit_precip, width = 95, height = 95, units = "mm")
+  
+summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
+
 # bar chart of some stats by timescale
 ggplot(df_fit_long, aes(x = Algorithm, y = fit, fill = ts)) +
   geom_col(position = "dodge") +

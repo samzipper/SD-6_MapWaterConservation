@@ -126,8 +126,35 @@ p_et.p_box <-
   scale_color_manual(labels = labs_algorithms, values = pal_algorithms) +
   scale_fill_manual(labels = labs_algorithms, values = pal_algorithms) +
   NULL
-ggsave(file.path("figures+tables", "FieldOpenET_Box-Alg_ET-P.png"), 
+ggsave(file.path("figures+tables", "FieldOpenET_Box-Alg_ET-P_Corn.png"), 
        p_et.p_box, width = 190, height = 85, units = "mm")
+
+# calculate range of medians for each year: ET - P
+df_ET.P_median_comparison <-
+  df_irr |> 
+  subset(CropGroupCoarse == "Corn" & within_lema) |> 
+  group_by(Year, Algorithm) |> 
+  summarize(ET.P_mm_median = median(ET.P_mm)) |> 
+  pivot_wider(id_cols = "Year", values_from = "ET.P_mm_median", names_from = "Algorithm")
+get_range <- function(x) { range(x)[2] - range(x)[1] }
+df_ET.P_median_comparison$range_mm <- 
+  apply(df_ET.P_median_comparison[, 2:7], MARGIN = 1, FUN = get_range)
+  
+write_csv(df_ET.P_median_comparison, 
+          file.path("figures+tables", "FieldOpenET_Box-Alg_ET-P_Corn_MedianTable.csv"))
+
+# calculate range of medians for each year: ET only
+df_ET_median_comparison <-
+  df_irr |> 
+  subset(CropGroupCoarse == "Corn" & within_lema) |> 
+  group_by(Year, Algorithm) |> 
+  summarize(ET_mm_median = median(ET_mm)) |> 
+  pivot_wider(id_cols = "Year", values_from = "ET_mm_median", names_from = "Algorithm")
+df_ET_median_comparison$range_mm <- 
+  apply(df_ET_median_comparison[, 2:7], MARGIN = 1, FUN = get_range)
+
+write_csv(df_ET_median_comparison, 
+          file.path("figures+tables", "FieldOpenET_Box-Alg_ET_Corn_MedianTable.csv"))
 
 ## DENSITY AND BOX PLOTS - comparing irrigated and rainfed
 p_et.p_irr_dens <-
