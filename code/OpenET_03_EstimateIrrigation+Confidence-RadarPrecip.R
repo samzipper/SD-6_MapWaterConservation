@@ -1,10 +1,11 @@
-## OpenET_03-EstimateIrrigation+Confidence.R
+## OpenET_03_EstimateIrrigation+Confidence-RadarPrecip.R
 # This script will estimate irrigation at the field and LEMA scales, and confidence in field-scale irrigation status.
+# This script uses radar precipitation estimates (not gridMET).
 
 source(file.path("code", "paths+packages.R"))
 
 # period to calculate/map
-yr_start <- 2016
+yr_start <- 2017  # no 2016 radar precip estimates
 yr_end <- 2020 # no irrigation status for 2021 so cannot include
 
 ## load data
@@ -46,19 +47,14 @@ fields_attributes$Irrigation[fields_attributes$UID %in% UID_nonirr_set0] <- FALS
 
 ## start working with ET data
 # loop through timesteps
-for (ts in c("Annual", "GrowingSeason", "WaterYear")){
+for (ts in c("Annual", "GrowingSeason")){
   
   # load ET and met data
   fields_et <- 
     read_csv(file.path(dir_openet, paste0("ET_", ts, "_All_FieldsNoDups.csv")))
   
   fields_met <- 
-    read_csv(file.path("data", paste0("gridmet_", ts, "ByField.csv")))
-  
-  # if using WaterYear: rename to Year so column name is consistent
-  if (ts == "WaterYear"){
-    colnames(fields_et)[colnames(fields_et) == "WaterYear"] <- "Year"
-  }
+    read_csv(file.path("data", paste0("RadarPrecip_", ts, "ByField.csv")))
   
   # join with attributes and calculate precipitation deficit
   fields_alldata <-
@@ -131,7 +127,7 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
     group_by(Year, Algorithm) |> 
     summarize(OpenETirrigationLEMA_m3 = sum(FieldIrrigation_m3))
   
-  write_csv(df_OpenET_irr_total, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, ".csv")))
+  write_csv(df_OpenET_irr_total, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, "_RadarPrecip.csv")))
   
   ## clean up fields_alldata and save
   fields_alldata_out <-
@@ -141,5 +137,5 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
            FieldIrrigation_mm, FieldIrrigation_m3, within_lema, within_buffer)
   
   # too big to save in repo - put in large data directory
-  write_csv(fields_alldata_out, file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, ".csv"))) 
+  write_csv(fields_alldata_out, file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, "_RadarPrecip.csv"))) 
 }

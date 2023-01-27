@@ -1,13 +1,13 @@
-## MetData_CompareRadarGridmet.R
+## RadarPrecip_CompareMetDataToGridmet.R
 
 source(file.path("code", "paths+packages.R"))
 
 # load data
 df_yr_radar <- 
-  read_csv(file.path("data", "RadarPrecip_AnnualByField.csv")) |> 
+  read_csv(file.path("data", "RadarPrecip_GrowingSeasonByField.csv")) |> 
   dplyr::select(UID, Year, precip_mm)
 df_yr_gridmet <- 
-  read_csv(file.path("data", "gridmet_AnnualByField.csv")) |> 
+  read_csv(file.path("data", "gridmet_GrowingSeasonByField.csv")) |> 
   dplyr::select(UID, Year, precip_mm)
 fields_spatial <- 
   read_csv(file.path("data", "Fields_Attributes-Spatial.csv")) |> 
@@ -27,5 +27,5 @@ ggplot(df_met, aes(x = precip_mm_gridmet, y = precip_mm_radar)) +
   scale_x_continuous(name = "Annual gridMET Precipitation [mm]") +
   scale_y_continuous(name = "Annual Radar Precipitation [mm]")
 
-ggsave(file.path("figures+tables", "MetData_CompareRadarGridmet.png"),
+ggsave(file.path("figures+tables", "RadarPrecip_CompareMetDataToGridmet.png"),
        width = 120, height = 120, units = "mm")

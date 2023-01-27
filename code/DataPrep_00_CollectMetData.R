@@ -51,7 +51,6 @@ df_monthly <-
 df_gs <-
   df_monthly |> 
   subset(Month %in% gs_months) |> 
-  select(-date, -Month) |> 
   group_by(UID, Year) |> 
   summarize(precip_mm = sum(precip_mm),
             ETr_mm = sum(ETr_mm),
@@ -60,7 +59,6 @@ df_gs <-
 # aggregate to water year by field
 df_wyear <-
   df_monthly |> 
-  select(-date, -Month) |> 
   group_by(UID, WaterYear) |> 
   summarize(precip_mm = sum(precip_mm),
             ETr_mm = sum(ETr_mm),
