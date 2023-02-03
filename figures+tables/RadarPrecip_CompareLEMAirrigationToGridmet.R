@@ -14,7 +14,7 @@ df_wimas <-
   read_csv(file.path("data", "WRGs_LEMAtotalIrrigation.csv")) |> 
   mutate(Algorithm = "Reported") |> 
   rename(Irrigation_m3 = WIMASirrigationLEMA_m3) |> 
-  subset(Year >= 2017 & Year <= 2020)
+  subset(Year >= 2016 & Year <= 2020)
 
 # join and plot
 df_both <- 
@@ -31,7 +31,7 @@ ggplot(df_both, aes(x = OpenETirrigationLEMA_m3_gridmet/1e7, y = OpenETirrigatio
   theme(legend.position = "bottom")
 
 ggsave(file.path("figures+tables", "RadarPrecip_CompareLEMAirrigationToGridmet_AnnualScatter.png"),
-       width = 120, height = 120, units = "mm")
+       width = 190, height = 120, units = "mm")
 
 # plot both against WIMAS
 df_both_with_wimas <-

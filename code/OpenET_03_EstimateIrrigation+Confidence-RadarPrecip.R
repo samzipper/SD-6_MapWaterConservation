@@ -5,7 +5,7 @@
 source(file.path("code", "paths+packages.R"))
 
 # period to calculate/map
-yr_start <- 2017  # no 2016 radar precip estimates
+yr_start <- 2016
 yr_end <- 2020 # no irrigation status for 2021 so cannot include
 
 ## load data
@@ -133,8 +133,8 @@ for (ts in c("Annual", "GrowingSeason")){
   fields_alldata_out <-
     fields_alldata |> 
     #subset(within_lema | within_buffer) |> 
-    select(UID, Year, Algorithm, Irrigation, IrrConfidence, CropGroupCoarse, ET_mm, ET.P_mm, 
-           FieldIrrigation_mm, FieldIrrigation_m3, within_lema, within_buffer)
+    dplyr::select(UID, Year, Algorithm, Irrigation, IrrConfidence, CropGroupCoarse, ET_mm, ET.P_mm, 
+                  FieldIrrigation_mm, FieldIrrigation_m3, within_lema, within_buffer)
   
   # too big to save in repo - put in large data directory
   write_csv(fields_alldata_out, file.path(dir_openet, paste0("OpenET_FieldIrrigation_", ts, "_RadarPrecip.csv"))) 

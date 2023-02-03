@@ -28,4 +28,4 @@ ggplot(df_met, aes(x = precip_mm_gridmet, y = precip_mm_radar)) +
   scale_y_continuous(name = "Annual Radar Precipitation [mm]")
 
 ggsave(file.path("figures+tables", "RadarPrecip_CompareMetDataToGridmet.png"),
-       width = 120, height = 120, units = "mm")
+       width = 190, height = 120, units = "mm")
