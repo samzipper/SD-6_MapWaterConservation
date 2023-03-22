@@ -7,7 +7,7 @@ source(file.path("code", "paths+packages.R"))
 path_to_data <- file.path("G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use")
 
 yr_start <- 2017
-yr_end <- 2021
+yr_end <- 2022
 
 # load OpenET data
 df_openet <- read_csv(file.path(path_to_data, "TD_OpenET_Monthly-Clean.csv")) |> 
@@ -32,7 +32,7 @@ df_long <-
 # calculate estimated irrigation
 df_long$irrigation_mm <- df_long$ET.P_mm
 df_long$irrigation_mm[df_long$irrigation_mm < 0] <- 0 # min allowed irrigation depth: 0 mm
-df_long$irrigation_mm[!(month(df_long$MonthYear) %in% seq(3,11))] <- 0  # no winter irrigation
+#df_long$irrigation_mm[!(month(df_long$MonthYear) %in% seq(3,11))] <- 0  # no winter irrigation
 
 # calculate cumulative sum
 algs <- unique(df_long$algorithm)
@@ -88,5 +88,5 @@ p_cs
   plot_layout(ncol = 1, guides = "collect") +
   plot_annotation(title = "Comparison of OpenET (lines) and reported irrigation (dots)",
                   subtitle = "TD Field in GMD3")
-ggsave(file.path(path_to_data, "TD_FieldComp_Irr_Neg+Winter0.png"),
+ggsave(file.path(path_to_data, "TD_FieldComp_Irr_Neg0.png"),
        width = 190, height = 150, units = "mm")
