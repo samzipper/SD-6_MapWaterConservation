@@ -51,7 +51,6 @@ df_monthly <-
 df_gs <-
   df_monthly |> 
   subset(Month %in% gs_months) |> 
-  select(-date, -Month) |> 
   group_by(UID, Year) |> 
   summarize(precip_mm = sum(precip_mm),
             ETr_mm = sum(ETr_mm),
@@ -60,7 +59,6 @@ df_gs <-
 # aggregate to water year by field
 df_wyear <-
   df_monthly |> 
-  select(-date, -Month) |> 
   group_by(UID, WaterYear) |> 
   summarize(precip_mm = sum(precip_mm),
             ETr_mm = sum(ETr_mm),
@@ -84,7 +82,7 @@ if (length(sf_fields$UID[!(sf_fields$UID %in% df_yearly$UID)]) > 0) { stop("erro
 # save output
 write_csv(df_yearly, file.path("data", "gridmet_AnnualByField.csv"))
 write_csv(df_gs, file.path("data", "gridmet_GrowingSeasonByField.csv"))
-write_csv(df_gs, file.path("data", "gridmet_WaterYearByField.csv"))
+write_csv(df_wyear, file.path("data", "gridmet_WaterYearByField.csv"))
 write_csv(df_monthly, file.path(dir_data, "gridMET", "gridmet_MonthlyByField.csv"))
 
 # visualize output
