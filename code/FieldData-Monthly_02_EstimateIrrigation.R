@@ -7,7 +7,7 @@ source(file.path("code", "paths+packages.R"))
 dir_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
 
 # load all fields and remove data you don't want
-df_all <- read_csv(file.path(dir_data, "FieldData_AllFieldsCompiled.csv"))
+df_all <- read_csv(file.path(dir_data, "FieldData_AllFieldsCompiled-Monthly.csv"))
 
 # pivot to long form
 df_long <- 
