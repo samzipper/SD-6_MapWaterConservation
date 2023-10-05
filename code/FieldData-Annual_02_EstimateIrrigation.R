@@ -3,6 +3,7 @@
 source(file.path("code", "paths+packages.R"))
 
 # folder where copmiled farmer data stored
+#setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
 dir_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
 
 # load all fields and remove data you don't want
@@ -54,7 +55,7 @@ fields_multiyr <-
   summarize(n_years = n()) |> 
   subset(n_years >= 4)
 
-df_multiyr <- subset(df_long_cumirr, FieldID %in% fields_multiyr$FieldID & FieldID != "WC13") # no OpenET data for WC13
+df_multiyr <- subset(df_long_cumirr, FieldID %in% fields_multiyr$FieldID) # no OpenET data for WC13
 ggplot(data = df_multiyr, aes(x = Year)) +
   geom_line(aes(y = irrEst_mm_cumsum/25.4, color = Algorithm)) +
   geom_point(aes(y = irrigation_mm_cumsum/25.4), shape = 1, color = "black") +
