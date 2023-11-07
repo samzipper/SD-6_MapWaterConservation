@@ -2,12 +2,12 @@
 
 source(file.path("code", "paths+packages.R"))
 
-# folder where copmiled farmer data stored
+# folder where compiled farmer data stored
 #setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
-dir_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
+dir_farm_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
 
 # load all fields and remove data you don't want
-df_all <- read_csv(file.path(dir_data, "FieldData_AllFieldsCompiled-Annual.csv"))
+df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv"))
 
 # pivot to long form
 df_long <- 

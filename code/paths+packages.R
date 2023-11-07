@@ -1,5 +1,5 @@
 ## paths+packages.R
-
+# setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
 # packages
 library(tidyverse)
 library(sf)
