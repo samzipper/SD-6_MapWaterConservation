@@ -40,7 +40,7 @@ ggplot(df_long, aes(x = MonthYear)) +
   geom_hline(yintercept = 0, color = col.gray) +
   geom_line(aes(y = irrEst_mm/25.4, color = Algorithm)) +
   geom_point(aes(y = irrigation_mm/25.4), color = "black", shape = 1) +
-  facet_wrap(~FieldID, ncol = 1) +
+  facet_wrap(~FieldID) +
   scale_color_manual(values = pal_algorithms, labels = labs_algorithms) +
   scale_x_date(name = "Month") +
   scale_y_continuous(name = "Monthly Irrigation [in]") +
@@ -53,7 +53,7 @@ ggplot(df_long, aes(x = MonthYear)) +
   geom_hline(yintercept = 0, color = col.gray) +
   geom_line(aes(y = ET_mm/25.4, color = Algorithm)) +
   geom_line(aes(y = ETo_mm/25.4), color = "black", linetype = "dashed") +
-  facet_wrap(~FieldID, ncol = 1) +
+  facet_wrap(~FieldID) +
   scale_color_manual(values = pal_algorithms, labels = labs_algorithms) +
   scale_x_date(name = "Month") +
   scale_y_continuous(name = "Monthly Flux [in]") +
@@ -65,7 +65,7 @@ ggsave("plots/FieldData_MonthlyTimeseries_ET+ETo.png", width = 150, height = 150
 ggplot(df_long_cumirr, aes(x = MonthYear)) +
   geom_line(aes(y = irrEst_mm_cumsum/25.4, color = Algorithm)) +
   geom_point(aes(y = irrigation_mm_cumsum/25.4), color = "black", shape = 1) +
-  facet_wrap(~FieldID, ncol = 1, scales = "free_y") +
+  facet_wrap(~FieldID, scales = "free_y") +
   scale_color_manual(values = pal_algorithms, labels = labs_algorithms) +
   scale_x_date(name = "Month") +
   scale_y_continuous(name = "Monthly Cumulative Irrigation [in]") +
@@ -77,7 +77,7 @@ ggsave("plots/FieldData_MonthlyCumulativeTimeseries.png", width = 150, height = 
 ggplot(df_long_cumirr, aes(x = MonthYear)) +
   geom_line(aes(y = ET_mm_cumsum/25.4, color = Algorithm)) +
   geom_point(aes(y = P.Irr_mm_cumsum/25.4), color = "black", shape = 1) +
-  facet_wrap(~FieldID, ncol = 1, scales = "free_y") +
+  facet_wrap(~FieldID, scales = "free_y") +
   scale_color_manual(values = pal_algorithms, labels = labs_algorithms) +
   scale_x_date(name = "Month") +
   scale_y_continuous(name = "Monthly Cumulative Flux [in]") +
@@ -94,20 +94,3 @@ ggplot(df_long, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4, color = FieldID)
   scale_y_continuous(name = "Reported Monthly Irrigation [in]") +
   theme(legend.position = "bottom")
 ggsave("plots/FieldData_MonthlyScatter.png", width = 150, height = 150, units = "mm")
-
-## calculate annual irrigation
-df_yr <-
-  df_long |> 
-  mutate(Year = year(MonthYear)) |> 
-  group_by(FieldID, Year, Algorithm) |> 
-  summarize(irrEst_mm_yr = sum(ET.P_mm),
-            irrigation_mm_yr = sum(irrigation_mm))
-
-ggplot(df_yr, aes(x = irrEst_mm_yr/25.4, y = irrigation_mm_yr/25.4, color = FieldID)) +
-  geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(shape = 1) +
-  facet_wrap(~Algorithm, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Annual Irrigation [in]") +
-  scale_y_continuous(name = "Reported Annual Irrigation [in]") +
-  theme(legend.position = "bottom")
-ggsave("plots/FieldData_AnnualScatter.png", width = 150, height = 150, units = "mm")

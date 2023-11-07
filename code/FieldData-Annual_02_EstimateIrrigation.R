@@ -43,7 +43,12 @@ ggplot(df_corn, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
   scale_x_continuous(name = "Estimated Irrigation [in]") +
   scale_y_continuous(name = "Reported Irrigation [in]") +
   coord_equal() +
-  scale_color_manual(name = "Region", values = c("NC" = col.cat.blu, "WC" = col.cat.yel, "SW" = col.cat.red)) +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = col.cat.blu, 
+                                "WC" = col.cat.yel, 
+                                "NW" = col.cat.org,
+                                "NB" = col.cat.grn,
+                                "SW" = col.cat.red)) +
   facet_wrap(~Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms))
 ggsave(file.path("plots", "FieldData-Annual_ScatterAnnual.png"),
        width = 190, height = 75, units = "mm")
@@ -55,7 +60,7 @@ fields_multiyr <-
   summarize(n_years = n()) |> 
   subset(n_years >= 4)
 
-df_multiyr <- subset(df_long_cumirr, FieldID %in% fields_multiyr$FieldID) # no OpenET data for WC13
+df_multiyr <- subset(df_long_cumirr, FieldID %in% fields_multiyr$FieldID)
 ggplot(data = df_multiyr, aes(x = Year)) +
   geom_line(aes(y = irrEst_mm_cumsum/25.4, color = Algorithm)) +
   geom_point(aes(y = irrigation_mm_cumsum/25.4), shape = 1, color = "black") +
