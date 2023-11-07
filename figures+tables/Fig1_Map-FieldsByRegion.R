@@ -20,6 +20,10 @@ sf_divisions$Region <- c("NW", "WC", "SW", "NC", "C", "SC", "NE", "EC", "SE")
 dir_farm_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
 df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv")) |> 
   mutate(Region = str_sub(FieldID, 1, 2))
+
+# LUMP NB FIELDS IN WITH NW
+df_all$Region[df_all$FieldID == "NB1"] <- "NW"
+
 df_countByRegion <- df_all |> 
   group_by(Region) |> 
   summarize(FieldYears = n())
@@ -32,15 +36,18 @@ sf_divLabels <-
 sf_divLabels$LabelLong <- paste0(sf_divLabels$Region, "\n(", sf_divLabels$FieldYears, " field-years)")
 sf_divLabels$LabelShort <- paste0(sf_divLabels$Region, " (", sf_divLabels$FieldYears, ")")
 
-# plot
+# plot - add annotations in InkScape
 ggplot() +
   geom_sf(data = sf_hpa, color = NA, fill = col.gray) +
-  geom_sf(data = sf_divisions, color = "red", fill = NA) +
-  geom_sf_text(data = sf_divLabels, aes(label = LabelShort)) +
+  geom_sf(data = sf_divisions, color = "black", fill = NA) +
+  #geom_sf_text(data = sf_divLabels, aes(label = LabelShort), nudge_y = 0.1) +
   geom_sf(data = sf_lema, fill = col.cat.blu, color = col.cat.blu) +
   scale_x_continuous(breaks = seq(-101, -95, 2)) +
   scale_y_continuous(breaks = seq(37, 40, 1)) +
   theme(axis.title = element_blank(),
-        axis.text.y = element_text(angle = 90, hjust = 0.5))
+        axis.text.y = element_text(angle = 90, hjust = 0.5),
+        panel.border = element_blank())
 ggsave(file.path("figures+tables", "Fig1_Map-FieldsByRegion.png"),
-       width = 95, height = 85, units = "mm")
+       width = 95, height = 55, units = "mm")
+ggsave(file.path("figures+tables", "Fig1_Map-FieldsByRegion.pdf"),
+       width = 95, height = 55, units = "mm", device = cairo_pdf)
