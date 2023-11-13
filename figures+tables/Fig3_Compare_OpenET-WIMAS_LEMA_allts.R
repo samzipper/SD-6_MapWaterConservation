@@ -32,21 +32,133 @@ df_allts$Algorithm <- factor(df_allts$Algorithm,
                              levels = c("Reported", "ensemble", "disalexi", 
                                         "eemetric", "geesebal", "ptjpl", "sims", "ssebop"))
 
+# calculate multi-year average
+df_allts_avg <-
+  df_allts |> 
+  group_by(Algorithm, ts) |> 
+  summarize(Irrigation_m3_mean = mean(Irrigation_m3),
+            Irrigation_m3_std = sd(Irrigation_m3))
+
 # plot timeseries
-ggplot(df_allts, aes(x = Year, y = Irrigation_m3/1e7, color = Algorithm)) +
+p_timeseries <- 
+  ggplot(df_allts, aes(x = Year, y = Irrigation_m3/1e7, color = Algorithm)) +
   geom_line() +
   geom_point() +
   facet_wrap(~ts, ncol = 1, 
-             labeller = as_labeller(c("Annual" = "(a) Annual (Jan-Dec)", 
+             labeller = as_labeller(c("Annual" = "(a) Calendar Year (Jan-Dec)", 
                                       "Growing Season" = "(b) Growing Season (Apr-Oct)", 
                                       "Water Year" = "(c) Water Year (Oct-Sep)"))) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Irrigation [x10\u2077 m\u00b3]") +
+  scale_y_continuous(name = "Annual Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
   guides(color = guide_legend(nrow = 3))
 ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_Timeseries.png"),
-       width = 95, height = 130, units = "mm")
+       p_timeseries, width = 95, height = 130, units = "mm")
+
+# plot barcharts
+reported_avg <- df_allts_avg$Irrigation_m3_mean[df_allts_avg$Algorithm == "Reported" & df_allts_avg$ts == "Annual"]
+reported_std <- df_allts_avg$Irrigation_m3_std[df_allts_avg$Algorithm == "Reported" & df_allts_avg$ts == "Annual"]
+
+p_average <- 
+  ggplot() +
+  annotate("rect", xmin = -Inf, xmax = Inf, 
+           #ymin = reported_avg*1.1/1e7, ymax = reported_avg*0.9/1e7,
+           ymin = (reported_avg - reported_std)/1e7, ymax = (reported_avg + reported_std)/1e7,
+           fill = col.gray) +
+  geom_col(data = df_allts_avg, 
+           aes(x = Algorithm, y = Irrigation_m3_mean/1e7, fill = Algorithm)) +
+  geom_linerange(data = df_allts_avg, 
+                 aes(x = Algorithm, color = Algorithm,
+                     ymin = (Irrigation_m3_mean - Irrigation_m3_std)/1e7,
+                     ymax = (Irrigation_m3_mean + Irrigation_m3_std)/1e7)) +
+  facet_wrap(~ts, ncol = 1, 
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (Jan-Dec)", 
+                                      "Growing Season" = "(e) Growing Season (Apr-Oct)", 
+                                      "Water Year" = "(f) Water Year (Oct-Sep)"))) +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_x_discrete(labels = labs_algorithms) +
+  scale_y_continuous(name = "Five-Year Average Irrigation [x10\u2077 m\u00b3]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 3))
+
+# combine plots
+(
+  (p_timeseries + 
+     guides(color = "none") +
+     theme(axis.title.x = element_blank())) + 
+    (p_average + 
+       theme(legend.position = "bottom",
+             axis.text.x = element_text(angle = 45, hjust = 1),
+             axis.title.x = element_blank())) 
+) + plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave(file.path("figures+tables", "Fig3_CompareOpenET-WIMAS_LEMA.png"),
+       width = 190, height = 150, units = "mm")
+
+##### ACRE-FEET VERSION
+
+# plot timeseries
+p_timeseries_af <- 
+  ggplot(df_allts, aes(x = Year, y = Irrigation_m3*0.000810714/1e3, color = Algorithm)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ts, ncol = 1, 
+             labeller = as_labeller(c("Annual" = "(a) Calendar Year (Jan-Dec)", 
+                                      "Growing Season" = "(b) Growing Season (Apr-Oct)", 
+                                      "Water Year" = "(c) Water Year (Oct-Sep)"))) +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_y_continuous(name = "Annual Irrigation [x1000 acre-feet]",
+                     breaks = seq(0, 60, 10)) +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 3))
+ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_Timeseries-AcreFeet.png"),
+       p_timeseries_af, width = 95, height = 130, units = "mm")
+
+# plot barcharts
+p_average_af <- 
+  ggplot() +
+  annotate("rect", xmin = -Inf, xmax = Inf, 
+           #ymin = reported_avg*1.1/1e7, ymax = reported_avg*0.9/1e7,
+           ymin = (reported_avg - reported_std)*0.000810714/1e3, ymax = (reported_avg + reported_std)*0.000810714/1e3,
+           fill = col.gray) +
+  geom_col(data = df_allts_avg, 
+           aes(x = Algorithm, y = Irrigation_m3_mean*0.000810714/1e3, fill = Algorithm)) +
+  geom_linerange(data = df_allts_avg, 
+                 aes(x = Algorithm, color = Algorithm,
+                     ymin = (Irrigation_m3_mean - Irrigation_m3_std)*0.000810714/1e3,
+                     ymax = (Irrigation_m3_mean + Irrigation_m3_std)*0.000810714/1e3)) +
+  facet_wrap(~ts, ncol = 1, 
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (Jan-Dec)", 
+                                      "Growing Season" = "(e) Growing Season (Apr-Oct)", 
+                                      "Water Year" = "(f) Water Year (Oct-Sep)"))) +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_x_discrete(labels = labs_algorithms) +
+  scale_y_continuous(name = "Five-Year Average Irrigation [x1000 acre-feet]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 3))
+
+# combine plots
+(
+  (p_timeseries_af + 
+     guides(color = "none") +
+     theme(axis.title.x = element_blank())) + 
+    (p_average_af + 
+       theme(legend.position = "bottom",
+             axis.text.x = element_text(angle = 45, hjust = 1),
+             axis.title.x = element_blank())) 
+) + plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave(file.path("figures+tables", "Fig3_CompareOpenET-WIMAS_LEMA-AcreFeet.png"),
+       width = 190, height = 150, units = "mm")
+
 
 # calculate fit statistics
 getR2 <- function(y, x) summary(lm(y~x))$r.squared
