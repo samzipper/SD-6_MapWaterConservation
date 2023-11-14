@@ -55,7 +55,7 @@ print(paste0(n_good, " of ", n_total, " good (", 100*round(n_good/n_total, 2), "
 p_irrArea_compare <-
   ggplot(wrg_use_trim, aes(x = irrFieldArea_m2/1e4, y = WRGirrAreaReported_m2/1e4)) +
   geom_point(aes(shape = irrArea_goodFit, color = irrArea_goodFit)) +
-  geom_abline(intercept = 0, slope = 1, color = col.cat.red) +
+  geom_abline(intercept = 0, slope = 1, color = col.cat.org) +
   scale_x_continuous(name = "Irrigated Area, Sum of Fields [ha]",
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_trim$irrFieldArea_m2/1e4, na.rm = T))) +
@@ -66,11 +66,11 @@ p_irrArea_compare <-
   scale_shape_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
                      values = c("FALSE" = 1, "TRUE" = 16)) +
   scale_color_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
-                     values = c("FALSE" = col.gray, "TRUE" = col.cat.red)) +
+                     values = c("FALSE" = col.gray, "TRUE" = col.cat.org)) +
   theme(legend.position = c(0.99,0.01), 
         legend.justification = c(1,0))
 
-ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
+ggsave(file.path("figures+tables", "Fig8_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
        p_irrArea_compare, width = 95, height = 95, units = "mm")
 
 # Volume comparison - area agreement only ---------------------------------
@@ -253,10 +253,10 @@ p_wrg_depth_areaMatch <-
   geom_point(aes(color = factor(Year)), shape = 1) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
   scale_x_continuous(name = "Estimated Irrigation [mm]",
-                     limits = c(0, max(df_wrg_irr_areaMatch_simple$WRGirrigationTotal_mm_OpenET)),
+                     limits = c(0, max(df_wrg_irr_areaMatch$WRGirrigationTotal_mm_OpenET)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
-                     limits = c(0, max(df_wrg_irr_areaMatch_simple$WRGirrigationTotal_mm_OpenET)),
+                     limits = c(0, max(df_wrg_irr_areaMatch$WRGirrigationTotal_mm_OpenET)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
   coord_equal() +
@@ -266,6 +266,107 @@ p_wrg_depth_areaMatch <-
 
 ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_WRG_IrrDepth_AllWRGs-AreaMatch.png"),
        p_wrg_depth_areaMatch, width = 190, height = 110, units = "mm")
+
+############ FIGURE FOR PAPER
+
+# algorithm for figure
+alg_fig <- "ensemble"
+lema_only <- T  # only plot LEMA fields or buffer too?
+
+if (lema_only) {
+  df_wrg_irr_plot <- subset(df_wrg_irr_all, LEMA_irrFieldArea_fraction > 0.5)
+} else {
+  df_wrg_irr_plot <- df_wrg_irr_all
+}
+
+# panel (a): volume comparison, all WRGs
+p_a <-
+  ggplot(subset(df_wrg_irr_plot, Algorithm == alg_fig), 
+         aes(x = WRGirrigationTotal_m3_OpenET/1e5, 
+             y = WRGirrigationTotal_m3_Reported/1e5,
+             color = factor(Year))) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1) +
+  scale_x_continuous(name = "Estimated Irrigation [x10\u2075 m\u00b3]",
+                     limits = c(0, 20.5),
+                     expand = expansion(mult = c(0, 0.025))) +
+  scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
+                     limits = c(0, 20.5),
+                     expand = expansion(mult = c(0, 0.025))) +  
+  scale_color_viridis_d(name = "Year") +
+  #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
+  coord_equal() +
+  NULL
+
+# panel (b): depth comparison, all WRGs
+p_b <- 
+  ggplot(subset(df_wrg_irr_plot, Algorithm == alg_fig), 
+       aes(x = WRGirrigationTotal_mm_OpenET, 
+           y = WRGirrigationTotal_mm_Reported,
+           color = factor(Year))) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1) +
+  scale_x_continuous(name = "Estimated Irrigation [mm]",
+                     limits = c(0, 600),
+                     expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(name = "Reported Irrigation [mm]",
+                     limits = c(0, 600),
+                     expand = expansion(mult = c(0, 0.05))) +
+  scale_color_viridis_d(name = "Year") +
+  #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
+  coord_equal() +
+  NULL
+
+# calculate multi-year averages
+df_wrg_irr_plot_avg <-
+  df_wrg_irr_plot |> 
+  group_by(WR_GROUP, Algorithm) |> 
+  summarize(WRGirrigationTotal_m3_OpenET_avg = mean(WRGirrigationTotal_m3_OpenET),
+            WRGirrigationTotal_m3_Reported_avg = mean(WRGirrigationTotal_m3_Reported),
+            WRGirrigationTotal_mm_OpenET_avg = mean(WRGirrigationTotal_mm_OpenET),
+            WRGirrigationTotal_mm_Reported_avg = mean(WRGirrigationTotal_mm_Reported))
+  
+# panel (c): avg volume comparison, all WRGs
+p_c <- 
+  ggplot(subset(df_wrg_irr_plot_avg, Algorithm == alg_fig), 
+       aes(x = WRGirrigationTotal_m3_OpenET_avg/1e5, 
+           y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
+  scale_x_continuous(name = "Avg. Estimated Irrigation [x10\u2075 m\u00b3]",
+                     limits = c(0, 20.5),
+                     expand = expansion(mult = c(0, 0.025))) +
+  scale_y_continuous(name = "Avg. Reported Irrigation [x10\u2075 m\u00b3]",
+                     limits = c(0, 20.5),
+                     expand = expansion(mult = c(0, 0.025))) +  
+  #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
+  coord_equal() +
+  NULL
+
+# panel (d): average depth comparison, all WRGs
+p_d <- 
+  ggplot(subset(df_wrg_irr_plot_avg, Algorithm == alg_fig), 
+       aes(x = WRGirrigationTotal_mm_OpenET_avg, 
+           y = WRGirrigationTotal_mm_Reported_avg)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
+  scale_x_continuous(name = "Avg. Estimated Irrigation [mm]",
+                     limits = c(0, 450),
+                     expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
+                     limits = c(0, 450),
+                     expand = expansion(mult = c(0, 0.05))) +
+  coord_equal() +
+  NULL
+
+(p_a + p_b + guide_area() + p_c + p_d + plot_spacer()) +
+  plot_layout(ncol = 3, guides = "collect",
+              widths = c(1, 1, 0.3)) +
+  plot_annotation(tag_levels = "a",
+                  tag_prefix = "(",
+                  tag_suffix = ")")
+ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_WRGs.png"),
+       width = 160, height = 130, units = "mm")
 
 # Pretend volume vs depth comparison for understanding --------------------
 

@@ -53,8 +53,6 @@ p_timeseries <-
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
   guides(color = guide_legend(nrow = 3))
-ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_Timeseries.png"),
-       p_timeseries, width = 95, height = 130, units = "mm")
 
 # plot barcharts
 reported_avg <- df_allts_avg$Irrigation_m3_mean[df_allts_avg$Algorithm == "Reported" & df_allts_avg$ts == "Annual"]
@@ -116,8 +114,6 @@ p_timeseries_af <-
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
   guides(color = guide_legend(nrow = 3))
-ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_Timeseries-AcreFeet.png"),
-       p_timeseries_af, width = 95, height = 130, units = "mm")
 
 # plot barcharts
 p_average_af <- 
@@ -183,14 +179,14 @@ df_fit_wide <-
   arrange(metric, ts, Algorithm) |> 
   pivot_wider(id_cols = "Algorithm", names_from = c("metric", "ts"), values_from = "fit")
 
-write_csv(df_fit_wide, file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_allts_FitStats.csv"))
+write_csv(df_fit_wide, file.path("figures+tables", "Table1_Compare_OpenET-WIMAS_LEMA_allts_FitStats.csv"))
 
 # pull in annual precip to plot fit vs. precipitation
-timestep <- "Annual"
+timestep <- "Growing Season"
 fields_spatial <- 
   read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 fields_met <- 
-  read_csv(file.path("data", paste0("gridmet_", timestep, "ByField.csv"))) |> 
+  read_csv(file.path("data", paste0("gridmet_", gsub(" ", "", timestep), "ByField.csv"))) |> 
   left_join(fields_spatial, by = "UID") |> 
   subset(within_lema) |> 
   mutate(precip_m3 = (precip_mm/1000)*area_m2) |> 
@@ -216,11 +212,11 @@ p_fit_precip <-
   geom_point() +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
                      guide = NULL) +
-  scale_x_continuous(name = "Mean Precipitation [mm]", expand = expansion(mult = 0.06)) +
-  scale_y_continuous(name = "Estimated - Reported Irrigation [x10\u2077 m\u00b3]") +
+  scale_x_continuous(name = "Growing Season Precipitation [mm]") +
+  scale_y_continuous(name = "(Estimated - Reported) Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0))
-ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
+ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
        p_fit_precip, width = 95, height = 95, units = "mm")
   
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
