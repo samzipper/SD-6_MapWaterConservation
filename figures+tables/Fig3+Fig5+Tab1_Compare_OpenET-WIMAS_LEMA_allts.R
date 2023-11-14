@@ -202,11 +202,11 @@ df_fit_with_precip <-
   subset(ts == timestep) |> 
   mutate(IrrDiff_m3 = Irrigation_m3 - Reported) |> 
   left_join(fields_met, by = "Year")
-  
+
 p_fit_precip <-
   ggplot(subset(df_fit_with_precip, Algorithm == "ensemble"), aes(x = MeanPrecip_mm, 
-                                                                y = IrrDiff_m3/1e7, 
-                                                                color = Algorithm)) +
+                                                                  y = IrrDiff_m3/1e7, 
+                                                                  color = Algorithm)) +
   geom_hline(yintercept = 0, color = col.gray) +
   stat_smooth(method = "lm") +
   geom_point() +
@@ -218,6 +218,22 @@ p_fit_precip <-
         strip.text = element_text(hjust = 0))
 ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
        p_fit_precip, width = 95, height = 95, units = "mm")
+
+p_fit_precip_af <-
+  ggplot(subset(df_fit_with_precip, Algorithm == "ensemble"), aes(x = MeanPrecip_mm/25.4, 
+                                                                  y = IrrDiff_m3*0.000810714/1e3, 
+                                                                  color = Algorithm)) +
+  geom_hline(yintercept = 0, color = col.gray) +
+  stat_smooth(method = "lm") +
+  geom_point() +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
+                     guide = NULL) +
+  scale_x_continuous(name = "Growing Season Precipitation [in]") +
+  scale_y_continuous(name = "(Estimated - Reported) Irrigation [x1000 acre-feet]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0))
+ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_LEMA_FitVsPrecip_AcreFeet.png"),
+       p_fit_precip_af, width = 95, height = 95, units = "mm")
   
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
 
