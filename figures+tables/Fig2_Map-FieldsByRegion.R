@@ -47,7 +47,7 @@ ggplot() +
   theme(axis.title = element_blank(),
         axis.text.y = element_text(angle = 90, hjust = 0.5),
         panel.border = element_blank())
-ggsave(file.path("figures+tables", "Fig1_Map-FieldsByRegion.png"),
+ggsave(file.path("figures+tables", "Fig2_Map-FieldsByRegion.png"),
        width = 95, height = 55, units = "mm")
-ggsave(file.path("figures+tables", "Fig1_Map-FieldsByRegion.pdf"),
+ggsave(file.path("figures+tables", "Fig2_Map-FieldsByRegion.pdf"),
        width = 95, height = 55, units = "mm", device = cairo_pdf)

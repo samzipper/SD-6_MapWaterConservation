@@ -73,10 +73,10 @@ p_annual_mm <-
                      breaks = seq(0, 700, 350)) +
   coord_equal() +
   scale_color_manual(name = "Region", 
-                     values = c("NC" = "#1f78b4", 
-                                "WC" = "#b2df8a", 
-                                "NW" = "#a6cee3",
-                                "SW" = "#33a02c")) +
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02")) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
 
 p_avg_mm <-
@@ -114,10 +114,10 @@ p_annual_in <-
                      limits = c(0, 34)) +
   coord_equal() +
   scale_color_manual(name = "Region", 
-                     values = c("NC" = "#1f78b4", 
-                                "WC" = "#b2df8a", 
-                                "NW" = "#a6cee3",
-                                "SW" = "#33a02c")) +
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02")) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
 
 p_avg_in <-

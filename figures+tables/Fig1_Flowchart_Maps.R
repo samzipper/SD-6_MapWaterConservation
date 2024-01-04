@@ -1,4 +1,4 @@
-## FlowChart_Maps.R
+## Fig1_FlowChart_Maps.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -57,7 +57,9 @@ map_height <- map_width*2/3
 p_et <-
   ggplot() +
   geom_sf(data = sf_subset, aes(fill = ET_mm_bound), color = NA) +
-  coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
+  geom_sf(data = sf_lema, color = col.cat.blu, fill = NA, linewidth = 0.6) +
+  coord_sf(xlim = c(extent["xmin"], extent["xmax"]), 
+           ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_viridis_c(name = NULL, direction = -1, breaks = seq(500, 900, 100), 
                        labels = c("<500", "600", "700", "800", ">900"),
                        option = "C", guide = "none") +
@@ -65,36 +67,45 @@ p_et <-
         axis.ticks = element_blank(),
         panel.border = element_blank()) +
   NULL
-ggsave(file.path("figures+tables", "Flowchart_Maps-ET.png"),
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-ET.png"),
+       p_et, width = map_width, height = map_height, units = "mm")
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-ET.pdf"),
        p_et, width = map_width, height = map_height, units = "mm")
 
 p_prec <-
   ggplot() +
   geom_sf(data = sf_subset, aes(fill = precip_mm), color = NA) +
+  geom_sf(data = sf_lema, color = col.cat.blu, fill = NA, linewidth = 0.6) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_viridis_c(name = NULL, direction = -1, guide = "none", option = "E") +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
         panel.border = element_blank()) +
   NULL
-ggsave(file.path("figures+tables", "Flowchart_Maps-Precip.png"),
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-Precip.png"),
+       p_prec, width = map_width, height = map_height, units = "mm")
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-Precip.pdf"),
        p_prec, width = map_width, height = map_height, units = "mm")
 
 p_irrStatus <-
   ggplot() +
   geom_sf(data = sf_subset, aes(fill = Irrigation), color = NA) +
+  geom_sf(data = sf_lema, color = col.cat.blu, fill = NA, linewidth = 0.6) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_manual(name = NULL, values = c(col.cat.yel, col.cat.grn), guide = "none") +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
         panel.border = element_blank()) +
   NULL
-ggsave(file.path("figures+tables", "Flowchart_Maps-irrStatus.png"),
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrStatus.png"),
+       p_irrStatus, width = map_width, height = map_height, units = "mm")
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrStatus.pdf"),
        p_irrStatus, width = map_width, height = map_height, units = "mm")
 
 p_irrDepth <- 
   ggplot() +
   geom_sf(data = subset(sf_subset, Irrigation), aes(fill = FieldIrrigation_mm), color = NA) +
+  geom_sf(data = sf_lema, color = col.cat.blu, fill = NA, linewidth = 0.6) +
   coord_sf(xlim = c(extent["xmin"], extent["xmax"]), ylim = c(extent["ymin"], extent["ymax"])) +
   scale_fill_viridis_c(name = NULL, 
                        direction = -1,
@@ -104,5 +115,7 @@ p_irrDepth <-
         axis.ticks = element_blank(),
         panel.border = element_blank()) +
   NULL
-ggsave(file.path("figures+tables", "Flowchart_Maps-irrDepth.png"),
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrDepth.png"),
+       p_irrDepth, width = map_width, height = map_height, units = "mm")
+ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrDepth.pdf"),
        p_irrDepth, width = map_width, height = map_height, units = "mm")

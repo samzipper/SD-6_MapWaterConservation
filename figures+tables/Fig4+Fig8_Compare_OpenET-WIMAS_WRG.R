@@ -390,12 +390,12 @@ p_d <-
 
 (p_a + p_b + guide_area() + p_c + p_d + plot_spacer()) +
   plot_layout(ncol = 3, guides = "collect",
-              widths = c(1, 1, 0.3)) +
+              widths = c(1, 1, 0.25)) +
   plot_annotation(tag_levels = "a",
                   tag_prefix = "(",
                   tag_suffix = ")")
 ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_WRGs.png"),
-       width = 160, height = 130, units = "mm")
+       width = 170, height = 130, units = "mm")
 
 # acre-feet version
 
