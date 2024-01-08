@@ -2,10 +2,6 @@
 
 source(file.path("code", "paths+packages.R"))
 
-# folder where compiled farmer data stored
-#setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
-dir_farm_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
-
 # load all fields and remove data you don't want
 df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv"))
 
@@ -92,14 +88,14 @@ p_avg_mm <-
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
   coord_equal() +
-  scale_color_manual(name = "# of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
+  scale_color_manual(name = "Number of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
 
 (p_annual_mm + p_avg_mm) +
   plot_layout(nrow = 2) & #+
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
         legend.margin = margin(t = -15))
-ggsave(file.path("figures+tables", "Fig5_FieldData-Annual_Irrigation_mm.png"),
+ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_mm.png"),
        width = 190, height = 100, units = "mm")
 
 # inches version
@@ -131,14 +127,14 @@ p_avg_in <-
   scale_y_continuous(name = "Avg. Rep Irrigation [in]",
                      limits = c(0, 31)) +
   coord_equal() +
-  scale_color_manual(name = "# of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
+  scale_color_manual(name = "Number of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
 
 (p_annual_in + p_avg_in) +
   plot_layout(nrow = 2) & #+
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
         legend.margin = margin(t = -15))
-ggsave(file.path("figures+tables", "Fig5_FieldData-Annual_Irrigation_Inches.png"),
+ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_Inches.png"),
        width = 190, height = 100, units = "mm")
 
 # plot cumulative sum through time

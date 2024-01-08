@@ -15,6 +15,10 @@ dir_data <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_She
 dir_GIS <- file.path(dir_data, "GIS")
 dir_openet <- file.path(dir_data, "OpenET", "Monthly_2016-2021_20221006extraction") # current version of OpenET data
 
+# folder where compiled farmer data stored
+#setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
+dir_farm_data <- "G:/My Drive/Projects-Active/NASA OpenET/data/field-specific water use"
+
 ## plotting controls
 # ggplot theme
 windowsFonts(Arial=windowsFont("TT Arial"))
