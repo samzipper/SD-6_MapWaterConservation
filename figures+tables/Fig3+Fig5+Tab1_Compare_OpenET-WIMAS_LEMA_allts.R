@@ -45,9 +45,9 @@ p_timeseries <-
   geom_line() +
   geom_point() +
   facet_wrap(~ts, ncol = 1, 
-             labeller = as_labeller(c("Annual" = "(a) Calendar Year (Jan-Dec)", 
-                                      "Growing Season" = "(b) Growing Season (Apr-Oct)", 
-                                      "Water Year" = "(c) Water Year (Oct-Sep)"))) +
+             labeller = as_labeller(c("Annual" = "(a) Calendar Year (January-December)", 
+                                      "Growing Season" = "(b) Growing Season (April-October)", 
+                                      "Water Year" = "(c) Water Year (October-September)"))) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_y_continuous(name = "Annual Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
@@ -71,9 +71,9 @@ p_average <-
                      ymin = (Irrigation_m3_mean - Irrigation_m3_std)/1e7,
                      ymax = (Irrigation_m3_mean + Irrigation_m3_std)/1e7)) +
   facet_wrap(~ts, ncol = 1, 
-             labeller = as_labeller(c("Annual" = "(d) Calendar Year (Jan-Dec)", 
-                                      "Growing Season" = "(e) Growing Season (Apr-Oct)", 
-                                      "Water Year" = "(f) Water Year (Oct-Sep)"))) +
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (January-December)", 
+                                      "Growing Season" = "(e) Growing Season (April-October)", 
+                                      "Water Year" = "(f) Water Year (October-September)"))) +
   scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_x_discrete(labels = labs_algorithms) +
@@ -105,9 +105,9 @@ p_timeseries_af <-
   geom_line() +
   geom_point() +
   facet_wrap(~ts, ncol = 1, 
-             labeller = as_labeller(c("Annual" = "(a) Calendar Year (Jan-Dec)", 
-                                      "Growing Season" = "(b) Growing Season (Apr-Oct)", 
-                                      "Water Year" = "(c) Water Year (Oct-Sep)"))) +
+             labeller = as_labeller(c("Annual" = "(a) Calendar Year (January-December)", 
+                                      "Growing Season" = "(b) Growing Season (April-October)", 
+                                      "Water Year" = "(c) Water Year (October-September)"))) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_y_continuous(name = "Annual Irrigation [x1000 acre-feet]",
                      breaks = seq(0, 60, 10)) +
@@ -129,9 +129,9 @@ p_average_af <-
                      ymin = (Irrigation_m3_mean - Irrigation_m3_std)*0.000810714/1e3,
                      ymax = (Irrigation_m3_mean + Irrigation_m3_std)*0.000810714/1e3)) +
   facet_wrap(~ts, ncol = 1, 
-             labeller = as_labeller(c("Annual" = "(d) Calendar Year (Jan-Dec)", 
-                                      "Growing Season" = "(e) Growing Season (Apr-Oct)", 
-                                      "Water Year" = "(f) Water Year (Oct-Sep)"))) +
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (January-December)", 
+                                      "Growing Season" = "(e) Growing Season (April-October)", 
+                                      "Water Year" = "(f) Water Year (October-September)"))) +
   scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_x_discrete(labels = labs_algorithms) +
