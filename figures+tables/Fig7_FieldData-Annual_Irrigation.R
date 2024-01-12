@@ -33,6 +33,10 @@ df_long_cumirr <-
           ETo_mm_cumsum = cumsum(ETo_mm)) |> 
   mutate(Year = df_long$Year)
 
+sum(is.finite(df_long$irrigation_mm)/7)
+sum(is.finite(df_long$irrEst_mm)/7)
+length(unique(df_long$FieldID))
+
 # choose only sites with >= 4 yrs (50%) data
 fields_multiyr <- 
   df_all |> 
@@ -57,7 +61,7 @@ df_corn <- subset(df_long, cropType %in% c("Corn", "Corn-Grain", "Corn-Corn"))
 ## plots
 # mm version
 p_annual_mm <-
-  ggplot(df_corn, aes(x = irrEst_mm, y = irrigation_mm)) +
+  ggplot(df_long, aes(x = irrEst_mm, y = irrigation_mm)) +
   geom_abline(color = col.gray) +
   geom_point(aes(color = Region), shape = 1) +
   #stat_smooth(method = "lm") +
@@ -100,7 +104,7 @@ ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_mm.png"),
 
 # inches version
 p_annual_in <-
-  ggplot(df_corn, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
+  ggplot(df_long, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
   geom_abline(color = col.gray) +
   geom_point(aes(color = Region), shape = 1) +
   #stat_smooth(method = "lm") +
