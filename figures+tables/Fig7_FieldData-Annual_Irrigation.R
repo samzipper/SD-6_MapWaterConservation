@@ -148,3 +148,41 @@ ggplot(data = df_multiyr, aes(x = Year)) +
   theme(legend.position = "bottom")
 ggsave(file.path("plots", "FieldData-Annual_Cumulative.png"),
        width = 150, height = 210, units = "mm")
+
+
+## graphical abstract version
+p_ga_annual <-
+  ggplot(subset(df_corn, Algorithm == "ensemble"), aes(x = irrEst_mm, y = irrigation_mm)) +
+  geom_abline(color = col.gray) +
+  geom_point(shape = 1, color = "#e31a1c") +
+  stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Estimated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Reported Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  labs(title = "Individual Years") +
+  coord_equal() +
+  theme(plot.title = element_text(face = "italic", hjust = 0.5))
+
+p_ga_avg <- 
+  ggplot(data = subset(df_multiyr_mean, Algorithm == "ensemble"), aes(x = irrEst_mm_mean, y = irrigation_mm_mean)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(shape = 1, color = "#e31a1c") +
+  stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Estimated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Reported Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  labs(title = "Multi-Year Average") +
+  coord_equal() +
+  theme(plot.title = element_text(face = "italic", hjust = 0.5))
+
+
+(p_ga_annual + p_ga_avg) +
+  plot_layout(nrow = 1)
+ggsave(file.path("figures+tables", "Fig7-GA_FieldData-Annual_Irrigation.png"),
+       width = 120, height = 60, units = "mm")

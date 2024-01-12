@@ -51,7 +51,7 @@ sf_subset$ET_mm_bound[sf_subset$ET_mm > 900] <- 900
 
 ## make maps
 # set panel width and height
-map_width <- 60
+map_width <- 62.5
 map_height <- map_width*2/3
 
 p_et <-
@@ -68,9 +68,7 @@ p_et <-
         panel.border = element_blank()) +
   NULL
 ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-ET.png"),
-       p_et, width = map_width, height = map_height, units = "mm")
-ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-ET.pdf"),
-       p_et, width = map_width, height = map_height, units = "mm")
+       p_et, width = map_width, height = map_height, units = "mm", dpi = 500)
 
 p_prec <-
   ggplot() +
@@ -83,9 +81,7 @@ p_prec <-
         panel.border = element_blank()) +
   NULL
 ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-Precip.png"),
-       p_prec, width = map_width, height = map_height, units = "mm")
-ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-Precip.pdf"),
-       p_prec, width = map_width, height = map_height, units = "mm")
+       p_prec, width = map_width, height = map_height, units = "mm", dpi = 500)
 
 p_irrStatus <-
   ggplot() +
@@ -98,9 +94,7 @@ p_irrStatus <-
         panel.border = element_blank()) +
   NULL
 ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrStatus.png"),
-       p_irrStatus, width = map_width, height = map_height, units = "mm")
-ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrStatus.pdf"),
-       p_irrStatus, width = map_width, height = map_height, units = "mm")
+       p_irrStatus, width = map_width, height = map_height, units = "mm", dpi = 500)
 
 p_irrDepth <- 
   ggplot() +
@@ -116,6 +110,4 @@ p_irrDepth <-
         panel.border = element_blank()) +
   NULL
 ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrDepth.png"),
-       p_irrDepth, width = map_width, height = map_height, units = "mm")
-ggsave(file.path("figures+tables", "Fig1_Flowchart_Maps-irrDepth.pdf"),
-       p_irrDepth, width = map_width, height = map_height, units = "mm")
+       p_irrDepth, width = map_width, height = map_height, units = "mm", dpi = 500)
