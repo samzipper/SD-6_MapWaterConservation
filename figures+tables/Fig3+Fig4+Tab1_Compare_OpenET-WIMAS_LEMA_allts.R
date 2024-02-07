@@ -306,5 +306,5 @@ ggplot(df_fit_long, aes(x = Algorithm, y = fit, fill = ts)) +
   coord_flip() +
   theme(legend.position = "bottom")
 
-ggsave(file.path("figures+tables", "FigS5_Compare_OpenET-WIMAS_LEMA_allts_FitStats_BarChart.png"),
+ggsave(file.path("figures+tables", "FigS6_Compare_OpenET-WIMAS_LEMA_allts_FitStats_BarChart.png"),
        width = 190, height = 140, units = "mm")

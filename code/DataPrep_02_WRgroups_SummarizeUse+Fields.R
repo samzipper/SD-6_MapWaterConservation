@@ -123,6 +123,10 @@ df_wrg_LEMAfrac <- subset(df_wrg_LEMAfrac, is.finite(LEMA_fieldArea_fraction))
 # check number of split WRGs across LEMA/notLEMA border
 df_wrg_LEMAfrac$WR_GROUP[df_wrg_LEMAfrac$LEMA_fieldArea_fraction >= 0.01 & df_wrg_LEMAfrac$LEMA_fieldArea_fraction <= 0.99]
 
+# calculate number of WRGs inside and outside lema
+sum(df_wrg_LEMAfrac$LEMA_fieldArea_fraction > 0.01)  # total WRGs including LEMA
+sum(df_wrg_LEMAfrac$LEMA_fieldArea_fraction > 0.01 & df_wrg_LEMAfrac$LEMA_fieldArea_fraction < 1) # total WRGs with land inside and outside LEMA
+
 # sum total and irrigation water use for each WRG in each year
 yr_range <- seq(2016, 2021)
 for (yr in yr_range){
