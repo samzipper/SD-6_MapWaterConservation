@@ -51,7 +51,9 @@ irrDepthStd <- sd(df_wimas_irrArea$Irrigation_mm)
 irrDepthMin <- min(df_wimas_irrArea$Irrigation_mm)
 irrDepthMax <- max(df_wimas_irrArea$Irrigation_mm)
 p_et.p_mm <-
-  ggplot(subset(fields_alldata, Irrigation), aes(x = factor(Year), y = ET.P_mm, fill = Algorithm)) +
+  ggplot(subset(fields_alldata, Irrigation), aes(x = factor(Year), y = ET.P_mm,
+                                                 fill = factor(Algorithm, levels = c("ensemble", "disalexi", "eemetric",
+                                                                                     "geesebal", "ptjpl", "sims", "ssebop")))) +
   geom_hline(yintercept = 0, color = col.gray) +
   annotate("rect", xmin = -Inf, xmax = Inf, 
            ymin = irrDepthMean-irrDepthStd, ymax = irrDepthMean+irrDepthStd,
@@ -59,11 +61,11 @@ p_et.p_mm <-
   geom_boxplot(outlier.shape = 1) +
   scale_x_discrete(name = "Year") +
   scale_y_continuous(name = "Growing Season ET - Precipitation [mm]") +
-  scale_fill_manual(values = pal_algorithms, labels = labs_algorithms) +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 2))
-ggsave(file.path("figures+tables", "Fig8_ET.Pboxplots_mm.png"),
+ggsave(file.path("figures+tables", "Fig9_ET.Pboxplots_mm.png"),
        p_et.p_mm, width = 190, height = 100, units = "mm")
 
 p_et.p_in <-
@@ -80,7 +82,7 @@ p_et.p_in <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 3))
-ggsave(file.path("figures+tables", "Fig8_ET.Pboxplots_in.png"),
+ggsave(file.path("figures+tables", "Fig9_ET.Pboxplots_in.png"),
        p_et.p_in, width = 190, height = 100, units = "mm")
 
 ## Figure 9: density plots, irrigated and rainfed corn
@@ -105,7 +107,7 @@ p_dens_mm <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig9_IrrigationDensity_mm.png"),
+ggsave(file.path("figures+tables", "Fig8_IrrigationDensity_mm.png"),
        p_dens_mm, width = 95, height = 150, units = "mm")
 
 scaleFUN10 <- function(x) x*10
@@ -126,5 +128,5 @@ p_dens_in <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig9_IrrigationDensity_in.png"),
+ggsave(file.path("figures+tables", "Fig8_IrrigationDensity_in.png"),
        p_dens_in, width = 95, height = 150, units = "mm")

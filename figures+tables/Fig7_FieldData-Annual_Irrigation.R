@@ -1,4 +1,4 @@
-## FieldData-Annual_02_EstimateIrrigation.R
+## FieldData-Annual_Irrigation.R
 
 source(file.path("code", "paths+packages.R"))
 
@@ -63,12 +63,12 @@ df_corn <- subset(df_long, cropType %in% c("Corn", "Corn-Grain", "Corn-Corn"))
 p_annual_mm <-
   ggplot(df_long, aes(x = irrEst_mm, y = irrigation_mm)) +
   geom_abline(color = col.gray) +
-  geom_point(aes(color = Region), shape = 1) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
   #stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
-  scale_y_continuous(name = "Reported Irrigation [mm]",
+  scale_y_continuous(name = "Reported\nIrrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
   coord_equal() +
@@ -76,39 +76,46 @@ p_annual_mm <-
                      values = c("NC" = "#7570b3", 
                                 "WC" = "#e7298a", 
                                 "NW" = "#1b9e77",
-                                "SW" = "#d95f02")) +
+                                "SW" = "#d95f02"),
+                     drop = F) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
 
 p_avg_mm <-
   ggplot(data = df_multiyr_mean, aes(x = irrEst_mm_mean, y = irrigation_mm_mean)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(aes(color = factor(n_years)), shape = 1) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms)) +
   stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Avg. Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
-  scale_y_continuous(name = "Avg. Rep Irrigation [mm]",
+  scale_y_continuous(name = "Avg. Reported\nIrrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
   coord_equal() +
-  scale_color_manual(name = "Number of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F)
 
 (p_annual_mm + p_avg_mm) +
-  plot_layout(nrow = 2) & #+
+  plot_layout(nrow = 2,
+              guides = "collect") & #+
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
-        legend.margin = margin(t = -15))
+        legend.margin = margin(t = -5))
 ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_mm.png"),
-       width = 190, height = 100, units = "mm")
+       width = 190, height = 85, units = "mm")
 
 # inches version
 p_annual_in <-
   ggplot(df_long, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
   geom_abline(color = col.gray) +
-  geom_point(aes(color = Region), shape = 1) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
   #stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Estimated Irrigation [in]",
+  scale_x_continuous(name = "Calculated Irrigation [in]",
                      limits = c(0, 34)) +
   scale_y_continuous(name = "Reported Irrigation [in]",
                      limits = c(0, 34)) +
@@ -117,29 +124,35 @@ p_annual_in <-
                      values = c("NC" = "#7570b3", 
                                 "WC" = "#e7298a", 
                                 "NW" = "#1b9e77",
-                                "SW" = "#d95f02")) +
+                                "SW" = "#d95f02"),
+                     drop = F) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
 
 p_avg_in <-
   ggplot(data = df_multiyr_mean, aes(x = irrEst_mm_mean/25.4, y = irrigation_mm_mean/25.4)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(aes(color = factor(n_years)), shape = 1) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
   facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms)) +
   stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Avg. Estimated Irrigation [in]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [in]",
                      limits = c(0, 31)) +
   scale_y_continuous(name = "Avg. Rep Irrigation [in]",
                      limits = c(0, 31)) +
   coord_equal() +
-  scale_color_manual(name = "Number of Years", values = c("#feebe2", "#fbb4b9", "#f768a1", "#ae017e"))
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F)
 
 (p_annual_in + p_avg_in) +
-  plot_layout(nrow = 2) & #+
+  plot_layout(nrow = 2, guides = "collect") & #+
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
-        legend.margin = margin(t = -15))
+        legend.margin = margin(t = -5))
 ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_Inches.png"),
-       width = 190, height = 100, units = "mm")
+       width = 190, height = 85, units = "mm")
 
 # plot cumulative sum through time
 ggplot(data = df_multiyr, aes(x = Year)) +
@@ -160,7 +173,7 @@ p_ga_annual <-
   geom_abline(color = col.gray) +
   geom_point(shape = 1, color = "#e31a1c") +
   stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -175,7 +188,7 @@ p_ga_avg <-
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = "#e31a1c") +
   stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 850),
                      breaks = seq(0, 700, 350)) +
   scale_y_continuous(name = "Reported Irrigation [mm]",

@@ -37,7 +37,9 @@ df_allts_avg <-
   df_allts |> 
   group_by(Algorithm, ts) |> 
   summarize(Irrigation_m3_mean = mean(Irrigation_m3),
-            Irrigation_m3_std = sd(Irrigation_m3))
+            Irrigation_m3_std = sd(Irrigation_m3),
+            Irrigation_m3_min = min(Irrigation_m3),
+            Irrigation_m3_max = max(Irrigation_m3))
 
 # plot timeseries
 p_timeseries <- 
@@ -52,13 +54,15 @@ p_timeseries <-
   scale_y_continuous(name = "Annual Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
-  guides(color = guide_legend(nrow = 3))
+  guides(color = guide_legend(nrow = 2))
 
 # plot barcharts
 reported_avg <- df_allts_avg$Irrigation_m3_mean[df_allts_avg$Algorithm == "Reported" & df_allts_avg$ts == "Annual"]
 reported_std <- df_allts_avg$Irrigation_m3_std[df_allts_avg$Algorithm == "Reported" & df_allts_avg$ts == "Annual"]
+reported_min <- min(df_allts$Irrigation_m3[df_allts$Algorithm == "Reported" & df_allts$ts == "Annual"])
+reported_max <- max(df_allts$Irrigation_m3[df_allts$Algorithm == "Reported" & df_allts$ts == "Annual"])
 
-p_average <- 
+p_average_col <- 
   ggplot() +
   annotate("rect", xmin = -Inf, xmax = Inf, 
            #ymin = reported_avg*1.1/1e7, ymax = reported_avg*0.9/1e7,
@@ -80,14 +84,59 @@ p_average <-
   scale_y_continuous(name = "Five-Year Average Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
-  guides(color = guide_legend(nrow = 3))
+  guides(color = guide_legend(nrow = 2))
+
+
+p_average_pointrange <- 
+  ggplot() +
+  annotate("rect", xmin = -Inf, xmax = Inf, 
+           #ymin = reported_avg*1.1/1e7, ymax = reported_avg*0.9/1e7,
+           ymin = reported_min/1e7, ymax = reported_max/1e7,
+           fill = col.gray) +
+  #geom_col(data = df_allts_avg, 
+  #         aes(x = Algorithm, y = Irrigation_m3_mean/1e7, fill = Algorithm)) +
+  geom_pointrange(data = df_allts_avg, 
+                 aes(x = Algorithm, color = Algorithm,
+                     y = Irrigation_m3_mean/1e7,
+                     ymin = Irrigation_m3_min/1e7,
+                     ymax = Irrigation_m3_max/1e7)) +
+  facet_wrap(~ts, ncol = 1, 
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (January-December)", 
+                                      "Growing Season" = "(e) Growing Season (April-October)", 
+                                      "Water Year" = "(f) Water Year (October-September)"))) +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_x_discrete(labels = labs_algorithms) +
+  scale_y_continuous(name = "Five-Year Average Irrigation [x10\u2077 m\u00b3]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 2))
+
+p_boxplot5yr <- 
+  ggplot() +
+  annotate("rect", xmin = -Inf, xmax = Inf, 
+           #ymin = reported_avg*1.1/1e7, ymax = reported_avg*0.9/1e7,
+           ymin = reported_min/1e7, ymax = reported_max/1e7,
+           fill = col.gray) +
+  geom_boxplot(data = df_allts, aes(x = Algorithm, y = Irrigation_m3/1e7, fill = Algorithm)) +
+  facet_wrap(~ts, ncol = 1, 
+             labeller = as_labeller(c("Annual" = "(d) Calendar Year (January-December)", 
+                                      "Growing Season" = "(e) Growing Season (April-October)", 
+                                      "Water Year" = "(f) Water Year (October-September)"))) +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  #scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_x_discrete(name = "Model", labels = labs_algorithms) +
+  scale_y_continuous(name = "Five-Year Average Irrigation [x10\u2077 m\u00b3]") +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 2))
 
 # combine plots
 (
   (p_timeseries + 
      guides(color = "none") +
      theme(axis.title.x = element_blank())) + 
-    (p_average + 
+    (p_average_pointrange + 
        theme(legend.position = "bottom",
              axis.text.x = element_text(angle = 45, hjust = 1),
              axis.title.x = element_blank())) 
@@ -95,7 +144,7 @@ p_average <-
   theme(legend.position = "bottom")
 
 ggsave(file.path("figures+tables", "Fig3_CompareOpenET-WIMAS_LEMA.png"),
-       width = 190, height = 150, units = "mm")
+       width = 190, height = 145, units = "mm")
 
 ##### ACRE-FEET VERSION
 
@@ -210,13 +259,19 @@ p_fit_precip <-
   geom_hline(yintercept = 0, color = col.gray) +
   stat_smooth(method = "lm") +
   geom_point() +
+  geom_text(aes(label = Year), check_overlap = T, 
+            hjust = c(1, 1, 0, 0.5, 0), 
+            vjust = c(0.5, 0.5, 0.5, 0, 0.5), 
+            nudge_x = c(-10, -10, 10, 8, 10),
+            nudge_y = c(0, 0, 0, 0.10, 0.05)) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
                      guide = NULL) +
-  scale_x_continuous(name = "Growing Season Precipitation [mm]") +
-  scale_y_continuous(name = "(Estimated - Reported) Irrigation [x10\u2077 m\u00b3]") +
+  scale_x_continuous(name = "Growing Season Precipitation [mm]",
+                     expand = expansion(mult = c(0.025, 0.07))) +
+  scale_y_continuous(name = "(Calculated - Reported) Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0))
-ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
+ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
        p_fit_precip, width = 95, height = 95, units = "mm")
 
 p_fit_precip_af <-
@@ -229,10 +284,10 @@ p_fit_precip_af <-
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
                      guide = NULL) +
   scale_x_continuous(name = "Growing Season Precipitation [in]") +
-  scale_y_continuous(name = "(Estimated - Reported) Irrigation [x1000 acre-feet]") +
+  scale_y_continuous(name = "(Calculated - Reported) Irrigation [x1000 acre-feet]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0))
-ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_LEMA_FitVsPrecip_AcreFeet.png"),
+ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_LEMA_FitVsPrecip_AcreFeet.png"),
        p_fit_precip_af, width = 95, height = 95, units = "mm")
   
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
@@ -246,7 +301,7 @@ ggplot(df_fit_long, aes(x = Algorithm, y = fit, fill = ts)) +
                                       "R2" = "R\u00b2",
                                       "slope" = "Slope"))) +
   scale_fill_discrete(name = "Aggregation Timescale") +
-  scale_x_discrete(labels = labs_algorithms) +
+  scale_x_discrete(name = "Model", labels = labs_algorithms) +
   scale_y_continuous(name = "Fit Statistic") +
   coord_flip() +
   theme(legend.position = "bottom")

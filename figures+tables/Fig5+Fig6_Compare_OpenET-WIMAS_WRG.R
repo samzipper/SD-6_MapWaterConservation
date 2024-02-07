@@ -55,7 +55,7 @@ if (lema_only) {
   wrg_use_plot <- wrg_use_trim
 }
 
-# stats on agreement between estimated and reported irrigated area
+# stats on agreement between Calculated and reported irrigated area
 n_good <- sum(wrg_use_plot$irrArea_goodFit)
 n_bad <- sum(!wrg_use_plot$irrArea_goodFit)
 n_total <- length(wrg_use_plot$irrArea_goodFit)
@@ -71,10 +71,10 @@ p_irrArea_compare <-
   ggplot(wrg_use_plot, aes(x = irrFieldArea_m2/1e4, y = WRGirrAreaReported_m2/1e4)) +
   geom_point(aes(shape = irrArea_goodFit, color = irrArea_goodFit)) +
   geom_abline(intercept = 0, slope = 1, color = col.cat.org) +
-  scale_x_continuous(name = "Irrigated Area, Sum of Fields [ha]",
+  scale_x_continuous(name = "Calculated Irrigated Area [ha]",
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
-  scale_y_continuous(name = "Irrigated Area, Reported [ha]",
+  scale_y_continuous(name = "Reported Irrigated Area [ha]",
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
   coord_equal() +
@@ -85,17 +85,17 @@ p_irrArea_compare <-
   theme(legend.position = c(0.99,0.01), 
         legend.justification = c(1,0))
 
-ggsave(file.path("figures+tables", "Fig8_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
+ggsave(file.path("figures+tables", "Fig6_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
        p_irrArea_compare, width = 95, height = 95, units = "mm")
 
 p_irrArea_compare_ac <-
   ggplot(wrg_use_plot, aes(x = irrFieldArea_m2/4046.86, y = WRGirrAreaReported_m2/4046.86)) +
   geom_point(aes(shape = irrArea_goodFit, color = irrArea_goodFit)) +
   geom_abline(intercept = 0, slope = 1, color = col.cat.org) +
-  scale_x_continuous(name = "Irrigated Area, Sum of Fields [acres]",
+  scale_x_continuous(name = "Calculated Irrigated Area [acres]",
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/4046.86, na.rm = T))) +
-  scale_y_continuous(name = "Irrigated Area, Reported [acres]",
+  scale_y_continuous(name = "Reported Irrigated Area [acres]",
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/4046.86, na.rm = T))) +
   coord_equal() +
@@ -106,7 +106,7 @@ p_irrArea_compare_ac <-
   theme(legend.position = c(0.99,0.01), 
         legend.justification = c(1,0))
 
-ggsave(file.path("figures+tables", "Fig8_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs_Acres.png"),
+ggsave(file.path("figures+tables", "Fig6_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs_Acres.png"),
        p_irrArea_compare_ac, width = 95, height = 95, units = "mm")
 
 # Volume comparison - area agreement only ---------------------------------
@@ -123,7 +123,7 @@ p_wrg_fit <-
   geom_abline(intercept = 0, slope = 1) +
   geom_point(aes(color = factor(Year)), shape = 1) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Irrigation [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, max(df_wrg_irr_areaMatch$WRGirrigationTotal_m3_OpenET/1e5)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -208,7 +208,7 @@ p_wrg_fit_simple <-
   geom_abline(intercept = 0, slope = 1) +
   geom_point(aes(color = factor(Year)), shape = 1) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Irrigation [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, max(df_wrg_irr_areaMatch_simple$WRGirrigationTotal_m3_OpenET/1e5)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -241,7 +241,7 @@ p_wrg_vol_all <-
   geom_abline(intercept = 0, slope = 1) +
   geom_point(aes(color = irrArea_goodFit), shape = 1) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Irrigation [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, max(df_wrg_irr_all$WRGirrigationTotal_m3_OpenET/1e5)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -264,7 +264,7 @@ p_wrg_depth_all <-
   geom_abline(intercept = 0, slope = 1) +
   geom_point(aes(color = irrArea_goodFit), shape = 1, alpha = 0.5) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, max(df_wrg_irr_all$WRGirrigationTotal_mm_Reported, na.rm = T)),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -288,7 +288,7 @@ p_wrg_depth_areaMatch <-
   geom_abline(intercept = 0, slope = 1) +
   geom_point(aes(color = factor(Year)), shape = 1) +
   facet_wrap( ~ Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms)) +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, max(df_wrg_irr_areaMatch$WRGirrigationTotal_mm_OpenET)),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -323,7 +323,7 @@ p_a <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Estimated Irrigation [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -342,7 +342,7 @@ p_b <-
            color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 600),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -369,7 +369,7 @@ p_c <-
            y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Estimated Irrigation [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [x10\u2075 m\u00b3]",
@@ -386,7 +386,7 @@ p_d <-
            y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Estimated Irrigation [mm]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 375),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
@@ -401,7 +401,7 @@ p_d <-
   plot_annotation(tag_levels = "a",
                   tag_prefix = "(",
                   tag_suffix = ")")
-ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_WRGs.png"),
+ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
 
 # acre-feet version
@@ -415,7 +415,7 @@ p_a_af <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Estimated Irrigation [x1000 ac-ft]",
+  scale_x_continuous(name = "Calculated Irrigation [x1000 ac-ft]",
                      limits = c(0, 1.7),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x1000 ac-ft]",
@@ -434,7 +434,7 @@ p_b_af <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Estimated Irrigation [in]",
+  scale_x_continuous(name = "Calculated Irrigation [in]",
                      limits = c(0, 600/25.4),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [in]",
@@ -469,7 +469,7 @@ p_d_af <-
              y = WRGirrigationTotal_mm_Reported_avg/25.4)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Estimated Irrigation [in]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [in]",
                      limits = c(0, 375/25.4),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [in]",
@@ -484,7 +484,7 @@ p_d_af <-
   plot_annotation(tag_levels = "a",
                   tag_prefix = "(",
                   tag_suffix = ")")
-ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_WRGs_AcreFeet.png"),
+ggsave(file.path("figures+tables", "Fig5_Compare_OpenET-WIMAS_WRGs_AcreFeet.png"),
        width = 160, height = 130, units = "mm")
 
 # Pretend volume vs depth comparison for understanding --------------------
