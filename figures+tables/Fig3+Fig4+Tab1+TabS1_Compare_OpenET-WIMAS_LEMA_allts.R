@@ -96,10 +96,10 @@ p_average_pointrange <-
   #geom_col(data = df_allts_avg, 
   #         aes(x = Algorithm, y = Irrigation_m3_mean/1e7, fill = Algorithm)) +
   geom_pointrange(data = df_allts_avg, 
-                 aes(x = Algorithm, color = Algorithm,
-                     y = Irrigation_m3_mean/1e7,
-                     ymin = Irrigation_m3_min/1e7,
-                     ymax = Irrigation_m3_max/1e7)) +
+                  aes(x = Algorithm, color = Algorithm,
+                      y = Irrigation_m3_mean/1e7,
+                      ymin = Irrigation_m3_min/1e7,
+                      ymax = Irrigation_m3_max/1e7)) +
   facet_wrap(~ts, ncol = 1, 
              labeller = as_labeller(c("Annual" = "(d) Calendar Year (January-December)", 
                                       "Growing Season" = "(e) Growing Season (April-October)", 
@@ -242,7 +242,7 @@ fields_met <-
   group_by(Year) |> 
   summarize(TotalPrecip_m3 = sum(precip_m3),
             MeanPrecip_mm = mean(precip_mm))
-  
+
 df_fit_with_precip <-
   df_allts |> 
   # have to pivot wider then longer to grab out the WIMAS data
@@ -289,10 +289,84 @@ p_fit_precip_af <-
         strip.text = element_text(hjust = 0))
 ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_LEMA_FitVsPrecip_AcreFeet.png"),
        p_fit_precip_af, width = 95, height = 95, units = "mm")
-  
+
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
 
-# bar chart of some stats by timescale
+## statistical bias-correction of calculated irrigation using precip
+# pull out each algorithm
+df_ensemble <- subset(df_fit_with_precip, Algorithm == "ensemble")
+df_disalexi <- subset(df_fit_with_precip, Algorithm == "disalexi")
+df_eemetric <- subset(df_fit_with_precip, Algorithm == "eemetric")
+df_geesebal <- subset(df_fit_with_precip, Algorithm == "geesebal")
+df_ptjpl <- subset(df_fit_with_precip, Algorithm == "ptjpl")
+df_sims <- subset(df_fit_with_precip, Algorithm == "sims")
+df_ssebop <- subset(df_fit_with_precip, Algorithm == "ssebop")
+
+# linear fit to precip
+lm_ensemble <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_ensemble)
+lm_disalexi <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_disalexi)
+lm_eemetric <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_eemetric)
+lm_geesebal <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_geesebal)
+lm_ptjpl <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_ptjpl)
+lm_sims <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_sims)
+lm_ssebop <- lm(IrrDiff_m3 ~ MeanPrecip_mm, data = df_ssebop)
+
+# bias correct
+df_ensemble$Irrigation_m3_precipCorrect <- df_ensemble$Irrigation_m3 - predict(lm_ensemble, data = df_ensemble)
+df_disalexi$Irrigation_m3_precipCorrect <- df_disalexi$Irrigation_m3 - predict(lm_disalexi, data = df_ensemble)
+df_eemetric$Irrigation_m3_precipCorrect <- df_eemetric$Irrigation_m3 - predict(lm_eemetric, data = df_eemetric)
+df_geesebal$Irrigation_m3_precipCorrect <- df_geesebal$Irrigation_m3 - predict(lm_geesebal, data = df_geesebal)
+df_ptjpl$Irrigation_m3_precipCorrect <- df_ptjpl$Irrigation_m3 - predict(lm_ptjpl, data = df_ptjpl)
+df_sims$Irrigation_m3_precipCorrect <- df_sims$Irrigation_m3 - predict(lm_sims, data = df_sims)
+df_ssebop$Irrigation_m3_precipCorrect <- df_ssebop$Irrigation_m3 - predict(lm_ssebop, data = df_ssebop)
+
+# combine back into one
+df_wimas$Irrigation_m3_precipCorrect <- df_wimas$Irrigation_m3 # need to create this column for plotting (even though no correction applied to reported data)
+df_precipCorrect <-
+  bind_rows(df_ensemble, df_disalexi, df_eemetric, df_geesebal, df_ptjpl, df_sims, df_ssebop, df_wimas)
+
+
+# set factor order for plotting
+df_precipCorrect$Algorithm <- factor(df_precipCorrect$Algorithm, 
+                                     levels = c("Reported", "ensemble", "disalexi", 
+                                                "eemetric", "geesebal", "ptjpl", "sims", "ssebop"))
+
+# plot
+p_timeseries_precipCorrect <- 
+  ggplot(df_precipCorrect, aes(x = Year, y = Irrigation_m3_precipCorrect/1e7, color = Algorithm)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  scale_y_continuous(name = "Precipitation-Adjusted Annual Irrigation [x10\u2077 m\u00b3]", 
+                     limits = c(min(df_precipCorrect$Irrigation_m3/1e7), max(df_precipCorrect$Irrigation_m3/1e7))) +
+  theme(legend.position = "bottom",
+        strip.text = element_text(hjust = 0)) +
+  guides(color = guide_legend(nrow = 2))
+
+# combine with line fit plot and save
+(p_fit_precip + p_timeseries_precipCorrect) +
+  plot_layout(ncol = 2, guides = "collect") +
+  plot_annotation(tag_level = "a", tag_prefix = "(", tag_suffix = ")") &
+  theme(legend.position = "bottom",
+        plot.tag.position = c(0.95, 0.97))
+ggsave(file.path("figures+tables", "Fig4_Compare_OpenET-WIMAS_LEMA_FitVsPrecip+PrecipCorrect.png"),
+       width = 190, height = 115, units = "mm")
+
+# fit stats
+df_fit_precipCorrect <-
+  df_precipCorrect |> 
+  subset(Algorithm != "Reported") |> 
+  # have to pivot wider then longer to grab out the WIMAS data
+  # calculate stats for ts, algorithm
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(Irrigation_m3_precipCorrect, Reported),
+            MAE_1e7m3 = mae(Irrigation_m3_precipCorrect/1e7, Reported/1e7),
+            R2 = getR2(Irrigation_m3_precipCorrect, Reported),
+            slope = getSlope(Irrigation_m3_precipCorrect, Reported))
+
+write_csv(df_fit_precipCorrect, file.path("figures+tables", "TableS1_Compare_OpenET-WIMAS_LEMA_allts_FitStats-PrecipCorrect.csv"))
+
+ ## bar chart of some stats by timescale
 ggplot(df_fit_long, aes(x = Algorithm, y = fit, fill = ts)) +
   geom_col(position = "dodge") +
   facet_wrap(~metric, nrow = 2, scales = "free_x",
