@@ -109,6 +109,33 @@ p_avg_mm <-
 ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_mm.png"),
        width = 190, height = 85, units = "mm")
 
+# fit stats
+getR2 <- function(x, y) summary(lm(y~x))$r.squared
+getSlope <- function(x, y) coefficients(lm(y~x))[2]
+df_fit_annual <-
+  df_long |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEst_mm, irrigation_mm),
+            MAE_mm = mae(irrEst_mm, irrigation_mm),
+            R2 = getR2(irrEst_mm, irrigation_mm),
+            slope = getSlope(irrEst_mm, irrigation_mm)) |> 
+  mutate(time = "Annual")
+
+df_fit_avg <-
+  df_multiyr_mean |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEst_mm_mean, irrigation_mm_mean),
+            MAE_mm = mae(irrEst_mm_mean, irrigation_mm_mean),
+            R2 = getR2(irrEst_mm_mean, irrigation_mm_mean),
+            slope = getSlope(irrEst_mm_mean, irrigation_mm_mean)) |> 
+  mutate(time = "Average")
+
+summary(lm(irrigation_mm_mean ~ irrEst_mm_mean, data = subset(df_multiyr_mean, Algorithm == "ssebop")))
+
+df_fit_both <-
+  bind_rows(df_fit_annual, df_fit_avg)
+write_csv(df_fit_both, file.path("figures+tables", "Table2_FieldDataFitStats.csv"))
+
 # inches version
 p_annual_in <-
   ggplot(df_long, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +

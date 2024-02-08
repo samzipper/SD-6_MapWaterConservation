@@ -206,8 +206,8 @@ ggsave(file.path("figures+tables", "Fig3_CompareOpenET-WIMAS_LEMA-AcreFeet.png")
 
 
 # calculate fit statistics
-getR2 <- function(y, x) summary(lm(y~x))$r.squared
-getSlope <- function(y, x) coefficients(lm(y~x))[2]
+getR2 <- function(x, y) summary(lm(y~x))$r.squared
+getSlope <- function(x, y) coefficients(lm(y~x))[2]
 df_fit_long <-
   df_allts |> 
   # have to pivot wider then longer to grab out the WIMAS data

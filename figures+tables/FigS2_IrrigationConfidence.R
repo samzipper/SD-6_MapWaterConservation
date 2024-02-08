@@ -47,21 +47,10 @@ fields_attributes$IrrConfidence[fields_attributes$IrrigatedPrc <= 0.1 | fields_a
 ggplot(fields_attributes, aes(x = factor(Year), fill = IrrConfidence)) + 
   geom_bar()
 
-fields_attributes |> 
-  mutate(IrrigatedPrc_bins = cut(IrrigatedPrc, breaks = seq(0, 1, 0.1), include.lowest = T)) |> 
-  group_by(Year, IrrigatedPrc_bins) |> 
-  summarize(BinAreaTotal_m2 = sum(area_m2)) |> 
-  ggplot(aes(x = IrrigatedPrc_bins, y = BinAreaTotal_m2/10000, fill = IrrigatedPrc_bins)) + 
-  geom_col() +
-  facet_wrap(~Year, ncol = 1) +
-  scale_x_discrete(name = "Irrigated Percentage within Field Boundary") +
-  scale_y_continuous(name = "Total Area within SD-6 LEMA [ha]") +
-  scale_fill_manual(values = c(rep(col.cat.yel, 5), rep(col.cat.grn, 5)),
-                    guide = "none")
+fields_attributes$IrrigatedPrc_bins <- cut(fields_attributes$IrrigatedPrc, breaks = c(0, 0.1, 0.5, 0.9, 1), include.lowest = T)
 
-
-fields_attributes |> 
-  mutate(IrrigatedPrc_bins = cut(IrrigatedPrc, breaks = c(0, 0.1, 0.5, 0.9, 1), include.lowest = T)) |> 
+p_area_bars <-
+  fields_attributes |> 
   group_by(Year, IrrigatedPrc_bins) |> 
   summarize(BinAreaTotal_m2 = sum(area_m2)) |> 
   ggplot(aes(x = IrrigatedPrc_bins, y = BinAreaTotal_m2/10000, fill = IrrigatedPrc_bins)) + 
@@ -71,11 +60,34 @@ fields_attributes |>
   scale_y_continuous(name = "Total Area within SD-6 LEMA [ha]") +
   scale_fill_manual(name = NULL, 
                     values = c(col.cat.yel, col.cat.org, col.cat.blu, col.cat.grn),
-                    labels = c("High Confidence Rainfed (< 10% Irrigated)",
+                    labels = c("High Confidence Rainfed (<10% Irrigated)",
                                "Low Confidence Rainfed (10-50% Irrigated)",
                                "Low Confidence Irrigated (50-90% Irrigated)",
                                "High Confidence Irrigated (>90% Irrigated")) +
   guides(fill = guide_legend(nrow = 4)) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "FigS2_IrrigationConfidence.png"),
-       width = 95, height = 210, units = "mm")
+ggsave(file.path("figures+tables", "FigS2_IrrigationConfidence-AreaBars.png"),
+       p_area_bars, width = 95, height = 210, units = "mm")
+
+## map with sf
+sf_attributes <-
+  sf_fields |> 
+  subset(UID %in% fields_attributes$UID) |> 
+  full_join(fields_attributes, by = "UID")
+
+p_irrConf_map <-
+  ggplot(sf_attributes, aes(fill = IrrigatedPrc_bins)) +
+  geom_sf(color = NA) +
+  facet_wrap(~Year, ncol = 2) +
+  scale_fill_manual(name = NULL, 
+                    values = c(col.cat.yel, col.cat.org, col.cat.blu, col.cat.grn),
+                    labels = c("High Confidence Rainfed (<10% Irrigated)",
+                               "Low Confidence Rainfed (10-50% Irrigated)",
+                               "Low Confidence Irrigated (50-90% Irrigated)",
+                               "High Confidence Irrigated (>90% Irrigated")) +
+  theme(legend.position = "bottom",
+        axis.text = element_blank()) +
+  guides(fill = guide_legend(nrow = 2))
+
+ggsave(file.path("figures+tables", "FigS3_IrrigationConfidence-Map.png"),
+       p_irrConf_map, width = 190, height = 210, units = "mm")
