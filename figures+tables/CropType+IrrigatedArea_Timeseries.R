@@ -62,15 +62,7 @@ p_ratio <-
                      labels = c("Buffer", "LEMA")) +
   theme(legend.position = c(0.85, 0.75))
 
-p_irr <-
-  ggplot(irr_summary, aes(x = Year, y = IrrArea_m2/1e7, color = within_lema)) +
-  geom_vline(xintercept = 2012.5, color = "black", linetype = "dashed") +
-  geom_point() +
-  geom_line() +
-  scale_x_continuous(breaks = seq(2006, 2021, 3)) +
-  scale_y_continuous(name = "Irrigated Area\n[x1000 ha]") +
-  scale_color_manual(name = "Location", values = c(col.cat.blu, col.cat.red),
-                     labels = c("Buffer", "LEMA"), guide = FALSE)
+
 
 p_combo_ts <-
   (p_ratio + p_irr) +
@@ -81,6 +73,16 @@ p_combo_ts
 
 ggsave(file.path("figures+tables", "CropType+IrrigatedArea_Timeseries.png"),
        p_combo_ts, width = 95, height = 110, units = "mm")
+
+p_irr_justLEMA <-
+  ggplot(subset(irr_summary, within_lema), aes(x = Year, y = IrrArea_m2/1e7)) +
+  geom_vline(xintercept = 2012.5, color = "black", linetype = "dashed") +
+  geom_point(color = col.cat.grn) +
+  geom_line(color = col.cat.grn) +
+  scale_x_continuous(breaks = seq(2006, 2021, 3)) +
+  scale_y_continuous(name = "Irrigated Area\n[x1000 ha]", limits = c(0, 12), breaks = seq(0, 12, 3))
+ggsave(file.path("figures+tables", "FigS2_IrrigatedArea_Timeseries.png"),
+       p_irr_justLEMA, width = 95, height = 75, units = "mm")
 
 # SI: rough breakdown of total crop type, LEMA only, by year
 p_LEMA_all <- 
