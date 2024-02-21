@@ -112,3 +112,14 @@ p_combo_bars <-
 
 ggsave(file.path("figures+tables", "CropTypeTimeseries_LEMAareaByYear.png"),
        p_combo_bars, width = 190, height = 95, units = "mm")
+
+## for chung-yi
+# stats on average percent cover for each crop
+crops_summary_irr |> 
+  group_by(Year, within_lema) |> 
+  summarize(area_m2_total = sum(area_m2_crop)) |> 
+  right_join(crops_summary_irr, by = c("Year", "within_lema")) |> 
+  subset(Year >= 2013 & within_lema) |> 
+  mutate(prc_of_irr_area = area_m2_crop/area_m2_total) |> 
+  group_by(CropGroupCoarse) |> 
+  summarize(prc_irr_mean = mean(prc_of_irr_area))
