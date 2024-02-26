@@ -5,6 +5,9 @@ source(file.path("code", "paths+packages.R"))
 # load all fields and remove data you don't want
 df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv"))
 
+# load deep percolation regressions
+df_lm <- read_csv(file.path("data", "DeepPercRegressions_Summary.csv")) # DP = lmSlope*AnnualPrecip_mm + lmInt
+
 # pivot to long form
 df_long <- 
   df_all |> 
@@ -17,9 +20,16 @@ df_long <-
 # lump the NB field in with NW (just over the border)
 df_long$Region[df_long$Region == "NB"] <- "NW"
 
+# calculate effective precipitation
+df_long$DeepPerc_mm <- df_lm$lmSlope[df_lm$ts == "Annual"]*df_long$precip_mm + df_lm$lmInt[df_lm$ts == "Annual"]
+df_long$DeepPerc_mm[df_long$DeepPerc_mm < 0] <- 0
+df_long$Peff_mm <- df_long$precip_mm - df_long$DeepPerc_mm
+
 # estimate irrigation as ET-P
 df_long$ET.P_mm <- df_long$ET_mm - df_long$precip_mm
+df_long$ET.Peff_mm <- df_long$ET_mm - df_long$Peff_mm
 df_long$irrEst_mm <- ifelse(df_long$ET.P_mm >= 0, df_long$ET.P_mm, 0)
+df_long$irrEstPeff_mm <- ifelse(df_long$ET.Peff_mm >= 0, df_long$ET.Peff_mm, 0)
 df_long$P.Irr_mm <- df_long$precip_mm + df_long$irrigation_mm
 
 # calculate cumulative irrigation
@@ -28,6 +38,7 @@ df_long_cumirr <-
   group_by(FieldID, Region, Algorithm) |> 
   reframe(irrigation_mm_cumsum = cumsum(irrigation_mm),
           irrEst_mm_cumsum = cumsum(irrEst_mm),
+          irrEstPeff_mm_cumsum = cumsum(irrEstPeff_mm),
           P.Irr_mm_cumsum = cumsum(P.Irr_mm),
           ET_mm_cumsum = cumsum(ET_mm),
           ETo_mm_cumsum = cumsum(ETo_mm)) |> 
@@ -53,10 +64,8 @@ df_multiyr_mean <-
   filter(Year == max(Year)) |> 
   left_join(fields_multiyr, by = "FieldID") |> 
   mutate(irrigation_mm_mean = irrigation_mm_cumsum/n_years,
-         irrEst_mm_mean = irrEst_mm_cumsum/n_years)
-
-# corn only - for plots
-df_corn <- subset(df_long, cropType %in% c("Corn", "Corn-Grain", "Corn-Corn"))
+         irrEst_mm_mean = irrEst_mm_cumsum/n_years,
+         irrEstPeff_mm_mean = irrEstPeff_mm_cumsum/n_years)
 
 ## plots
 # mm version

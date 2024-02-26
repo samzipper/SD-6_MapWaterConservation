@@ -4,10 +4,13 @@ source(file.path("code", "paths+packages.R"))
 
 # folder where compiled farmer data stored
 #setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
-dir_farm_data <- "G:/.shortcut-targets-by-id/1fM3-4oKs6lEiTg-VQECNObDmlw9jVdX3/EGGS/NASA OpenET/data/field-specific water use"
+dir_farm_data <- "G:/My Drive/Projects-Active/NASA OpenET/data/field-specific water use"
 
 # load all fields and remove data you don't want
 df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv"))
+
+# load deep percolation regressions
+df_lm <- read_csv(file.path("data", "DeepPercRegressions_Summary.csv")) # DP = lmSlope*AnnualPrecip_mm + lmInt
 
 # pivot to long form
 df_long <- 
@@ -17,9 +20,16 @@ df_long <-
   arrange(FieldID, Algorithm) |> 
   mutate(Algorithm = str_sub(Algorithm, start = 1, end = -7))
 
+# calculate effective precipitation
+df_long$DeepPerc_mm <- df_lm$lmSlope[df_lm$ts == "Annual"]*df_long$precip_mm + df_lm$lmInt[df_lm$ts == "Annual"]
+df_long$DeepPerc_mm[df_long$DeepPerc_mm < 0] <- 0
+df_long$Peff_mm <- df_long$precip_mm - df_long$DeepPerc_mm
+
 # estimate irrigation as ET-P
 df_long$ET.P_mm <- df_long$ET_mm - df_long$precip_mm
+df_long$ET.Peff_mm <- df_long$ET_mm - df_long$Peff_mm
 df_long$irrEst_mm <- ifelse(df_long$ET.P_mm >= 0, df_long$ET.P_mm, 0)
+df_long$irrEstPeff_mm <- ifelse(df_long$ET.Peff_mm >= 0, df_long$ET.Peff_mm, 0)
 df_long$P.Irr_mm <- df_long$precip_mm + df_long$irrigation_mm
 
 # calculate cumulative irrigation
