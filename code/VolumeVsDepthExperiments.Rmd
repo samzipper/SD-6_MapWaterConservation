@@ -1,0 +1,65 @@
+---
+title: "Volume v Depth Experiments"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Volume vs Depth
+
+Making some imaginary data to test whether volume and depth should have the same agreement. 
+The SD-6 WRG analysis suggests that volume agrees better than depth.
+Question is: if we are dividing by the same area, should this be possible?
+
+## Make some imaginary data
+
+Will make data where depth is not correlated (random numbers), area is perfectly correlated, and volume is depth*area.
+
+```{r make-data}
+
+set.seed(1)
+pretendDepth_sim <- runif(500)
+pretendDepth_obs <- runif(500)
+pretendArea_sim <- seq(1, 500)
+pretendArea_obs <- seq(1, 500)
+pretendVolume_sim <- pretendDepth_sim*pretendArea_sim
+pretendVolume_obs <- pretendDepth_obs*pretendArea_obs
+
+```
+
+## Compare pretend irrigation depth
+
+Depth not correlated - random numbers.
+
+```{r compare-depth}
+
+plot(pretendDepth_sim, pretendDepth_obs)
+
+summary(lm(pretendDepth_obs ~ pretendDepth_sim))
+
+```
+## Compare pretend irrigated area
+
+Area perfectly correlated - defined equal to each other.
+
+```{r compare-area}
+
+plot(pretendArea_sim, pretendArea_obs)
+
+summary(lm(pretendArea_obs ~ pretendArea_sim))
+
+```
+
+## Compare pretend irrigation volume
+
+Multiplying depth * area.
+
+```{r compare-volume}
+
+plot(pretendVolume_sim, pretendVolume_obs)
+
+summary(lm(pretendVolume_obs ~ pretendVolume_sim))
+
+```

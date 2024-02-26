@@ -5,13 +5,23 @@
 source(file.path("code", "paths+packages.R"))
 
 # load daily met data
-df_daily <-
+df_daily_2000 <-
+  file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_500m_2000.csv") |>
+  read_csv() |>
+  mutate(UID = as.integer(UID),
+         date_ymd = ymd(date_ymd),
+         Year = year(date_ymd),
+         Month = month(date_ymd)) |> 
+  subset(Year >= 2008)
+
+df_daily_2016 <-
   file.path(dir_data, "gridMET", "gridMET_FieldsNoDups_500m_2016.csv") |>
   read_csv() |>
   mutate(UID = as.integer(UID),
          date_ymd = ymd(date_ymd),
          Year = year(date_ymd),
          Month = month(date_ymd))
+df_daily <- rbind(df_daily_2000, df_daily_2016)
 
 # some tiny fields do not have data - find the nearest one
 sf_fields <- st_read(file.path("data", "Fields_NoDups.shp"))
