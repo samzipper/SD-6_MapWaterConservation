@@ -51,7 +51,7 @@ p_timeseries <-
                                       "Growing Season" = "(b) Growing Season (April-October)", 
                                       "Water Year" = "(c) Water Year (October-September)"))) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Annual Irrigation using Peff [x10\u2077 m\u00b3]",
+  scale_y_continuous(name = "Annual Irrigation [x10\u2077 m\u00b3]",
                      limits = c(0, 7)) +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
@@ -83,7 +83,7 @@ p_average_pointrange <-
   scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_x_discrete(labels = labs_algorithms) +
-  scale_y_continuous(name = "Five-Year Avg Irrigation using Peff [x10\u2077 m\u00b3]",
+  scale_y_continuous(name = "Five-Year Avg Irrigation [x10\u2077 m\u00b3]",
                      limits = c(0, 7)) +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
@@ -167,11 +167,11 @@ p_fit_precip <-
                      guide = NULL) +
   scale_x_continuous(name = "Growing Season Precipitation [mm]",
                      expand = expansion(mult = c(0.025, 0.07))) +
-  scale_y_continuous(name = "(Calculated - Reported) Irrigation using Peff [x10\u2077 m\u00b3]") +
+  scale_y_continuous(name = "(Calculated - Reported) Irrigation [x10\u2077 m\u00b3]") +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0))
-ggsave(file.path("figures+tables", "Fig4_Peff_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
-       p_fit_precip, width = 95, height = 95, units = "mm")
+#ggsave(file.path("figures+tables", "Fig4_Peff_Compare_OpenET-WIMAS_LEMA_FitVsPrecip.png"),
+#       p_fit_precip, width = 95, height = 95, units = "mm")
 
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
 
@@ -220,7 +220,7 @@ p_timeseries_precipCorrect <-
   geom_line() +
   geom_point() +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Precip-Adjusted Annual Irrigation using Peff [x10\u2077 m\u00b3]", 
+  scale_y_continuous(name = "Precip-Adjusted Annual Irrigation [x10\u2077 m\u00b3]", 
                      limits = c(0,7)) +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +

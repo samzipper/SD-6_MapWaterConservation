@@ -85,10 +85,31 @@ p_et.p_in <-
 ggsave(file.path("figures+tables", "Fig9_ET.Pboxplots_in.png"),
        p_et.p_in, width = 190, height = 100, units = "mm")
 
+## plot ET-Peff by year and algorithm
+p_et.peff_mm <-
+  ggplot(subset(fields_alldata, Irrigation), aes(x = factor(Year), y = ET.Peff_mm,
+                                                 fill = factor(Algorithm, levels = c("ensemble", "disalexi", "eemetric",
+                                                                                     "geesebal", "ptjpl", "sims", "ssebop")))) +
+  geom_hline(yintercept = 0, color = col.gray) +
+  annotate("rect", xmin = -Inf, xmax = Inf, 
+           ymin = irrDepthMean-irrDepthStd, ymax = irrDepthMean+irrDepthStd,
+           fill = col.gray) +
+  geom_boxplot(outlier.shape = 1) +
+  scale_x_discrete(name = "Year") +
+  scale_y_continuous(name = "Growing Season ET -\nEffective Precipitation [mm]") +
+  scale_fill_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
+                             nrow = 2))
+ggsave(file.path("figures+tables", "Fig9_ET.PeffBoxplots_mm.png"),
+       p_et.peff_mm, width = 190, height = 100, units = "mm")
+
+
 ## Figure 9: density plots, irrigated and rainfed corn
 #Our transformation function
 scaleFUN1000 <- function(x) x*1000
 
+## mm, P version
 p_dens_mm <-
   ggplot(subset(fields_alldata, Algorithm == "ensemble"), aes(x = ET.P_mm, fill = Irrigation, color = Irrigation)) +
   geom_vline(xintercept = 0, color = col.gray) +
@@ -110,6 +131,29 @@ p_dens_mm <-
 ggsave(file.path("figures+tables", "Fig8_IrrigationDensity_mm.png"),
        p_dens_mm, width = 95, height = 150, units = "mm")
 
+## mm, Peff version
+p_dens_mm_Peff <-
+  ggplot(subset(fields_alldata, Algorithm == "ensemble"), aes(x = ET.Peff_mm, fill = Irrigation, color = Irrigation)) +
+  geom_vline(xintercept = 0, color = col.gray) +
+  annotate("rect", ymin = -Inf, ymax = Inf, 
+           xmin = irrDepthMean-irrDepthStd, 
+           xmax = irrDepthMean+irrDepthStd,
+           fill = col.gray) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~Year, ncol = 1) +
+  scale_x_continuous(name = "Growing Season ET - Effective Precipitation [mm]") +
+  scale_y_continuous(name = "Density [x1000]", breaks = seq(0, 0.01, 0.005), labels = scaleFUN1000) +
+  scale_color_manual(name = NULL,
+                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
+                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
+  scale_fill_manual(name = NULL,
+                    values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
+                    labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
+  theme(legend.position = "bottom")
+ggsave(file.path("figures+tables", "Fig8_Peff_IrrigationDensity_mm.png"),
+       p_dens_mm_Peff, width = 95, height = 150, units = "mm")
+
+# inches, P version
 scaleFUN10 <- function(x) x*10
 p_dens_in <-
   ggplot(subset(fields_alldata, Algorithm == "ensemble"), aes(x = ET.P_mm/25.4, fill = Irrigation, color = Irrigation)) +

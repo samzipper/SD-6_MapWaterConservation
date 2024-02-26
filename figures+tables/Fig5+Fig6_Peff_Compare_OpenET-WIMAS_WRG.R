@@ -86,7 +86,7 @@ p_a <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Calculated Irrigation using Peff [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -105,7 +105,7 @@ p_b <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Calculated Irrigation using Peff [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 600),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -132,7 +132,7 @@ p_c <-
              y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Calculated Irrigation using Peff [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [x10\u2075 m\u00b3]",
@@ -149,7 +149,7 @@ p_d <-
              y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Calculated Irrigation using Peff [mm]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 375),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
@@ -167,6 +167,9 @@ p_d <-
   theme(plot.tag.position = c(0.27, 0.95))
 ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
+
+lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
+   data = subset(df_wrg_irr_plot_avg, Algorithm == alg_fig)) |> summary()
 
 ### SI FIGURE: comparison for only fields with area agreement
 
@@ -193,7 +196,7 @@ p_a_areaMatch <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Calculated Irrigation using Peff [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Reported Irrigation [x10\u2075 m\u00b3]",
@@ -212,7 +215,7 @@ p_b_areaMatch <-
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
-  scale_x_continuous(name = "Calculated Irrigation using Peff [mm]",
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 600),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
@@ -230,7 +233,7 @@ p_c_areaMatch <-
              y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Calculated Irrigation using Peff [x10\u2075 m\u00b3]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [x10\u2075 m\u00b3]",
@@ -247,7 +250,7 @@ p_d_areaMatch <-
              y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  scale_x_continuous(name = "Avg. Calculated Irrigation using Peff [mm]",
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 375),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
@@ -265,3 +268,7 @@ p_d_areaMatch <-
                   tag_suffix = ")")
 ggsave(file.path("figures+tables", "FigS12_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
        width = 170, height = 130, units = "mm")
+
+
+lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
+   data = subset(df_wrg_irr_areaMatch_avg, Algorithm == alg_fig)) |> summary()

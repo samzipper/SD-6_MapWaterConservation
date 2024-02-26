@@ -46,6 +46,7 @@ df_long_cumirr <-
 
 sum(is.finite(df_long$irrigation_mm)/7)
 sum(is.finite(df_long$irrEst_mm)/7)
+sum(is.finite(df_long$irrEstPeff_mm)/7)
 length(unique(df_long$FieldID))
 
 # choose only sites with >= 4 yrs (50%) data
@@ -68,7 +69,7 @@ df_multiyr_mean <-
          irrEstPeff_mm_mean = irrEstPeff_mm_cumsum/n_years)
 
 ## plots
-# mm version
+# mm version (using P)
 p_annual_mm <-
   ggplot(df_long, aes(x = irrEst_mm, y = irrigation_mm)) +
   geom_abline(color = col.gray) +
@@ -145,7 +146,84 @@ df_fit_both <-
   bind_rows(df_fit_annual, df_fit_avg)
 write_csv(df_fit_both, file.path("figures+tables", "Table2_FieldDataFitStats.csv"))
 
-# inches version
+# mm version (using Peff)
+p_annual_mm_Peff <-
+  ggplot(df_long, aes(x = irrEstPeff_mm, y = irrigation_mm)) +
+  geom_abline(color = col.gray) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
+  #stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Reported\nIrrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F) +
+  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
+
+p_avg_mm_Peff <-
+  ggplot(data = df_multiyr_mean, aes(x = irrEstPeff_mm_mean, y = irrigation_mm_mean)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
+  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms)) +
+  stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Avg. Reported\nIrrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F)
+
+(p_annual_mm_Peff + p_avg_mm_Peff) +
+  plot_layout(nrow = 2,
+              guides = "collect") & #+
+  #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
+  theme(legend.position = "bottom",
+        legend.margin = margin(t = -5))
+ggsave(file.path("figures+tables", "Fig7_Peff_FieldData-Annual_Irrigation_mm.png"),
+       width = 190, height = 90, units = "mm")
+
+# fit stats
+getR2 <- function(x, y) summary(lm(y~x))$r.squared
+getSlope <- function(x, y) coefficients(lm(y~x))[2]
+df_fit_annual_Peff <-
+  df_long |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEstPeff_mm, irrigation_mm),
+            MAE_mm = mae(irrEstPeff_mm, irrigation_mm),
+            R2 = getR2(irrEstPeff_mm, irrigation_mm),
+            slope = getSlope(irrEstPeff_mm, irrigation_mm)) |> 
+  mutate(time = "Annual")
+
+df_fit_avg_Peff <-
+  df_multiyr_mean |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEstPeff_mm_mean, irrigation_mm_mean),
+            MAE_mm = mae(irrEstPeff_mm_mean, irrigation_mm_mean),
+            R2 = getR2(irrEstPeff_mm_mean, irrigation_mm_mean),
+            slope = getSlope(irrEstPeff_mm_mean, irrigation_mm_mean)) |> 
+  mutate(time = "Average")
+
+summary(lm(irrigation_mm_mean ~ irrEstPeff_mm_mean, data = subset(df_multiyr_mean, Algorithm == "ssebop")))
+
+df_fit_both_Peff <-
+  bind_rows(df_fit_annual_Peff, df_fit_avg_Peff)
+write_csv(df_fit_both_Peff, file.path("figures+tables", "Table2_Peff_FieldDataFitStats.csv"))
+
+# inches version (using P)
 p_annual_in <-
   ggplot(df_long, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
   geom_abline(color = col.gray) +
@@ -189,6 +267,9 @@ p_avg_in <-
         legend.margin = margin(t = -5))
 ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_Inches.png"),
        width = 190, height = 85, units = "mm")
+
+
+
 
 # plot cumulative sum through time
 ggplot(data = df_multiyr, aes(x = Year)) +
