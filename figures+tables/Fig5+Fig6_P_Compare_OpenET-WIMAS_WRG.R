@@ -604,21 +604,3 @@ p_wrg_depth_areaMatch <-
 
 ggsave(file.path("figures+tables", "Compare_OpenET-WIMAS_WRG_IrrDepth_AllWRGs-AreaMatch.png"),
        p_wrg_depth_areaMatch, width = 190, height = 110, units = "mm")
-
-
-# Pretend volume vs depth comparison for understanding --------------------
-
-# this is just to test understanding - if you multiple two non-correlated vectors
-# by a correlated vector, would the correlation improve?
-# answer: yes
-
-v1 <- runif(100)
-v2 <- runif(100)
-v3 <- seq(1, 100)
-
-plot(v1, v2)
-plot(v3, v3)
-plot(v1*v3, v2*v3)
-
-summary(lm(v1 ~ v2))
-summary(lm(v1*v3 ~ v2*v3))
