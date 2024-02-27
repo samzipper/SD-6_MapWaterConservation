@@ -78,6 +78,15 @@ if (lema_only) {
   df_wrg_irr_plot <- df_wrg_irr_all
 }
 
+# calculate multi-year averages
+df_wrg_irr_plot_avg <-
+  df_wrg_irr_plot |> 
+  group_by(WR_GROUP, Algorithm) |> 
+  summarize(WRGirrigationTotal_m3_OpenET_avg = mean(WRGirrigationTotal_m3_OpenET),
+            WRGirrigationTotal_m3_Reported_avg = mean(WRGirrigationTotal_m3_Reported),
+            WRGirrigationTotal_mm_OpenET_avg = mean(WRGirrigationTotal_mm_OpenET),
+            WRGirrigationTotal_mm_Reported_avg = mean(WRGirrigationTotal_mm_Reported))
+
 # panel (a): volume comparison, all WRGs
 p_a <-
   ggplot(subset(df_wrg_irr_plot, Algorithm == alg_fig), 
@@ -115,15 +124,6 @@ p_b <-
   #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
   coord_equal() +
   NULL
-
-# calculate multi-year averages
-df_wrg_irr_plot_avg <-
-  df_wrg_irr_plot |> 
-  group_by(WR_GROUP, Algorithm) |> 
-  summarize(WRGirrigationTotal_m3_OpenET_avg = mean(WRGirrigationTotal_m3_OpenET),
-            WRGirrigationTotal_m3_Reported_avg = mean(WRGirrigationTotal_m3_Reported),
-            WRGirrigationTotal_mm_OpenET_avg = mean(WRGirrigationTotal_mm_OpenET),
-            WRGirrigationTotal_mm_Reported_avg = mean(WRGirrigationTotal_mm_Reported))
 
 # panel (c): avg volume comparison, all WRGs
 p_c <- 
@@ -167,6 +167,9 @@ p_d <-
   theme(plot.tag.position = c(0.27, 0.95))
 ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
+
+lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
+   data = subset(df_wrg_irr_plot, Algorithm == alg_fig)) |> summary()
 
 lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
    data = subset(df_wrg_irr_plot_avg, Algorithm == alg_fig)) |> summary()
@@ -269,6 +272,9 @@ p_d_areaMatch <-
 ggsave(file.path("figures+tables", "FigS12_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
        width = 170, height = 130, units = "mm")
 
+
+lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
+   data = subset(df_wrg_irr_areaMatch, Algorithm == alg_fig)) |> summary()
 
 lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
    data = subset(df_wrg_irr_areaMatch_avg, Algorithm == alg_fig)) |> summary()

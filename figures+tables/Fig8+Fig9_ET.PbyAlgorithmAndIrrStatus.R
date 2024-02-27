@@ -104,6 +104,15 @@ p_et.peff_mm <-
 ggsave(file.path("figures+tables", "Fig9_ET.PeffBoxplots_mm.png"),
        p_et.peff_mm, width = 190, height = 100, units = "mm")
 
+# medians for text
+subset(fields_alldata, Irrigation) |> 
+  group_by(Year, Algorithm) |> 
+  summarize(FieldIrrigationPeff_mm_median = median(FieldIrrigationPeff_mm),
+            FieldIrrigation_mm_median = median(FieldIrrigation_mm)) |> 
+  group_by(Year) |> 
+  summarize(IrrigationRangePeff_mm = (max(FieldIrrigationPeff_mm_median) - min(FieldIrrigationPeff_mm_median)),
+            IrrigationRange_mm = (max(FieldIrrigation_mm_median) - min(FieldIrrigation_mm_median)))
+
 
 ## Figure 9: density plots, irrigated and rainfed corn
 #Our transformation function
