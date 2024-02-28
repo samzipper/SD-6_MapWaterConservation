@@ -286,7 +286,7 @@ ggsave(file.path("plots", "FieldData-Annual_Cumulative.png"),
 
 ## graphical abstract version
 p_ga_annual <-
-  ggplot(subset(df_corn, Algorithm == "ensemble"), aes(x = irrEst_mm, y = irrigation_mm)) +
+  ggplot(subset(df_long, Algorithm == "ensemble"), aes(x = irrEstPeff_mm, y = irrigation_mm)) +
   geom_abline(color = col.gray) +
   geom_point(shape = 1, color = "#e31a1c") +
   stat_smooth(method = "lm") +
@@ -301,7 +301,7 @@ p_ga_annual <-
   theme(plot.title = element_text(face = "italic", hjust = 0.5))
 
 p_ga_avg <- 
-  ggplot(data = subset(df_multiyr_mean, Algorithm == "ensemble"), aes(x = irrEst_mm_mean, y = irrigation_mm_mean)) +
+  ggplot(data = subset(df_multiyr_mean, Algorithm == "ensemble"), aes(x = irrEstPeff_mm_mean, y = irrigation_mm_mean)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = "#e31a1c") +
   stat_smooth(method = "lm") +
@@ -320,3 +320,6 @@ p_ga_avg <-
   plot_layout(nrow = 1)
 ggsave(file.path("figures+tables", "Fig7-GA_FieldData-Annual_Irrigation.png"),
        width = 120, height = 60, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig7-GA_FieldData-Annual_Irrigation.pdf"),
+       width = 120, height = 60, units = "mm", device = cairo_pdf)
