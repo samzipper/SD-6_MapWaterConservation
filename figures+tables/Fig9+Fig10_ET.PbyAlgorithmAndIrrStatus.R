@@ -1,4 +1,4 @@
-## Fig8+Fig9_ET.PbyAlgorithmAndIrrStatus.R
+## Fig9+Fig10_ET.PbyAlgorithmAndIrrStatus.R
 # This script plots variability in ET-P as a function of algorithm and irrigation status.
 
 source(file.path("code", "paths+packages.R"))
@@ -65,7 +65,7 @@ p_et.p_mm <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 2))
-ggsave(file.path("figures+tables", "Fig9_ET.Pboxplots_mm.png"),
+ggsave(file.path("figures+tables", "Fig10_ET.Pboxplots_mm.png"),
        p_et.p_mm, width = 190, height = 100, units = "mm")
 
 p_et.p_in <-
@@ -82,7 +82,7 @@ p_et.p_in <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 3))
-ggsave(file.path("figures+tables", "Fig9_ET.Pboxplots_in.png"),
+ggsave(file.path("figures+tables", "Fig10_ET.Pboxplots_in.png"),
        p_et.p_in, width = 190, height = 100, units = "mm")
 
 ## plot ET-Peff by year and algorithm
@@ -101,7 +101,7 @@ p_et.peff_mm <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 2))
-ggsave(file.path("figures+tables", "Fig9_ET.PeffBoxplots_mm.png"),
+ggsave(file.path("figures+tables", "Fig10_ET.PeffBoxplots_mm.png"),
        p_et.peff_mm, width = 190, height = 100, units = "mm")
 
 # medians for text
@@ -137,7 +137,7 @@ p_dens_mm <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig8_IrrigationDensity_mm.png"),
+ggsave(file.path("figures+tables", "Fig9_IrrigationDensity_mm.png"),
        p_dens_mm, width = 95, height = 150, units = "mm")
 
 ## mm, Peff version
@@ -159,7 +159,7 @@ p_dens_mm_Peff <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig8_Peff_IrrigationDensity_mm.png"),
+ggsave(file.path("figures+tables", "Fig9_Peff_IrrigationDensity_mm.png"),
        p_dens_mm_Peff, width = 95, height = 150, units = "mm")
 
 # inches, P version
@@ -181,5 +181,5 @@ p_dens_in <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig8_IrrigationDensity_in.png"),
+ggsave(file.path("figures+tables", "Fig9_IrrigationDensity_in.png"),
        p_dens_in, width = 95, height = 150, units = "mm")

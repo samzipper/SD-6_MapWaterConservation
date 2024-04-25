@@ -116,7 +116,7 @@ p_avg_mm <-
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
         legend.margin = margin(t = -5))
-ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_mm.png"),
+ggsave(file.path("figures+tables", "Fig8_FieldData-Annual_Irrigation_mm.png"),
        width = 190, height = 85, units = "mm")
 
 # fit stats
@@ -144,7 +144,7 @@ summary(lm(irrigation_mm_mean ~ irrEst_mm_mean, data = subset(df_multiyr_mean, A
 
 df_fit_both <-
   bind_rows(df_fit_annual, df_fit_avg)
-write_csv(df_fit_both, file.path("figures+tables", "Table2_FieldDataFitStats.csv"))
+write_csv(df_fit_both, file.path("figures+tables", "Table3_FieldDataFitStats.csv"))
 
 # mm version (using Peff)
 p_annual_mm_Peff <-
@@ -193,7 +193,7 @@ p_avg_mm_Peff <-
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
         legend.margin = margin(t = -5))
-ggsave(file.path("figures+tables", "Fig7_Peff_FieldData-Annual_Irrigation_mm.png"),
+ggsave(file.path("figures+tables", "Fig8_Peff_FieldData-Annual_Irrigation_mm.png"),
        width = 190, height = 90, units = "mm")
 
 # fit stats
@@ -265,7 +265,7 @@ p_avg_in <-
   #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
   theme(legend.position = "bottom",
         legend.margin = margin(t = -5))
-ggsave(file.path("figures+tables", "Fig7_FieldData-Annual_Irrigation_Inches.png"),
+ggsave(file.path("figures+tables", "Fig8_FieldData-Annual_Irrigation_Inches.png"),
        width = 190, height = 85, units = "mm")
 
 
@@ -318,8 +318,8 @@ p_ga_avg <-
 
 (p_ga_annual + p_ga_avg) +
   plot_layout(nrow = 1)
-ggsave(file.path("figures+tables", "Fig7-GA_FieldData-Annual_Irrigation.png"),
+ggsave(file.path("figures+tables", "Fig8-GA_FieldData-Annual_Irrigation.png"),
        width = 120, height = 60, units = "mm")
 
-ggsave(file.path("figures+tables", "Fig7-GA_FieldData-Annual_Irrigation.pdf"),
+ggsave(file.path("figures+tables", "Fig8-GA_FieldData-Annual_Irrigation.pdf"),
        width = 120, height = 60, units = "mm", device = cairo_pdf)

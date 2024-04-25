@@ -286,10 +286,10 @@ getSlope <- function(x, y) coefficients(lm(y~x))[2]
 df_fit_sd6 <-
   df_wrg_irr_plot |> 
   group_by(Algorithm) |> 
-  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
+  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
             Bias_prc_mm = pbias(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
             MAE_mm = mae(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
             R2_mm = getR2(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
@@ -300,10 +300,10 @@ df_fit_sd6 <-
 df_fit_sd6_avg <-
   df_wrg_irr_plot_avg |> 
   group_by(Algorithm) |> 
-  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
+  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
             Bias_prc_mm = pbias(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
             MAE_mm = mae(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
             R2_mm = getR2(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
@@ -314,10 +314,10 @@ df_fit_sd6_avg <-
 df_fit_areaMatch <-
   df_wrg_irr_areaMatch |> 
   group_by(Algorithm) |> 
-  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
-            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET/1e5, WRGirrigationTotal_m3_Reported/1e5),
+  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
+            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET, WRGirrigationTotal_m3_Reported),
             Bias_prc_mm = pbias(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
             MAE_mm = mae(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
             R2_mm = getR2(WRGirrigationTotal_mm_OpenET, WRGirrigationTotal_mm_Reported),
@@ -328,10 +328,10 @@ df_fit_areaMatch <-
 df_fit_areaMatch_avg <-
   df_wrg_irr_areaMatch_avg |> 
   group_by(Algorithm) |> 
-  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
-            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET_avg/1e5, WRGirrigationTotal_m3_Reported_avg/1e5),
+  summarize(Bias_prc_m3 = pbias(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            MAE_m3 = mae(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            R2_m3 = getR2(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
+            slope_m3 = getSlope(WRGirrigationTotal_m3_OpenET_avg, WRGirrigationTotal_m3_Reported_avg),
             Bias_prc_mm = pbias(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
             MAE_mm = mae(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
             R2_mm = getR2(WRGirrigationTotal_mm_OpenET_avg, WRGirrigationTotal_mm_Reported_avg),
@@ -340,7 +340,5 @@ df_fit_areaMatch_avg <-
          group = "areaMatch")
 
 df_fit_all <-
-  bind_rows(df_fit_sd6, df_fit_sd6_avg, df_fit_areaMatch, df_fit_areaMatch_avg) |> 
-  subset(Algorithm == alg_fig) |> 
-  dplyr::select(-Algorithm)
-write_csv(df_fit_all, file.path("figures+tables", "Table2_Peff_WRGFitStats.csv"))
+  bind_rows(df_fit_sd6, df_fit_sd6_avg, df_fit_areaMatch, df_fit_areaMatch_avg)
+write_csv(df_fit_both, file.path("figures+tables", "Table2_FieldDataFitStats.csv"))
