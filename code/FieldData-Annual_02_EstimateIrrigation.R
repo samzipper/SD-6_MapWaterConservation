@@ -31,6 +31,9 @@ df_long$ET.Peff_mm <- df_long$ET_mm - df_long$Peff_mm
 df_long$irrEst_mm <- ifelse(df_long$ET.P_mm >= 0, df_long$ET.P_mm, 0)
 df_long$irrEstPeff_mm <- ifelse(df_long$ET.Peff_mm >= 0, df_long$ET.Peff_mm, 0)
 df_long$P.Irr_mm <- df_long$precip_mm + df_long$irrigation_mm
+df_long$Peff.Irr_mm <- df_long$Peff_mm + df_long$irrigation_mm
+df_long$ET_P.I <- df_long$ET_mm/df_long$P.Irr_mm
+df_long$ET_Peff.I <- df_long$ET_mm/df_long$Peff.Irr_mm
 
 # calculate cumulative irrigation
 df_long_cumirr <- 
@@ -42,6 +45,46 @@ df_long_cumirr <-
           ET_mm_cumsum = cumsum(ET_mm),
           ETo_mm_cumsum = cumsum(ETo_mm)) |> 
   mutate(Year = df_long$Year)
+
+## plots - looking at ET/P+Irr
+#ggplot(subset(df_long, Algorithm == "ensemble"), aes(x = factor(Year), y= ET_P.I)) +
+ggplot(df_long, aes(x = factor(Year), y= ET_P.I)) +
+  geom_hline(yintercept = 1, color = col.gray) +
+  geom_boxplot()
+
+ggplot(df_long, aes(x = factor(Year), y= ET_Peff.I)) +
+  geom_hline(yintercept = 1, color = col.gray) +
+  geom_boxplot()
+
+ggplot(df_long, aes(x = ET_Peff.I)) +
+  geom_vline(xintercept = 1, color = col.gray) +
+  geom_vline(xintercept = c(0.8, 1.2), color = col.gray, linetype = "dashed") +
+  facet_wrap(~Year, nrow = 2) +
+  geom_histogram()
+
+df_long |> 
+  subset(Algorithm == "ensemble") |> 
+  group_by(Year) |> 
+  summarize(ET_Peff.I_mean = mean(ET_Peff.I),
+            ET_Peff.I_median = median(ET_Peff.I),
+            ET_Peff.I_stdev = sd(ET_Peff.I))
+
+# subset anything with ET_Peff.I more than 20% from 1
+ggplot(subset(df_long, Algorithm == "ensemble"), 
+       aes(x = irrEstPeff_mm, y = irrigation_mm)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(data = subset(df_long, Algorithm == "ensemble"), 
+             aes(color = abs(ET_Peff.I - 1) < 0.2)) +
+  stat_smooth(method = "lm", color = "black") +
+  stat_smooth(data = subset(df_long, Algorithm == "ensemble" &
+                              abs(ET_Peff.I - 1) < 0.2),
+              method = "lm", color = "blue") +
+  scale_x_continuous(name = "Estimated Irrigation [mm]") +
+  scale_y_continuous(name = "Reported Irrigation [mm]")
+
+lm(irrigation_mm ~ irrEstPeff_mm, data = subset(df_long, Algorithm == "ensemble")) |> summary()
+lm(irrigation_mm ~ irrEstPeff_mm, data = subset(df_long, Algorithm == "ensemble" &
+                                                  abs(ET_Peff.I - 1) < 0.2)) |> summary()
 
 ## plots
 # scatterplot
