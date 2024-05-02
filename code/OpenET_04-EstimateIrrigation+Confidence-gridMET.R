@@ -72,6 +72,12 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   fields_alldata$FieldIrrigation_m3 <- round((fields_alldata$FieldIrrigation_mm/1000)*fields_alldata$area_m2, 1)
   fields_alldata$FieldIrrigationPeff_m3 <- round((fields_alldata$FieldIrrigationPeff_mm/1000)*fields_alldata$area_m2, 1)
   
+  # create irrigation confidence column
+  fields_alldata$IrrigatedConfidence <- cut(fields_alldata$IrrigatedPrc, 
+                                            breaks = c(0, 0.1, 0.5, 0.9, 1), 
+                                            include.lowest = T,
+                                            labels = c("RainfedHigh", "RainfedLow", "IrrigatedLow", "IrrigatedHigh"))
+  
   ## summarize to LEMA total and save
   df_OpenET_irr_total <-
     fields_alldata |> 
@@ -82,11 +88,26 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   
   write_csv(df_OpenET_irr_total, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, ".csv")))
   
+  ## high confidence irrigation only - summarize to LEMA total and save
+  df_OpenET_irr_total_highConf <-
+    fields_alldata |> 
+    subset(within_lema & IrrigatedConfidence == "IrrigatedHigh") |> 
+    group_by(Year, Algorithm) |> 
+    summarize(OpenETirrigationLEMA_m3 = sum(FieldIrrigation_m3),
+              OpenETirrigationLEMAPeff_m3 = sum(FieldIrrigationPeff_m3))
+  
+  write_csv(df_OpenET_irr_total_highConf, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, "_HighConfOnly.csv")))
+  
+  #left_join(df_OpenET_irr_total, df_OpenET_irr_total_highConf, by = c("Year", "Algorithm"), suffix = c("_all", "_HighConf")) |> 
+  #  ggplot(aes(x = OpenETirrigationLEMAPeff_m3_all, y = OpenETirrigationLEMAPeff_m3_HighConf)) +
+  #  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  #  geom_point()
+  
   ## clean up fields_alldata and save
   fields_alldata_out <-
     fields_alldata |> 
     #subset(within_lema | within_buffer) |> 
-    select(UID, Year, Algorithm, Irrigation, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, 
+    select(UID, Year, Algorithm, Irrigation, IrrigatedConfidence, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, 
            FieldIrrigation_mm, FieldIrrigation_m3, FieldIrrigationPeff_mm, FieldIrrigationPeff_m3, 
            within_lema, within_buffer)
   

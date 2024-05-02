@@ -10,19 +10,38 @@ df_wimas <-
   mutate(Algorithm = "Reported") |> 
   rename(Irrigation_m3 = WIMASirrigationLEMA_m3) |> 
   subset(Year >= 2016 & Year <= 2020)
-df_yr <- 
-  read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_Annual.csv")) |> 
-  rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
-  bind_rows(df_wimas) |> 
-  mutate(ts = "Annual")
-df_wyr <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_WaterYear.csv")) |> 
-  rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
-  bind_rows(df_wimas) |> 
-  mutate(ts = "Water Year")
-df_gs <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_GrowingSeason.csv")) |> 
-  rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
-  bind_rows(df_wimas) |> 
-  mutate(ts = "Growing Season")
+
+# choose LEMA total estimates - all irrigated fields, or high confidence only
+irr_choice <- "All" # "All" or "HighConf"
+if (irr_choice == "HighConf"){
+  df_yr <- 
+    read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_Annual_HighConfOnly.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Annual")
+  df_wyr <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_WaterYear_HighConfOnly.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Water Year")
+  df_gs <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_GrowingSeason_HighConfOnly.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Growing Season")
+} else if (irr_choice == "All"){
+  df_yr <- 
+    read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_Annual.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Annual")
+  df_wyr <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_WaterYear.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Water Year")
+  df_gs <- read_csv(file.path("data", "OpenET_LEMAtotalIrrigation_GrowingSeason.csv")) |> 
+    rename(Irrigation_m3 = OpenETirrigationLEMAPeff_m3) |> 
+    bind_rows(df_wimas) |> 
+    mutate(ts = "Growing Season")
+}
 
 df_allts <- 
   bind_rows(df_yr, df_wyr, df_gs)
@@ -130,7 +149,7 @@ df_fit_wide <-
 write_csv(df_fit_wide, file.path("figures+tables", "Table1_Peff_Compare_OpenET-WIMAS_LEMA_allts_FitStats.csv"))
 
 # pull in annual precip to plot fit vs. precipitation
-timestep <- "Growing Season"
+timestep <- "Water Year"
 fields_spatial <- 
   read_csv(file.path("data", "Fields_Attributes-Spatial.csv"))
 fields_met <- 
@@ -138,6 +157,7 @@ fields_met <-
   left_join(fields_spatial, by = "UID") |> 
   subset(within_lema) |> 
   mutate(precip_m3 = (precip_mm/1000)*area_m2) |> 
+  rename(Year = WaterYear) |> # needed if you choose WaterYear timestep
   group_by(Year) |> 
   summarize(TotalPrecip_m3 = sum(precip_m3),
             MeanPrecip_mm = mean(precip_mm))
