@@ -3,7 +3,7 @@
 source(file.path("code", "paths+packages.R"))
 
 # timescale for OpenET data
-ts <- "GrowingSeason"
+ts <- "WaterYear"
 
 # load WRG data
 wrg_use <- 
@@ -181,7 +181,8 @@ lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
 # subset to good area match only
 df_wrg_irr_areaMatch <-
   df_wrg_irr_all |> 
-  subset(irrArea_goodFit)
+  subset(irrArea_goodFit & 
+           Algorithm == alg_fig)
 
 df_wrg_irr_areaMatch_avg <-
   df_wrg_irr_areaMatch |> 
@@ -193,12 +194,12 @@ df_wrg_irr_areaMatch_avg <-
 
 # panel (a): volume comparison, all WRGs
 p_a_areaMatch <-
-  ggplot(subset(df_wrg_irr_areaMatch, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_areaMatch, 
          aes(x = WRGirrigationTotal_m3_OpenET/1e5, 
-             y = WRGirrigationTotal_m3_Reported/1e5,
-             color = factor(Year))) +
+             y = WRGirrigationTotal_m3_Reported/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(shape = 1) +
+  geom_point(aes(color = factor(Year)), shape = 1) +
+  stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
@@ -212,12 +213,12 @@ p_a_areaMatch <-
 
 # panel (b): depth comparison, all WRGs
 p_b_areaMatch <- 
-  ggplot(subset(df_wrg_irr_areaMatch, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_areaMatch, 
          aes(x = WRGirrigationTotal_mm_OpenET, 
-             y = WRGirrigationTotal_mm_Reported,
-             color = factor(Year))) +
+             y = WRGirrigationTotal_mm_Reported)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(shape = 1) +
+  geom_point(aes(color = factor(Year)), shape = 1) +
+  stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 600),
                      expand = expansion(mult = c(0, 0.05))) +
@@ -231,11 +232,12 @@ p_b_areaMatch <-
 
 # panel (c): avg volume comparison, all WRGs
 p_c_areaMatch <- 
-  ggplot(subset(df_wrg_irr_areaMatch_avg, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_areaMatch_avg, 
          aes(x = WRGirrigationTotal_m3_OpenET_avg/1e5, 
              y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
+  stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
@@ -248,11 +250,12 @@ p_c_areaMatch <-
 
 # panel (d): average depth comparison, all WRGs
 p_d_areaMatch <- 
-  ggplot(subset(df_wrg_irr_areaMatch_avg, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_areaMatch_avg, 
          aes(x = WRGirrigationTotal_mm_OpenET_avg, 
              y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
+  stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 375),
                      expand = expansion(mult = c(0, 0.05))) +

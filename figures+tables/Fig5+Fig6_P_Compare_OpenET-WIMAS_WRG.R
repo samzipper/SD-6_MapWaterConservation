@@ -3,7 +3,7 @@
 source(file.path("code", "paths+packages.R"))
 
 # timescale for OpenET data
-ts <- "GrowingSeason"
+ts <- "WaterYear"
 
 # load WRG data
 wrg_use <- 
@@ -350,10 +350,10 @@ df_wrg_irr_areaMatch_avg <-
 p_a_areaMatch <-
   ggplot(subset(df_wrg_irr_areaMatch, Algorithm == alg_fig), 
          aes(x = WRGirrigationTotal_m3_OpenET/1e5, 
-             y = WRGirrigationTotal_m3_Reported/1e5,
-             color = factor(Year))) +
+             y = WRGirrigationTotal_m3_Reported/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(shape = 1) +
+  geom_point(aes(color = factor(Year)), shape = 1) +
+  #stat_smooth(method = "lm") +
   scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
