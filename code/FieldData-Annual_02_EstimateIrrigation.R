@@ -50,6 +50,13 @@ for (ts in ts_all){
   }
 }
 
+## inspecting high ET_Peff.I fields for Forrest
+#write_csv(df_long_all, "FieldDataForForrest.csv")
+#weird_fields <- 
+#  subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear") |> 
+#  subset(ET_Peff.I > 1.5 & Year == 2022) |> 
+#  arrange(ET_Peff.I)
+
 ## evaluate ET_P.I output
 # boxplot - distribution by year and timescale
 ggplot(subset(df_long_all, Algorithm == "ensemble"), aes(x = factor(Year), y= ET_P.I, fill = timescale)) +
@@ -83,14 +90,16 @@ df_long_all |>
 ggplot(subset(df_long_all, Algorithm == "ensemble"), aes(x = FieldID, y= ET_P.I, fill = timescale)) +
   geom_hline(yintercept = 1, color = col.gray) +
   geom_hline(yintercept = c(0.8, 1.2), color = col.gray, linetype = "dashed") +
-  geom_boxplot()
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 # raster - distribution by field and year
 ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"), 
        aes(x = FieldID, y = factor(Year), fill = ET_P.I)) +
   geom_raster() +
   labs(title = "Ensemble ET, WaterYear timescale") +
-  scale_fill_gradient2(midpoint = 1, mid = "gray95")
+  scale_fill_gradient2(midpoint = 1, mid = "gray95") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 ## evaluate ET_Peff.I output
 # boxplot - distribution by year and timescale
@@ -125,14 +134,16 @@ df_long_all |>
 ggplot(subset(df_long_all, Algorithm == "ensemble"), aes(x = FieldID, y= ET_Peff.I, fill = timescale)) +
   geom_hline(yintercept = 1, color = col.gray) +
   geom_hline(yintercept = c(0.8, 1.2), color = col.gray, linetype = "dashed") +
-  geom_boxplot()
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 # raster - distribution by field and year
 ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"), 
        aes(x = FieldID, y = factor(Year), fill = ET_Peff.I)) +
   geom_raster() +
   labs(title = "Ensemble ET, WaterYear timescale") +
-  scale_fill_gradient2(midpoint = 1, mid = "gray95")
+  scale_fill_gradient2(midpoint = 1, mid = "gray95") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
 # histogram - distribution by year
 ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"), 
