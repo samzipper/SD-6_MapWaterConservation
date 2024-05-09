@@ -1,9 +1,9 @@
 ## FieldData-Annual_02_EstimateIrrigation.R
+#setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
 
 source(file.path("code", "paths+packages.R"))
 
 # folder where compiled farmer data stored
-#setwd("C:/Users/s947z036/WorkGits/SD-6_MapWaterConservation")
 dir_farm_data <- "G:/My Drive/Projects-Active/NASA OpenET/data/field-specific water use"
 
 sf_fields <- st_read(file.path(dir_farm_data, "OpenET_FieldWaterUseBoundaries.shp"))
@@ -151,8 +151,8 @@ ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"),
   geom_histogram(binwidth = 0.1) +
   geom_vline(xintercept = 1, color = col.gray) +
   geom_vline(xintercept = c(0.8, 1.2), color = col.gray, linetype = "dashed") +
-  facet_wrap(~factor(Year), ncol = 4)
-labs(title = "Ensemble ET, WaterYear timescale")
+  facet_wrap(~factor(Year), ncol = 4) +
+  labs(title = "Ensemble ET, WaterYear timescale")
 
 df_long_all |> 
   subset(Algorithm == "ensemble" & timescale == "WaterYear") |> 
@@ -194,6 +194,20 @@ ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"),
 lm(irrigation_mm ~ irrEstPeff_mm, data = subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear")) |> summary()
 lm(irrigation_mm ~ irrEstPeff_mm, data = subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear" &
                                                   FieldID %in% fields_keep)) |> summary()
+
+# manually remove fields that seem weird for one reason or another
+fields_weird <- c("NW6", "NW7", "NC1", "NC2", "WC22", "WC23", "WC18")
+ggplot(subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear"), 
+       aes(x = irrEstPeff_mm, y = irrigation_mm)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = !(FieldID %in% fields_weird))) +
+  stat_smooth(method = "lm", color = "black") +
+  stat_smooth(data = subset(df_long_all, Algorithm == "ensemble" & timescale == "WaterYear" &
+                              !(FieldID %in% fields_weird)),
+              method = "lm", color = "blue") +
+  scale_x_continuous(name = "Estimated Irrigation [mm]") +
+  scale_y_continuous(name = "Reported Irrigation [mm]") +
+  labs(title = "ts = WaterYear, Algorithm = ensemble")
 
 # remove individual years (due to flowmeter issue, etc.)
 # match fig 7 in Ott et al
@@ -244,6 +258,21 @@ round(100*mae(df_plot_noOutliers_withArea$irrEstPeff_m3million, df_plot_noOutlie
 summary(lm(irrigation_m3million ~ irrEstPeff_m3million, data = df_plot_noOutliers_withArea))
 
 ## plots
+ggplot(subset(df_long, ncrop == 1), aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
+  geom_abline(color = col.gray) +
+  geom_point(aes(color = str_sub(FieldID, 1, 2))) +
+  #stat_smooth(method = "lm", color = "black", linetype = "dashed") +
+  scale_x_continuous(name = "Estimated Irrigation [in]") +
+  scale_y_continuous(name = "Reported Irrigation [in]") +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = col.cat.blu, 
+                                "WC" = col.cat.yel, 
+                                "NW" = col.cat.org,
+                                "NB" = col.cat.grn,
+                                "SW" = col.cat.red)) +
+  facet_wrap(~Algorithm, nrow = 2, labeller = as_labeller(labs_algorithms))
+
 # scatterplot
 df_corn <- subset(df_long, cropType %in% c("Corn", "Corn-Grain", "Corn-Corn"))
 ggplot(df_corn, aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
