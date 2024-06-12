@@ -2,11 +2,37 @@
 
 source(file.path("code", "paths+packages.R"))
 
-# load all fields and remove data you don't want
-df_all <- read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv"))
-
 # load deep percolation regressions
 df_lm <- read_csv(file.path("data", "DeepPercRegressions_Summary.csv")) # DP = lmSlope*AnnualPrecip_mm + lmInt
+
+# load all timescales and combine
+df_yr <- 
+  read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-Annual.csv")) |> 
+  mutate(DeepPerc_mm = df_lm$lmSlope[df_lm$ts == "Annual"]*precip_mm + df_lm$lmInt[df_lm$ts == "Annual"],
+         ts = "Annual")
+df_wyr <- 
+  read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-WaterYear.csv")) |> 
+  mutate(DeepPerc_mm = df_lm$lmSlope[df_lm$ts == "WaterYear"]*precip_mm + df_lm$lmInt[df_lm$ts == "WaterYear"],
+         ts = "WaterYear")
+df_gs <- 
+  read_csv(file.path(dir_farm_data, "FieldData_AllFieldsCompiled-GrowingSeason.csv")) |> 
+  mutate(DeepPerc_mm = df_lm$lmSlope[df_lm$ts == "GrowingSeason"]*precip_mm + df_lm$lmInt[df_lm$ts == "GrowingSeason"],
+         ts = "GrowingSeason")
+
+df_all <- 
+  bind_rows(df_yr, df_wyr, df_gs)
+
+# calculate effective precipitation
+df_all$DeepPerc_mm[df_all$DeepPerc_mm < 0] <- 0
+df_all$Peff_mm <- df_all$precip_mm - df_all$DeepPerc_mm
+
+# data screening - same as Ott et al (based on ensemble)
+#  0.5 < Irr/(ET-Peff) < 1.5
+df_all$Irr_ET.Peff <- df_all$irrigation_mm/(df_all$ensemble_et_mm - df_all$Peff_mm)
+ggplot(df_all, aes(x = Irr_ET.Peff)) + geom_histogram(binwidth = 0.1) + geom_vline(xintercept = c(0.5, 1.5), color = "red") + facet_wrap(~ts)
+df_screened <- subset(df_all, Irr_ET.Peff > 0.5 & Irr_ET.Peff < 1.5)
+
+length(unique(df_screened$FieldID))
 
 # pivot to long form
 df_long <- 
@@ -19,11 +45,6 @@ df_long <-
 
 # lump the NB field in with NW (just over the border)
 df_long$Region[df_long$Region == "NB"] <- "NW"
-
-# calculate effective precipitation
-df_long$DeepPerc_mm <- df_lm$lmSlope[df_lm$ts == "Annual"]*df_long$precip_mm + df_lm$lmInt[df_lm$ts == "Annual"]
-df_long$DeepPerc_mm[df_long$DeepPerc_mm < 0] <- 0
-df_long$Peff_mm <- df_long$precip_mm - df_long$DeepPerc_mm
 
 # estimate irrigation as ET-P
 df_long$ET.P_mm <- df_long$ET_mm - df_long$precip_mm
@@ -68,10 +89,61 @@ df_multiyr_mean <-
          irrEst_mm_mean = irrEst_mm_cumsum/n_years,
          irrEstPeff_mm_mean = irrEstPeff_mm_cumsum/n_years)
 
+# fit stats
+getR2 <- function(x, y) summary(lm(y~x))$r.squared
+getSlope <- function(x, y) coefficients(lm(y~x))[2]
+df_fit_annual_Peff <-
+  df_long |> 
+  group_by(Algorithm, ts) |> 
+  summarize(Bias_prc = pbias(irrEstPeff_mm, irrigation_mm),
+            MAE_mm = mae(irrEstPeff_mm, irrigation_mm),
+            R2 = getR2(irrEstPeff_mm, irrigation_mm),
+            slope = getSlope(irrEstPeff_mm, irrigation_mm))
+
 ## plots
-# mm version (using P)
-p_annual_mm <-
-  ggplot(df_long, aes(x = irrEst_mm, y = irrigation_mm)) +
+# fit stats by algorithm and timescale
+df_fit_annual_Peff |> 
+  pivot_longer(cols = c(-Algorithm, -ts)) |> 
+  ggplot(aes(x = Algorithm, y = value, fill = ts)) +
+  geom_hline(yintercept = 0, color = col.gray) +
+  geom_col(position = "dodge") +
+  facet_wrap(~name, scales = "free", labeller = as_labeller(c("Bias_prc" = "Bias [%]",
+                                                            "MAE_mm" = "MAE [mm]",
+                                                            "R2" = "R\u00b2",
+                                                            "slope" = "Slope"))) +
+  scale_fill_viridis_d(name = "Timescale",
+                    labels = c("Annual" = "Calendar Year",
+                               "WaterYear" = "Water Year",
+                               "GrowingSeason" = "Growing Season")) +
+  scale_x_discrete(labels = labs_algorithms) +
+  scale_y_continuous(name = "Fit Score") +
+  theme(legend.position = "bottom")
+
+# scatterplots - all algorithms, best timescale (Growing Season)
+ggplot(subset(df_long, ts == "GrowingSeason"), 
+       aes(x = irrEstPeff_mm, y = irrigation_mm)) +
+  geom_abline(color = col.gray) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
+  stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Reported\nIrrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F) +
+  facet_wrap(~Algorithm, labeller = as_labeller(labs_algorithms),
+             nrow = 2) +
+  theme(legend.position = "bottom")
+
+# scatterplots - all algorithms and timescales
+ggplot(df_long, aes(x = irrEstPeff_mm, y = irrigation_mm)) +
   geom_abline(color = col.gray) +
   geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
   #stat_smooth(method = "lm") +
@@ -88,64 +160,16 @@ p_annual_mm <-
                                 "NW" = "#1b9e77",
                                 "SW" = "#d95f02"),
                      drop = F) +
-  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
+  facet_grid(Algorithm ~ ts, labeller = as_labeller(c(labs_algorithms,
+                                                      "Annual" = "Calendar Year",
+                                                      "WaterYear" = "Water Year",
+                                                      "GrowingSeason" = "Growing Season"))) +
+  theme(legend.position = "bottom")
 
-p_avg_mm <-
-  ggplot(data = df_multiyr_mean, aes(x = irrEst_mm_mean, y = irrigation_mm_mean)) +
-  geom_abline(intercept = 0, slope = 1, color = col.gray) +
-  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
-  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms)) +
-  stat_smooth(method = "lm") +
-  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
-                     limits = c(0, 850),
-                     breaks = seq(0, 700, 350)) +
-  scale_y_continuous(name = "Avg. Reported\nIrrigation [mm]",
-                     limits = c(0, 850),
-                     breaks = seq(0, 700, 350)) +
-  coord_equal() +
-  scale_color_manual(name = "Region", 
-                     values = c("NC" = "#7570b3", 
-                                "WC" = "#e7298a", 
-                                "NW" = "#1b9e77",
-                                "SW" = "#d95f02"),
-                     drop = F)
 
-(p_annual_mm + p_avg_mm) +
-  plot_layout(nrow = 2,
-              guides = "collect") & #+
-  #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
-  theme(legend.position = "bottom",
-        legend.margin = margin(t = -5))
-ggsave(file.path("figures+tables", "Fig8_FieldData-Annual_Irrigation_mm.png"),
-       width = 190, height = 85, units = "mm")
 
-# fit stats
-getR2 <- function(x, y) summary(lm(y~x))$r.squared
-getSlope <- function(x, y) coefficients(lm(y~x))[2]
-df_fit_annual <-
-  df_long |> 
-  group_by(Algorithm) |> 
-  summarize(Bias_prc = pbias(irrEst_mm, irrigation_mm),
-            MAE_mm = mae(irrEst_mm, irrigation_mm),
-            R2 = getR2(irrEst_mm, irrigation_mm),
-            slope = getSlope(irrEst_mm, irrigation_mm)) |> 
-  mutate(time = "Annual")
 
-df_fit_avg <-
-  df_multiyr_mean |> 
-  group_by(Algorithm) |> 
-  summarize(Bias_prc = pbias(irrEst_mm_mean, irrigation_mm_mean),
-            MAE_mm = mae(irrEst_mm_mean, irrigation_mm_mean),
-            R2 = getR2(irrEst_mm_mean, irrigation_mm_mean),
-            slope = getSlope(irrEst_mm_mean, irrigation_mm_mean)) |> 
-  mutate(time = "Average")
-
-summary(lm(irrigation_mm_mean ~ irrEst_mm_mean, data = subset(df_multiyr_mean, Algorithm == "ssebop")))
-
-df_fit_both <-
-  bind_rows(df_fit_annual, df_fit_avg)
-write_csv(df_fit_both, file.path("figures+tables", "Table3_FieldDataFitStats.csv"))
-
+## old plots
 # mm version (using Peff)
 p_annual_mm_Peff <-
   ggplot(df_long, aes(x = irrEstPeff_mm, y = irrigation_mm)) +
@@ -222,6 +246,83 @@ summary(lm(irrigation_mm_mean ~ irrEstPeff_mm_mean, data = subset(df_multiyr_mea
 df_fit_both_Peff <-
   bind_rows(df_fit_annual_Peff, df_fit_avg_Peff)
 write_csv(df_fit_both_Peff, file.path("figures+tables", "Table2_Peff_FieldDataFitStats.csv"))
+
+# mm version (using P)
+p_annual_mm <-
+  ggplot(df_long, aes(x = irrEst_mm, y = irrigation_mm)) +
+  geom_abline(color = col.gray) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
+  #stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Calculated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Reported\nIrrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F) +
+  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms))
+
+p_avg_mm <-
+  ggplot(data = df_multiyr_mean, aes(x = irrEst_mm_mean, y = irrigation_mm_mean)) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  geom_point(aes(color = factor(Region, levels = c("WC", "NW", "SW", "NC"))), shape = 1) +
+  facet_wrap(~Algorithm, nrow = 1, labeller = as_labeller(labs_algorithms)) +
+  stat_smooth(method = "lm") +
+  scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  scale_y_continuous(name = "Avg. Reported\nIrrigation [mm]",
+                     limits = c(0, 850),
+                     breaks = seq(0, 700, 350)) +
+  coord_equal() +
+  scale_color_manual(name = "Region", 
+                     values = c("NC" = "#7570b3", 
+                                "WC" = "#e7298a", 
+                                "NW" = "#1b9e77",
+                                "SW" = "#d95f02"),
+                     drop = F)
+
+(p_annual_mm + p_avg_mm) +
+  plot_layout(nrow = 2,
+              guides = "collect") & #+
+  #plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
+  theme(legend.position = "bottom",
+        legend.margin = margin(t = -5))
+ggsave(file.path("figures+tables", "Fig8_FieldData-Annual_Irrigation_mm.png"),
+       width = 190, height = 85, units = "mm")
+
+# fit stats
+getR2 <- function(x, y) summary(lm(y~x))$r.squared
+getSlope <- function(x, y) coefficients(lm(y~x))[2]
+df_fit_annual <-
+  df_long |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEst_mm, irrigation_mm),
+            MAE_mm = mae(irrEst_mm, irrigation_mm),
+            R2 = getR2(irrEst_mm, irrigation_mm),
+            slope = getSlope(irrEst_mm, irrigation_mm)) |> 
+  mutate(time = "Annual")
+
+df_fit_avg <-
+  df_multiyr_mean |> 
+  group_by(Algorithm) |> 
+  summarize(Bias_prc = pbias(irrEst_mm_mean, irrigation_mm_mean),
+            MAE_mm = mae(irrEst_mm_mean, irrigation_mm_mean),
+            R2 = getR2(irrEst_mm_mean, irrigation_mm_mean),
+            slope = getSlope(irrEst_mm_mean, irrigation_mm_mean)) |> 
+  mutate(time = "Average")
+
+summary(lm(irrigation_mm_mean ~ irrEst_mm_mean, data = subset(df_multiyr_mean, Algorithm == "ssebop")))
+
+df_fit_both <-
+  bind_rows(df_fit_annual, df_fit_avg)
+write_csv(df_fit_both, file.path("figures+tables", "Table3_FieldDataFitStats.csv"))
 
 # inches version (using P)
 p_annual_in <-
