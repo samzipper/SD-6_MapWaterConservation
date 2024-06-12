@@ -57,20 +57,41 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
            ET.Peff_mm = ET_mm - Peff_mm) |> 
     subset(Year >= yr_start & Year <= yr_end)
   
+  ## summarize rainfed crop ET-Peff for each year
+  # figure out types of crops that are irrigated
+  fields_alldata |> 
+    subset(Irrigation & within_lema) |> 
+    group_by(CropGroupCoarse) |> 
+    summarize(nfields = n())
+  
+  fields_rainfed <-
+    fields_alldata |> 
+    subset(CropGroupCoarse %in% c("Corn", "Soybeans", "Sorghum", "Winter Wheat") &
+             !Irrigation) |> 
+    group_by(Year, Algorithm, CropGroupCoarse) |> 
+    summarize(ET.Peff_mm_rainfed = median(ET.Peff_mm))
+  
+  fields_alldata <- left_join(fields_alldata, fields_rainfed, by = c("Year", "CropGroupCoarse", "Algorithm"))
+  fields_alldata$ET.Peff_mm_rainfed[is.na(fields_alldata$ET.Peff_mm_rainfed)] <- 0
+  fields_alldata$ET.Peff.RFadj_mm <- fields_alldata$ET.Peff_mm - fields_alldata$ET.Peff_mm_rainfed
+  
   ## estimate irrigation
   # set any fields with ET - P < 0 = 0 (negative irrigation impossible)
   fields_alldata$FieldIrrigation_mm <- ifelse(fields_alldata$ET.P_mm < 0, 0, round(fields_alldata$ET.P_mm, 1))
   fields_alldata$FieldIrrigationPeff_mm <- ifelse(fields_alldata$ET.Peff_mm < 0, 0, round(fields_alldata$ET.Peff_mm, 1))
+  fields_alldata$FieldIrrigationPeffRFadj_mm <- ifelse(fields_alldata$ET.Peff.RFadj_mm < 0, 0, round(fields_alldata$ET.Peff.RFadj_mm, 1))
   
   # set any non-irrigated fields = 0 (assumes irrigation status correct)
   fields_alldata$FieldIrrigation_mm[!fields_alldata$Irrigation] <- 0
   fields_alldata$FieldIrrigationPeff_mm[!fields_alldata$Irrigation] <- 0
+  fields_alldata$FieldIrrigationPeffRFadj_mm[!fields_alldata$Irrigation] <- 0
   
   # calculate irrigation volume: mm --> m3
   #  mm/1000 = m
   #  m*area = m3
   fields_alldata$FieldIrrigation_m3 <- round((fields_alldata$FieldIrrigation_mm/1000)*fields_alldata$area_m2, 1)
   fields_alldata$FieldIrrigationPeff_m3 <- round((fields_alldata$FieldIrrigationPeff_mm/1000)*fields_alldata$area_m2, 1)
+  fields_alldata$FieldIrrigationPeffRFadj_m3 <- round((fields_alldata$FieldIrrigationPeffRFadj_mm/1000)*fields_alldata$area_m2, 1)
   
   # create irrigation confidence column
   fields_alldata$IrrigatedConfidence <- cut(fields_alldata$IrrigatedPrc, 
@@ -84,7 +105,8 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
     subset(within_lema) |> 
     group_by(Year, Algorithm) |> 
     summarize(OpenETirrigationLEMA_m3 = sum(FieldIrrigation_m3),
-              OpenETirrigationLEMAPeff_m3 = sum(FieldIrrigationPeff_m3))
+              OpenETirrigationLEMAPeff_m3 = sum(FieldIrrigationPeff_m3),
+              OpenETirrigationLEMAPeffRFadj_m3 = sum(FieldIrrigationPeffRFadj_m3))
   
   write_csv(df_OpenET_irr_total, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, ".csv")))
   
@@ -94,7 +116,8 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
     subset(within_lema & IrrigatedConfidence == "IrrigatedHigh") |> 
     group_by(Year, Algorithm) |> 
     summarize(OpenETirrigationLEMA_m3 = sum(FieldIrrigation_m3),
-              OpenETirrigationLEMAPeff_m3 = sum(FieldIrrigationPeff_m3))
+              OpenETirrigationLEMAPeff_m3 = sum(FieldIrrigationPeff_m3),
+              OpenETirrigationLEMAPeffRFadj_m3 = sum(FieldIrrigationPeffRFadj_m3))
   
   write_csv(df_OpenET_irr_total_highConf, file.path("data", paste0("OpenET_LEMAtotalIrrigation_", ts, "_HighConfOnly.csv")))
   
@@ -107,8 +130,8 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   fields_alldata_out <-
     fields_alldata |> 
     #subset(within_lema | within_buffer) |> 
-    select(UID, Year, Algorithm, Irrigation, IrrigatedConfidence, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, 
-           FieldIrrigation_mm, FieldIrrigation_m3, FieldIrrigationPeff_mm, FieldIrrigationPeff_m3, 
+    select(UID, Year, Algorithm, Irrigation, IrrigatedConfidence, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, ET.Peff.RFadj_mm,
+           FieldIrrigation_mm, FieldIrrigation_m3, FieldIrrigationPeff_mm, FieldIrrigationPeff_m3, FieldIrrigationPeffRFadj_mm, FieldIrrigationPeffRFadj_m3,
            within_lema, within_buffer)
   
   # too big to save in repo - put in large data directory

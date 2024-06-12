@@ -7,8 +7,11 @@
    width="358.66666"
    height="206.66667"
    viewBox="0 0 358.66666 206.66667"
-   sodipodi:docname="Fig1_Map-FieldsByRegion.svg"
-   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="Fig2_Map-FieldsByRegionWithLabels.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:export-filename="Fig2_Map-FieldsByRegionWithLabels.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -102,12 +105,12 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="3.94"
-     inkscape:cx="179.44162"
-     inkscape:cy="103.29949"
+     inkscape:cx="179.31472"
+     inkscape:cy="103.17259"
      inkscape:window-width="1920"
-     inkscape:window-height="1137"
-     inkscape:window-x="1192"
-     inkscape:window-y="379"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="g140">
     <inkscape:page
@@ -116,9 +119,11 @@
        id="page138"
        width="358.66666"
        height="206.66667"
-       inkscape:export-filename="Fig1_Map-FieldsByRegionWithLabels.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
+       inkscape:export-filename="Fig2_Map-FieldsByRegionWithLabels.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       margin="0"
+       bleed="0" />
   </sodipodi:namedview>
   <g
      id="g140"
@@ -744,9 +749,9 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828);display:inline;fill:#0082c8;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-278.21708"
          y="-72.656634"
-         id="tspan5799"><tspan
+         id="tspan2"><tspan
            style="stroke:none"
-           id="tspan5797">SD-6 </tspan></tspan></text>
+           id="tspan1">SD-6 </tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.75000002,0,0,0.75000002,396.93832,160.25699)"
@@ -754,14 +759,14 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828-9);display:inline;fill:#606060;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-285.70792"
          y="-72.656634"
-         id="tspan5803"><tspan
+         id="tspan4"><tspan
            style="stroke:none"
-           id="tspan5801">High Plains </tspan></tspan><tspan
+           id="tspan3">High Plains </tspan></tspan><tspan
          x="-273.1103"
          y="-59.323336"
-         id="tspan5807"><tspan
+         id="tspan6"><tspan
            style="stroke:none"
-           id="tspan5805">Aquifer</tspan></tspan></text>
+           id="tspan5">Aquifer</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.75000002,0,0,0.75000002,254.45304,77.204828)"
@@ -769,9 +774,9 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828-9-5);display:inline;fill:#606060;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-276.8017"
          y="-72.656634"
-         id="tspan5811"><tspan
+         id="tspan8"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan5809">NW (52)</tspan></tspan></text>
+           id="tspan7">NW (52)</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.75000002,0,0,0.75000002,334.29031,82.686956)"
@@ -779,9 +784,9 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828-9-5-2);display:inline;fill:#606060;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-271.61616"
          y="-72.656634"
-         id="tspan5815"><tspan
+         id="tspan10"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan5813">NC (4)</tspan></tspan></text>
+           id="tspan9">NC (4)</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.75000002,0,0,0.75000002,252.74968,119.54736)"
@@ -789,9 +794,9 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828-9-5-4);display:inline;fill:#606060;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-280.50937"
          y="-72.656634"
-         id="tspan5819"><tspan
+         id="tspan12"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan5817">WC (171)</tspan></tspan></text>
+           id="tspan11">WC (171)</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.75000002,0,0,0.75000002,252.49843,160.93061)"
@@ -799,9 +804,9 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;white-space:pre;shape-inside:url(#rect828-9-5-4-7);display:inline;fill:#606060;fill-opacity:1;stroke:#000000;stroke-width:1.33333"><tspan
          x="-276.43386"
          y="-72.656634"
-         id="tspan5823"><tspan
+         id="tspan14"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan5821">SW (12)</tspan></tspan></text>
+           id="tspan13">SW (12)</tspan></tspan></text>
     <path
        style="fill:none;fill-opacity:1;stroke:#606060;stroke-width:1.00063;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1L)"
        d="m 181.31377,102.3562 c 0,0 -3.68761,2.02248 -7.60843,2.20597 -4.3159,0.20198 -9.81841,-0.0958 -9.81841,-0.0958"

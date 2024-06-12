@@ -1,4 +1,4 @@
-## OpenET-ETaw_ExploreData.R
+## OpenET-ETaw-SD6_ExploreData.R
 # Explore ETaw data from OpenET.
 
 source(file.path("code", "paths+packages.R"))
@@ -23,7 +23,7 @@ dir_ETaw <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_She
 #rename to match format of 'ET_Monthly_All_FieldsNoDups.csv' file, join with attributes
 #  UID,Date,ETaw_mm_mean_ensemble
 df_ETaw_mo <- 
-  read_csv(file.path(dir_ETaw, "ETaw_mean_vals.csv")) |> 
+  read_csv(file.path(dir_ETaw, "LEMAarea_ETaw_mean_vals.csv")) |> 
   rename(Date = image_date, ETaw_mm_mean_ensemble = mean) |> 
   dplyr::select(-area) |> 
   mutate(Year = year(Date)) |> 

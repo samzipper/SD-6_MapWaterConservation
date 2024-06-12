@@ -257,6 +257,30 @@ round(100*rmse(df_plot_noOutliers_withArea$irrEstPeff_m3million, df_plot_noOutli
 round(100*mae(df_plot_noOutliers_withArea$irrEstPeff_m3million, df_plot_noOutliers_withArea$irrigation_m3million)/mean(df_plot_noOutliers_withArea$irrigation_m3million), 2)
 summary(lm(irrigation_m3million ~ irrEstPeff_m3million, data = df_plot_noOutliers_withArea))
 
+# nice versions - for Boyoucos seminar
+p_depth <- 
+  ggplot(df_plot_noOutliers, 
+       aes(y = irrigation_mm, x = irrEstPeff_mm)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  stat_smooth(method = "lm") +
+  scale_x_continuous("Calculated Irrigation [mm]", limits = c(100, 1000)) +
+  scale_y_continuous("Reported Irrigation [mm]", limits = c(100, 1000))
+
+p_area <-
+  ggplot(df_plot_noOutliers_withArea, 
+       aes(y = irrigation_m3million, x = irrEstPeff_m3million)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept = 0, slope = 1, color = col.gray) +
+  stat_smooth(method = "lm") +
+  scale_x_continuous("Calculated Irrigation [million m^3]", limits = c(0, 1)) +
+  scale_y_continuous("Reported Irrigation [million m^3]", limits = c(0, 1))
+
+(p_depth + p_area) +
+  plot_layout(ncol = 2)
+ggsave(file.path("plots", "FieldResolution_OttEtAlComparison.png"),
+       width = 190, height = 90, units = "mm")
+
 ## plots
 ggplot(subset(df_long, ncrop == 1), aes(x = irrEst_mm/25.4, y = irrigation_mm/25.4)) +
   geom_abline(color = col.gray) +
