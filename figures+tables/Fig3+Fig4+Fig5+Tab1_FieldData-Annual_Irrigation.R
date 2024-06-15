@@ -192,7 +192,7 @@ ggplot(subset(df_long, ts == "GrowingSeason"),
            y = (ET_mm / (precip_mm + irrigation_mm)),
            fill = factor(Algorithm, levels = c("ensemble", "disalexi", "eemetric", "geesebal", "ptjpl", "sims", "ssebop")))) +
   geom_hline(yintercept = 1, color = col.gray) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape = 1) +
   scale_y_continuous(name = "ET / (Irrigation + Peff)") +
   scale_x_discrete(name = "Year") +
   scale_fill_manual(name = "Algorithm", 
