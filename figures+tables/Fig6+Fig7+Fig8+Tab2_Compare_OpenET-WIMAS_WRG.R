@@ -3,7 +3,7 @@
 source(file.path("code", "paths+packages.R"))
 
 # timescale for OpenET data
-ts <- "WaterYear"
+ts <- "GrowingSeason"
 
 # load WRG data
 wrg_use <- 
@@ -66,7 +66,34 @@ hist(wrg_use_plot$irrArea_pctDiff)
 mean(wrg_use_plot$irrArea_pctDiff[wrg_use_plot$WRGirrAreaReported_m2 > 0])
 median(wrg_use_plot$irrArea_pctDiff)
 
-############ FIGURE FOR PAPER
+## Figure - irrigated area comparison
+meanIrrAreaDiff <- round(mean(wrg_use_plot$irrArea_pctDiff[wrg_use_plot$WRGirrAreaReported_m2 > 0]), 3)
+
+p_irrArea_compare <-
+  ggplot(wrg_use_plot, aes(x = irrFieldArea_m2/1e4, y = WRGirrAreaReported_m2/1e4)) +
+  geom_point(aes(shape = irrArea_goodFit, color = irrArea_goodFit)) +
+  geom_abline(intercept = 0, slope = 1, color = col.cat.org) +
+  scale_x_continuous(name = "Calculated Irrigated Area [ha]",
+                     expand = expansion(mult = c(0, 0.025)),
+                     limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
+  scale_y_continuous(name = "Reported Irrigated Area [ha]",
+                     expand = expansion(mult = c(0, 0.025)),
+                     limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
+  coord_equal() +
+  annotate("text", x = 160, y = 520, 
+           label = paste0("Mean Difference = ", meanIrrAreaDiff*100, "%")) +
+  scale_shape_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
+                     values = c("FALSE" = 1, "TRUE" = 16)) +
+  scale_color_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
+                     values = c("FALSE" = col.gray, "TRUE" = col.cat.org)) +
+  theme(legend.position = c(0.99,0.01), 
+        legend.justification = c(1,0))
+
+ggsave(file.path("figures+tables", "Fig7_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
+       p_irrArea_compare, width = 95, height = 95, units = "mm")
+
+
+## Figure- irrigation comparison, all LEMA WRGs
 
 # algorithm for figure
 alg_fig <- "ensemble"
@@ -165,7 +192,7 @@ p_d <-
                   tag_prefix = "(",
                   tag_suffix = ")") &
   theme(plot.tag.position = c(0.27, 0.95))
-ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.png"),
+ggsave(file.path("figures+tables", "Fig6_Peff_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
 
 lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
@@ -174,9 +201,7 @@ lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
 lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
    data = subset(df_wrg_irr_plot_avg, Algorithm == alg_fig)) |> summary()
 
-### SI FIGURE: comparison for only fields with area agreement
-
-# Volume comparison - area agreement only ---------------------------------
+## Figure - area match comparison
 
 # subset to good area match only
 df_wrg_irr_areaMatch <-
@@ -199,7 +224,7 @@ p_a_areaMatch <-
              y = WRGirrigationTotal_m3_Reported/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(aes(color = factor(Year)), shape = 1) +
-  stat_smooth(method = "lm", color = col.cat.red) +
+  #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
@@ -218,7 +243,7 @@ p_b_areaMatch <-
              y = WRGirrigationTotal_mm_Reported)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(aes(color = factor(Year)), shape = 1) +
-  stat_smooth(method = "lm", color = col.cat.red) +
+  #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Calculated Irrigation [mm]",
                      limits = c(0, 600),
                      expand = expansion(mult = c(0, 0.05))) +
@@ -237,7 +262,7 @@ p_c_areaMatch <-
              y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  stat_smooth(method = "lm", color = col.cat.red) +
+  #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [x10\u2075 m\u00b3]",
                      limits = c(0, 20.5),
                      expand = expansion(mult = c(0, 0.025))) +
@@ -255,7 +280,7 @@ p_d_areaMatch <-
              y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
-  stat_smooth(method = "lm", color = col.cat.red) +
+  #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
                      limits = c(0, 375),
                      expand = expansion(mult = c(0, 0.05))) +
@@ -273,7 +298,7 @@ p_d_areaMatch <-
                   tag_prefix = "(",
                   tag_suffix = ")") &
   theme(plot.tag.position = c(0.27, 0.95))
-ggsave(file.path("figures+tables", "Fig7_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
+ggsave(file.path("figures+tables", "Fig8_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
        width = 170, height = 130, units = "mm")
 
 
