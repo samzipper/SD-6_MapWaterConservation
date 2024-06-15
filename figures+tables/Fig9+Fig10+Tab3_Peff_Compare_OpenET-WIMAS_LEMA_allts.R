@@ -1,6 +1,6 @@
 ## Compare_OpenET-WIMAS_LEMA_allts.R
 # This script is supposed to compare estimated pumping from WIMAS and OpenET at 
-# scale of the LEMA for three timescales: Annual, Growing Season, Water Year.
+# scale of the LEMA.
 
 source(file.path("code", "paths+packages.R"))
 
@@ -54,6 +54,12 @@ df_plot$Algorithm <- factor(df_plot$Algorithm,
                              levels = c("Reported", "ensemble", "disalexi", 
                                         "eemetric", "geesebal", "ptjpl", "sims", "ssebop"))
 
+# have to pivot wider then longer to grab out the WIMAS data
+df_plot_wide <- 
+  df_plot |> 
+  pivot_wider(id_cols = c("Year", "ts"), names_from = "Algorithm", values_from = "Irrigation_m3") |> 
+  pivot_longer(cols = -c("Year", "ts", "Reported"), names_to = "Algorithm", values_to = "Irrigation_m3")
+  
 # calculate multi-year average
 df_plot_avg <-
   df_plot |> 
@@ -76,7 +82,6 @@ p_timeseries <-
         strip.text = element_text(hjust = 0)) +
   guides(color = guide_legend(nrow = 2))
 
-
 # calculate fit statistics
 getR2 <- function(x, y) summary(lm(y~x))$r.squared
 getSlope <- function(x, y) coefficients(lm(y~x))[2]
@@ -91,25 +96,8 @@ df_fit_long <-
   pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
                names_to = "metric", values_to = "fit")
 
-df_fit_long_shift <-
-  df_plot_wide |> 
-  # calculate stats for ts, algorithm
-  group_by(ts, Algorithm) |> 
-  summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
-            MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
-            R2 = getR2(Irrigation_m3_shift, Reported),
-            slope = getSlope(Irrigation_m3_shift, Reported)) |> 
-  pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
-               names_to = "metric", values_to = "fit")
-
 df_fit_wide <-
   df_fit_long |> 
-  # pivot longer then wider for paper table formatting
-  arrange(metric, ts, Algorithm) |> 
-  pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
-
-df_fit_wide_shift <-
-  df_fit_long_shift |> 
   # pivot longer then wider for paper table formatting
   arrange(metric, ts, Algorithm) |> 
   pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
@@ -160,8 +148,10 @@ summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Alg
 # combine and save
 (p_timeseries + p_fit_precip) +
   plot_layout(ncol = 2, widths = c(1.5, 1)) +
-  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
-  theme(legend.position = "bottom")
+  plot_annotation(tag_levels = "a", tag_prefix = " (", tag_suffix = ")") &
+  theme(legend.position = "bottom",
+        plot.tag.position = "topleft",
+        plot.tag.location = "panel")
 ggsave(file.path("figures+tables", "Fig9_LEMA-Timeseries+PrecipScatter.png"),
        width = 190, height = 95, units = "mm")
 
@@ -171,6 +161,25 @@ prc_shift <- (1-0.366) # amount to reduce, based on WRG irrigated area compariso
 df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
 df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
   df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
+df_plot_wide$Irrigation_m3_shift <- df_plot_wide$Irrigation_m3*prc_shift
+
+# fit stats
+df_fit_long_shift <-
+  df_plot_wide |> 
+  # calculate stats for ts, algorithm
+  group_by(ts, Algorithm) |> 
+  summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
+            MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
+            R2 = getR2(Irrigation_m3_shift, Reported),
+            slope = getSlope(Irrigation_m3_shift, Reported)) |> 
+  pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
+               names_to = "metric", values_to = "fit")
+
+df_fit_wide_shift <-
+  df_fit_long_shift |> 
+  # pivot longer then wider for paper table formatting
+  arrange(metric, ts, Algorithm) |> 
+  pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
 
 # statistical bias-correction of calculated irrigation using precip
 # pull out each algorithm
@@ -204,7 +213,6 @@ df_ssebop$Irrigation_m3_precipCorrect <- df_ssebop$Irrigation_m3 - predict(lm_ss
 df_wimas$Irrigation_m3_precipCorrect <- df_wimas$Irrigation_m3 # need to create this column for plotting (even though no correction applied to reported data)
 df_precipCorrect <-
   bind_rows(df_ensemble, df_disalexi, df_eemetric, df_geesebal, df_ptjpl, df_sims, df_ssebop, df_wimas)
-
 
 # set factor order for plotting
 df_precipCorrect$Algorithm <- factor(df_precipCorrect$Algorithm, 
