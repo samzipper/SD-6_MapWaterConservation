@@ -89,9 +89,15 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   # calculate irrigation volume: mm --> m3
   #  mm/1000 = m
   #  m*area = m3
-  fields_alldata$FieldIrrigation_m3 <- round((fields_alldata$FieldIrrigation_mm/1000)*fields_alldata$area_m2, 1)
-  fields_alldata$FieldIrrigationPeff_m3 <- round((fields_alldata$FieldIrrigationPeff_mm/1000)*fields_alldata$area_m2, 1)
-  fields_alldata$FieldIrrigationPeffRFadj_m3 <- round((fields_alldata$FieldIrrigationPeffRFadj_mm/1000)*fields_alldata$area_m2, 1)
+  fields_alldata$FieldIrrigation_m3 <- round((fields_alldata$FieldIrrigation_mm/1000)*
+                                               fields_alldata$area_m2*
+                                               fields_alldata$IrrigatedPrc, 1)
+  fields_alldata$FieldIrrigationPeff_m3 <- round((fields_alldata$FieldIrrigationPeff_mm/1000)*
+                                                   fields_alldata$area_m2*
+                                                   fields_alldata$IrrigatedPrc, 1)
+  fields_alldata$FieldIrrigationPeffRFadj_m3 <- round((fields_alldata$FieldIrrigationPeffRFadj_mm/1000)*
+                                                        fields_alldata$area_m2*
+                                                        fields_alldata$IrrigatedPrc, 1)
   
   # create irrigation confidence column
   fields_alldata$IrrigatedConfidence <- cut(fields_alldata$IrrigatedPrc, 
@@ -130,7 +136,7 @@ for (ts in c("Annual", "GrowingSeason", "WaterYear")){
   fields_alldata_out <-
     fields_alldata |> 
     #subset(within_lema | within_buffer) |> 
-    select(UID, Year, Algorithm, Irrigation, IrrigatedConfidence, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, ET.Peff.RFadj_mm,
+    select(UID, Year, Algorithm, Irrigation, IrrigatedConfidence, IrrigatedPrc, CropGroupCoarse, ET_mm, ET.P_mm, ET.Peff_mm, ET.Peff.RFadj_mm,
            FieldIrrigation_mm, FieldIrrigation_m3, FieldIrrigationPeff_mm, FieldIrrigationPeff_m3, FieldIrrigationPeffRFadj_mm, FieldIrrigationPeffRFadj_m3,
            within_lema, within_buffer)
   

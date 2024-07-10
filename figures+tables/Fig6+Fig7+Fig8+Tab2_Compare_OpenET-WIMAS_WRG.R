@@ -80,7 +80,7 @@ p_irrArea_compare <-
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
   coord_equal() +
-  annotate("text", x = 160, y = 520, 
+  annotate("text", x = 160, y = 480, 
            label = paste0("Mean Difference = ", meanIrrAreaDiff*100, "%")) +
   scale_shape_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
                      values = c("FALSE" = 1, "TRUE" = 16)) +

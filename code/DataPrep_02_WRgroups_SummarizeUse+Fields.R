@@ -84,31 +84,54 @@ WRGs_LEMA[WRGs_LEMA %in% WRGs_notLEMA]
 
 # for each WRG, calculate fraction of irrigation area inside LEMA
 wrg_all <- unique(wrg_fields_trim$WR_GROUP)
-df_wrg_LEMAfrac <- tibble(WR_GROUP = wrg_all,
-                          LEMA_fieldArea_m2 = NaN,
-                          notLEMA_fieldArea_m2 = NaN,
-                          LEMA_irrFieldArea_m2 = NaN,
-                          notLEMA_irrFieldArea_m2 = NaN)
+yr_range <- seq(2016, 2021)
 
-for (i in 1:length(wrg_all)){
-  w <- df_wrg_LEMAfrac$WR_GROUP[i]
+for (yr in yr_range){
+  df_wrg_LEMAfrac_y <- tibble(Year = yr,
+                              WR_GROUP = wrg_all,
+                              LEMA_fieldArea_m2 = NaN,
+                              notLEMA_fieldArea_m2 = NaN,
+                              LEMA_irrFieldArea_m2 = NaN,
+                              notLEMA_irrFieldArea_m2 = NaN)
   
-  # get area of fields in LEMA
-  w_UIDs <- unique(subset(wrg_fields_trim, WR_GROUP == w)$UID)
-  w_UIDs_LEMA <- w_UIDs[w_UIDs %in% UID_LEMA]
-  w_UIDs_notLEMA <- w_UIDs[w_UIDs %in% UID_notLEMA]
-  w_UIDs_irr_LEMA <- w_UIDs[w_UIDs %in% UID_irr_LEMA]
-  w_UIDs_irr_notLEMA <- w_UIDs[w_UIDs %in% UID_irr_notLEMA]
+  fields_irrigation_y <- subset(fields_irrigation, Year == yr)
   
-  df_wrg_LEMAfrac$LEMA_fieldArea_m2[i] <-
-    sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_LEMA])
-  df_wrg_LEMAfrac$notLEMA_fieldArea_m2[i] <-
-    sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_notLEMA])
+  for (i in 1:length(wrg_all)){
+    w <- df_wrg_LEMAfrac_y$WR_GROUP[i]
+    
+    # get fields in WRG
+    w_UIDs <- unique(subset(wrg_fields_trim, WR_GROUP == w)$UID)
+    w_UIDs_LEMA <- w_UIDs[w_UIDs %in% UID_LEMA]
+    w_UIDs_notLEMA <- w_UIDs[w_UIDs %in% UID_notLEMA]
+    
+    # identify irrigated and non-irrigated fields
+    w_UIDs_irr_LEMA <- w_UIDs_LEMA[w_UIDs_LEMA %in% subset(fields_irrigation_y, Irrigation)$UID]
+    w_UIDs_irr_notLEMA <- w_UIDs_irr_notLEMA[w_UIDs_irr_notLEMA %in% subset(fields_irrigation_y, Irrigation)$UID]
+    
+    # get irrigated percent of pixels for each irrigated field
+    w_UIDs_irrPrc_LEMA <- fields_irrigation_y$IrrigatedPrc[match(w_UIDs_irr_LEMA, fields_irrigation_y$UID)]
+    w_UIDs_irrPrc_notLEMA <- fields_irrigation_y$IrrigatedPrc[match(w_UIDs_irr_notLEMA, fields_irrigation_y$UID)]
+    
+    # get area for each irrigated field
+    w_UIDs_area_LEMA <- fields_spatial$area_m2[match(w_UIDs_irr_LEMA, fields_spatial$UID)]
+    w_UIDs_area_notLEMA <- fields_spatial$area_m2[match(w_UIDs_irr_notLEMA, fields_spatial$UID)]
+    
+    df_wrg_LEMAfrac_y$LEMA_fieldArea_m2[i] <-
+      sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_LEMA])
+    df_wrg_LEMAfrac_y$notLEMA_fieldArea_m2[i] <-
+      sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_notLEMA])
+    
+    df_wrg_LEMAfrac_y$LEMA_irrFieldArea_m2[i] <-
+      sum(w_UIDs_area_LEMA*w_UIDs_irrPrc_LEMA)
+    df_wrg_LEMAfrac_y$notLEMA_irrFieldArea_m2[i] <-
+      sum(w_UIDs_area_notLEMA*w_UIDs_irrPrc_notLEMA)
+  }
   
-  df_wrg_LEMAfrac$LEMA_irrFieldArea_m2[i] <-
-    sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_irr_LEMA])
-  df_wrg_LEMAfrac$notLEMA_irrFieldArea_m2[i] <-
-    sum(fields_spatial$area_m2[fields_spatial$UID %in% w_UIDs_irr_notLEMA])
+  if (yr == yr_range[1]){
+    df_wrg_LEMAfrac <- df_wrg_LEMAfrac_y
+  } else {
+    df_wrg_LEMAfrac <- bind_rows(df_wrg_LEMAfrac, df_wrg_LEMAfrac_y)
+  }
 }
 
 # calculate field area and irrigated field area fraction
@@ -128,7 +151,6 @@ sum(df_wrg_LEMAfrac$LEMA_fieldArea_fraction > 0.01)  # total WRGs including LEMA
 sum(df_wrg_LEMAfrac$LEMA_fieldArea_fraction > 0.01 & df_wrg_LEMAfrac$LEMA_fieldArea_fraction < 1) # total WRGs with land inside and outside LEMA
 
 # sum total and irrigation water use for each WRG in each year
-yr_range <- seq(2016, 2021)
 for (yr in yr_range){
   wrg_yr <- wrg_usebyyear_trim[,c("WR_GROUP", paste0("Wuse_", yr), paste0("Irr_", yr), paste0("Acres_", yr))]
   colnames(wrg_yr) <- c("WR_GROUP", "Wuse_af", "Irr_af", "Irr_Acres")
@@ -145,12 +167,12 @@ for (yr in yr_range){
 wrg_summary_out <- 
   wrg_summary |> 
   arrange(Year, WR_GROUP) |> 
-  left_join(df_wrg_LEMAfrac, by = "WR_GROUP") |> 
+  left_join(df_wrg_LEMAfrac, by = c("Year", "WR_GROUP")) |> 
   mutate(WRGirrigationTotal_m3 = Irr_af*1233.48185532,
          WRGirrigationLEMA_m3 = WRGirrigationTotal_m3*LEMA_irrFieldArea_fraction,
          WRGirrAreaReported_m2 = Irr_Acres*4046.8564) |> 
   select(-Wuse_af, -Irr_af, -Irr_Acres)
-  
+
 ## calculate total annual LEMA-scale irrigation for each water rights group
 wrg_irrigation_LEMA <-
   wrg_summary_out |> 
@@ -171,7 +193,7 @@ wrg_pdiv |>
   rename(WR_GROUP = Wr_group,
          WRG_nWaterRight = Grp_wr_cnt,
          WRG_nPDIV = Grp_pd_cnt) |> 
-  st_write(file.path("data", "WRGs_PDIVbyWRG.gpkg"))
+  st_write(file.path("data", "WRGs_PDIVbyWRG.gpkg"), append = F)
 
 # WRGs_LEMAtotalIrrigation.csv = CSV file with total LEMA reported water use by year
 write_csv(wrg_irrigation_LEMA, file.path("data", "WRGs_LEMAtotalIrrigation.csv"))
