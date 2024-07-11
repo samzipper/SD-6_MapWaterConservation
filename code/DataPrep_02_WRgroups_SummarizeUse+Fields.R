@@ -106,7 +106,7 @@ for (yr in yr_range){
     
     # identify irrigated and non-irrigated fields
     w_UIDs_irr_LEMA <- w_UIDs_LEMA[w_UIDs_LEMA %in% subset(fields_irrigation_y, Irrigation)$UID]
-    w_UIDs_irr_notLEMA <- w_UIDs_irr_notLEMA[w_UIDs_irr_notLEMA %in% subset(fields_irrigation_y, Irrigation)$UID]
+    w_UIDs_irr_notLEMA <- w_UIDs_notLEMA[w_UIDs_notLEMA %in% subset(fields_irrigation_y, Irrigation)$UID]
     
     # get irrigated percent of pixels for each irrigated field
     w_UIDs_irrPrc_LEMA <- fields_irrigation_y$IrrigatedPrc[match(w_UIDs_irr_LEMA, fields_irrigation_y$UID)]

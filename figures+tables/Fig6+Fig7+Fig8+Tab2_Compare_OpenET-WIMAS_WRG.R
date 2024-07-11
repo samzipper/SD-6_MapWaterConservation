@@ -80,7 +80,7 @@ p_irrArea_compare <-
                      expand = expansion(mult = c(0, 0.025)),
                      limits = c(0, max(wrg_use_plot$irrFieldArea_m2/1e4, na.rm = T))) +
   coord_equal() +
-  annotate("text", x = 160, y = 480, 
+  annotate("text", x = 130, y = 450, 
            label = paste0("Mean Difference = ", meanIrrAreaDiff*100, "%")) +
   scale_shape_manual(name = "Agreement", labels = c("FALSE" = "> 10%", "TRUE" = "< 10%"), 
                      values = c("FALSE" = 1, "TRUE" = 16)) +
@@ -207,7 +207,8 @@ lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
 df_wrg_irr_areaMatch <-
   df_wrg_irr_all |> 
   subset(irrArea_goodFit & 
-           Algorithm == alg_fig)
+           Algorithm == alg_fig &
+           LEMA_irrFieldArea_fraction > 0.5)
 
 df_wrg_irr_areaMatch_avg <-
   df_wrg_irr_areaMatch |> 
@@ -282,10 +283,10 @@ p_d_areaMatch <-
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
   #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
-                     limits = c(0, 375),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
-                     limits = c(0, 375),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   coord_equal() +
   NULL

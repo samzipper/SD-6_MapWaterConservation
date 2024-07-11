@@ -157,7 +157,7 @@ ggsave(file.path("figures+tables", "Fig9_LEMA-Timeseries+PrecipScatter.png"),
 
 ## FIGURE 10 - PRECIP CORRECT + AREA CORRECT
 # shift based on irrigated area
-prc_shift <- (1-0.366) # amount to reduce, based on WRG irrigated area comparison
+prc_shift <- (1-0.069) # amount to reduce, based on WRG irrigated area comparison
 df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
 df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
   df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
