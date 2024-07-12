@@ -75,8 +75,8 @@ p_timeseries <-
   ggplot(df_plot, aes(x = Year, y = Irrigation_m3/1e7, color = Algorithm)) +
   geom_line() +
   geom_point() +
-  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Annual Irrigation [x10\u2077 m\u00b3]",
+  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms, guide = NULL) +
+  scale_y_continuous(name = "Annual Irrigation\n[x10\u2077 m\u00b3]",
                      limits = c(0, 6.5)) +
   theme(legend.position = "bottom",
         strip.text = element_text(hjust = 0)) +
@@ -123,18 +123,17 @@ df_fit_with_precip <-
 
 p_fit_precip <-
   ggplot(subset(df_fit_with_precip, Algorithm == "ensemble"), aes(x = MeanPrecip_mm, 
-                                                                  y = IrrDiff_m3/1e7, 
-                                                                  color = Algorithm)) +
+                                                                  y = IrrDiff_m3/1e7)) +
   geom_hline(yintercept = 0, color = col.gray) +
-  stat_smooth(method = "lm") +
-  geom_point() +
+  stat_smooth(method = "lm", color = "#e31a1c") +
+  geom_point(color = "#e31a1c") +
   geom_text(aes(label = Year), check_overlap = T, 
             hjust = c(1, 1, 0, 0.5, 0), 
             vjust = c(0.5, 0.5, 0.5, 0, 0.5), 
             nudge_x = c(-10, -10, 10, 8, 10),
             nudge_y = c(0, 0, 0, 0.10, 0.05)) +
-  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
-                     guide = NULL) +
+  #scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms,
+  #                   guide = NULL) +
   scale_x_continuous(name = "Growing Season Precipitation [mm]",
                      expand = expansion(mult = c(0.025, 0.085))) +
   scale_y_continuous(name = "(Calculated - Reported)\nIrrigation [x10\u2077 m\u00b3]") +
@@ -145,55 +144,6 @@ p_fit_precip <-
 
 summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Algorithm == "ensemble")))
 
-# combine and save
-(p_timeseries + p_fit_precip) +
-  plot_layout(ncol = 2, widths = c(1.5, 1)) +
-  plot_annotation(tag_levels = "a", tag_prefix = " (", tag_suffix = ")") &
-  theme(legend.position = "bottom",
-        plot.tag.position = "topleft",
-        plot.tag.location = "panel")
-ggsave(file.path("figures+tables", "Fig8_LEMA-Timeseries+PrecipScatter.png"),
-       width = 190, height = 95, units = "mm")
-
-## FIGURE 9 - CORRECTED TIMESERIES
-# Area correction - remove for now
-# # shift based on irrigated area
-# prc_shift <- (1-0.069) # amount to reduce, based on WRG irrigated area comparison
-# df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
-# df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
-#   df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
-# df_plot_wide$Irrigation_m3_shift <- df_plot_wide$Irrigation_m3*prc_shift
-# 
-# # fit stats
-# df_fit_long_shift <-
-#   df_plot_wide |> 
-#   # calculate stats for ts, algorithm
-#   group_by(ts, Algorithm) |> 
-#   summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
-#             MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
-#             R2 = getR2(Irrigation_m3_shift, Reported),
-#             slope = getSlope(Irrigation_m3_shift, Reported)) |> 
-#   pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
-#                names_to = "metric", values_to = "fit")
-# 
-# df_fit_wide_shift <-
-#   df_fit_long_shift |> 
-#   # pivot longer then wider for paper table formatting
-#   arrange(metric, ts, Algorithm) |> 
-#   pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
-# 
-# # plot - area-adjusted
-# p_timeseries_areaShift <- 
-#   ggplot(df_plot, aes(x = Year, y = Irrigation_m3_shift/1e7, color = Algorithm)) +
-#   geom_line() +
-#   geom_point() +
-#   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-#   scale_y_continuous(name = "Area-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]",
-#                      limits = c(0, 6.5)) +
-#   theme(legend.position = "bottom",
-#         strip.text = element_text(hjust = 0)) +
-#   guides(color = guide_legend(nrow = 3))
-#
 # statistical bias-correction of calculated irrigation using precip
 # pull out each algorithm
 df_ensemble <- subset(df_fit_with_precip, Algorithm == "ensemble")
@@ -238,12 +188,60 @@ p_timeseries_precipCorrect <-
   geom_line() +
   geom_point() +
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Precip-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]", 
+  scale_y_continuous(name = "Precip-Adjusted \nAnnual Irrigation [x10\u2077 m\u00b3]", 
                      limits = c(0,6.5)) +
   theme(strip.text = element_text(hjust = 0))
 
-ggsave(file.path("figures+tables", "Fig9_LEMA-TimeseriesCorrected.png"),
-       p_timeseries_precipCorrect, width = 190, height = 80, units = "mm")
+# combine and save
+(p_timeseries + p_fit_precip + p_timeseries_precipCorrect + guide_area()) +
+  plot_layout(ncol = 2, widths = c(1.5, 1), guides = "collect") +
+  plot_annotation(tag_levels = "a", tag_prefix = " (", tag_suffix = ")") &
+  theme(legend.position = "bottom",
+        plot.tag.position = "topleft",
+        plot.tag.location = "panel") &
+  guides(color = guide_legend(ncol = 2))
+ggsave(file.path("figures+tables", "Fig8_LEMA-Timeseries+PrecipScatter.png"),
+       width = 190, height = 100, units = "mm")
+
+## FIGURE 9 - CORRECTED TIMESERIES
+# Area correction - remove for now
+# # shift based on irrigated area
+# prc_shift <- (1-0.069) # amount to reduce, based on WRG irrigated area comparison
+# df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
+# df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
+#   df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
+# df_plot_wide$Irrigation_m3_shift <- df_plot_wide$Irrigation_m3*prc_shift
+# 
+# # fit stats
+# df_fit_long_shift <-
+#   df_plot_wide |> 
+#   # calculate stats for ts, algorithm
+#   group_by(ts, Algorithm) |> 
+#   summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
+#             MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
+#             R2 = getR2(Irrigation_m3_shift, Reported),
+#             slope = getSlope(Irrigation_m3_shift, Reported)) |> 
+#   pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
+#                names_to = "metric", values_to = "fit")
+# 
+# df_fit_wide_shift <-
+#   df_fit_long_shift |> 
+#   # pivot longer then wider for paper table formatting
+#   arrange(metric, ts, Algorithm) |> 
+#   pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
+# 
+# # plot - area-adjusted
+# p_timeseries_areaShift <- 
+#   ggplot(df_plot, aes(x = Year, y = Irrigation_m3_shift/1e7, color = Algorithm)) +
+#   geom_line() +
+#   geom_point() +
+#   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+#   scale_y_continuous(name = "Area-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]",
+#                      limits = c(0, 6.5)) +
+#   theme(legend.position = "bottom",
+#         strip.text = element_text(hjust = 0)) +
+#   guides(color = guide_legend(nrow = 3))
+#
 
 ### TABLE - fit stats for original, precip correct, area shift
 df_fit_wide$Approach <- "Original"
