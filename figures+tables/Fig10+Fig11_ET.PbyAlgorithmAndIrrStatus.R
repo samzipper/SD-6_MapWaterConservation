@@ -1,4 +1,4 @@
-## Fig9+Fig10_ET.PbyAlgorithmAndIrrStatus.R
+## Fig10+Fig11_ET.PbyAlgorithmAndIrrStatus.R
 # This script plots variability in ET-P as a function of algorithm and irrigation status.
 
 source(file.path("code", "paths+packages.R"))
@@ -34,22 +34,26 @@ fields_irrigation <-
          IrrConfidence = "Unknown") |> 
   subset(Year %in% df_wimas$Year)
 
-df_irrArea <- 
-  fields_irrigation |> 
-  left_join(fields_spatial, by = "UID") |> 
-  subset(within_lema & Irrigation) |> 
-  group_by(Year) |> 
-  summarize(irrArea_m2_sum = sum(area_m2))
+# df_irrArea <- 
+#   fields_irrigation |> 
+#   left_join(fields_spatial, by = "UID") |> 
+#   subset(within_lema & Irrigation) |> 
+#   group_by(Year) |> 
+#   summarize(irrArea_m2_sum = sum(area_m2))
+# 
+# df_wimas_irrArea <- 
+#   left_join(df_wimas, df_irrArea, by = "Year") |> 
+#   mutate(Irrigation_mm = 1000*Irrigation_m3/irrArea_m2_sum)
+# 
+# ## plot ET-P by year and algorithm
+# irrDepthMean <- mean(df_wimas_irrArea$Irrigation_mm)
+# irrDepthStd <- sd(df_wimas_irrArea$Irrigation_mm)
+# irrDepthMin <- min(df_wimas_irrArea$Irrigation_mm)
+# irrDepthMax <- max(df_wimas_irrArea$Irrigation_mm)
 
-df_wimas_irrArea <- 
-  left_join(df_wimas, df_irrArea, by = "Year") |> 
-  mutate(Irrigation_mm = 1000*Irrigation_m3/irrArea_m2_sum)
-
-## plot ET-P by year and algorithm
-irrDepthMean <- mean(df_wimas_irrArea$Irrigation_mm)
-irrDepthStd <- sd(df_wimas_irrArea$Irrigation_mm)
-irrDepthMin <- min(df_wimas_irrArea$Irrigation_mm)
-irrDepthMax <- max(df_wimas_irrArea$Irrigation_mm)
+# set shaded interval - LEMA average (11") +/- 20%
+irrDepthMin <- 11*25.4*0.8
+irrDepthMax <- 11*25.4*1.2
 
 ## plot ET-Peff by year and algorithm
 p_et.peff_mm <-
@@ -58,7 +62,7 @@ p_et.peff_mm <-
                                                                                      "geesebal", "ptjpl", "sims", "ssebop")))) +
   geom_hline(yintercept = 0, color = col.gray) +
   annotate("rect", xmin = -Inf, xmax = Inf, 
-           ymin = irrDepthMean-irrDepthStd, ymax = irrDepthMean+irrDepthStd,
+           ymin = irrDepthMin, ymax = irrDepthMax,
            fill = col.gray) +
   geom_boxplot(outlier.shape = 1) +
   scale_x_discrete(name = "Year") +
@@ -67,7 +71,7 @@ p_et.peff_mm <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 2))
-ggsave(file.path("figures+tables", "Fig12_ET.PeffBoxplots_mm.png"),
+ggsave(file.path("figures+tables", "Fig11_ET.PeffBoxplots_mm.png"),
        p_et.peff_mm, width = 190, height = 100, units = "mm")
 
 # medians for text
@@ -80,7 +84,7 @@ subset(fields_alldata, Irrigation) |>
             IrrigationRange_mm = (max(FieldIrrigation_mm_median) - min(FieldIrrigation_mm_median)))
 
 
-## Figure 11: density plots, irrigated and rainfed corn
+## Figure 10: density plots, irrigated and rainfed corn
 #Our transformation function
 scaleFUN1000 <- function(x) x*1000
 
@@ -89,8 +93,8 @@ p_dens_mm_Peff <-
   ggplot(subset(fields_alldata, Algorithm == "ensemble"), aes(x = ET.Peff_mm, fill = Irrigation, color = Irrigation)) +
   geom_vline(xintercept = 0, color = col.gray) +
   annotate("rect", ymin = -Inf, ymax = Inf, 
-           xmin = irrDepthMean-irrDepthStd, 
-           xmax = irrDepthMean+irrDepthStd,
+           xmin = irrDepthMin, 
+           xmax = irrDepthMax,
            fill = col.gray) +
   geom_density(alpha = 0.5) +
   facet_wrap(~Year, ncol = 1) +
@@ -103,5 +107,5 @@ p_dens_mm_Peff <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig11_Peff_IrrigationDensity_mm.png"),
+ggsave(file.path("figures+tables", "Fig10_Peff_IrrigationDensity_mm.png"),
        p_dens_mm_Peff, width = 95, height = 150, units = "mm")

@@ -198,8 +198,8 @@ ggplot(subset(df_long, ts == "GrowingSeason"),
   scale_fill_manual(name = "Algorithm", 
                     values = pal_algorithms, 
                     labels = labs_algorithms) 
-ggsave(file.path("figures+tables", "Fig5_Fields-AnnualBoxplots.png"),
-       width = 190, height = 90, units = "mm")
+#ggsave(file.path("figures+tables", "Fig5_Fields-AnnualBoxplots.png"),
+#       width = 190, height = 90, units = "mm")
 
 # scatterplots - all algorithms and timescales
 ggplot(df_long, aes(x = irrEstPeff_mm, y = irrigation_mm)) +

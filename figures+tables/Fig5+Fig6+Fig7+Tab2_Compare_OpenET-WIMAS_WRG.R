@@ -89,7 +89,7 @@ p_irrArea_compare <-
   theme(legend.position = c(0.99,0.01), 
         legend.justification = c(1,0))
 
-ggsave(file.path("figures+tables", "Fig7_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
+ggsave(file.path("figures+tables", "Fig6_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
        p_irrArea_compare, width = 95, height = 95, units = "mm")
 
 
@@ -192,7 +192,7 @@ p_d <-
                   tag_prefix = "(",
                   tag_suffix = ")") &
   theme(plot.tag.position = c(0.27, 0.95))
-ggsave(file.path("figures+tables", "Fig6_Peff_Compare_OpenET-WIMAS_WRGs.png"),
+ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
 
 lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
@@ -203,12 +203,22 @@ lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
 
 ## Figure - area match comparison
 
-# subset to good area match only
-df_wrg_irr_areaMatch <-
-  df_wrg_irr_all |> 
-  subset(irrArea_goodFit & 
-           Algorithm == alg_fig &
-           LEMA_irrFieldArea_fraction > 0.5)
+# algorithm for figure
+alg_fig <- "ensemble"
+lema_only <- T  # only plot LEMA fields or buffer too?
+
+if (lema_only) {
+  df_wrg_irr_areaMatch <-
+    df_wrg_irr_all |> 
+    subset(irrArea_goodFit & 
+             Algorithm == alg_fig &
+             LEMA_irrFieldArea_fraction > 0.5)
+} else {
+  df_wrg_irr_areaMatch <-
+    df_wrg_irr_all |> 
+    subset(irrArea_goodFit & 
+             Algorithm == alg_fig)
+}
 
 df_wrg_irr_areaMatch_avg <-
   df_wrg_irr_areaMatch |> 
@@ -299,7 +309,7 @@ p_d_areaMatch <-
                   tag_prefix = "(",
                   tag_suffix = ")") &
   theme(plot.tag.position = c(0.27, 0.95))
-ggsave(file.path("figures+tables", "Fig8_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
+ggsave(file.path("figures+tables", "Fig7_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
        width = 170, height = 130, units = "mm")
 
 

@@ -69,7 +69,7 @@ df_plot_avg <-
             Irrigation_m3_min = min(Irrigation_m3),
             Irrigation_m3_max = max(Irrigation_m3))
 
-## FIGURE 9 - timeseries and precip error
+## FIGURE 8 - timeseries and precip error
 # plot timeseries
 p_timeseries <- 
   ggplot(df_plot, aes(x = Year, y = Irrigation_m3/1e7, color = Algorithm)) +
@@ -152,35 +152,48 @@ summary(lm(IrrDiff_m3/1e7 ~ MeanPrecip_mm, data = subset(df_fit_with_precip, Alg
   theme(legend.position = "bottom",
         plot.tag.position = "topleft",
         plot.tag.location = "panel")
-ggsave(file.path("figures+tables", "Fig9_LEMA-Timeseries+PrecipScatter.png"),
+ggsave(file.path("figures+tables", "Fig8_LEMA-Timeseries+PrecipScatter.png"),
        width = 190, height = 95, units = "mm")
 
-## FIGURE 10 - PRECIP CORRECT + AREA CORRECT
-# shift based on irrigated area
-prc_shift <- (1-0.069) # amount to reduce, based on WRG irrigated area comparison
-df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
-df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
-  df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
-df_plot_wide$Irrigation_m3_shift <- df_plot_wide$Irrigation_m3*prc_shift
-
-# fit stats
-df_fit_long_shift <-
-  df_plot_wide |> 
-  # calculate stats for ts, algorithm
-  group_by(ts, Algorithm) |> 
-  summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
-            MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
-            R2 = getR2(Irrigation_m3_shift, Reported),
-            slope = getSlope(Irrigation_m3_shift, Reported)) |> 
-  pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
-               names_to = "metric", values_to = "fit")
-
-df_fit_wide_shift <-
-  df_fit_long_shift |> 
-  # pivot longer then wider for paper table formatting
-  arrange(metric, ts, Algorithm) |> 
-  pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
-
+## FIGURE 9 - CORRECTED TIMESERIES
+# Area correction - remove for now
+# # shift based on irrigated area
+# prc_shift <- (1-0.069) # amount to reduce, based on WRG irrigated area comparison
+# df_plot$Irrigation_m3_shift <- df_plot$Irrigation_m3
+# df_plot$Irrigation_m3_shift[df_plot$Algorithm != "Reported"] <- 
+#   df_plot$Irrigation_m3[df_plot$Algorithm != "Reported"]*prc_shift
+# df_plot_wide$Irrigation_m3_shift <- df_plot_wide$Irrigation_m3*prc_shift
+# 
+# # fit stats
+# df_fit_long_shift <-
+#   df_plot_wide |> 
+#   # calculate stats for ts, algorithm
+#   group_by(ts, Algorithm) |> 
+#   summarize(Bias_prc = pbias(Irrigation_m3_shift, Reported),
+#             MAE_1e7m3 = mae(Irrigation_m3_shift/1e7, Reported/1e7),
+#             R2 = getR2(Irrigation_m3_shift, Reported),
+#             slope = getSlope(Irrigation_m3_shift, Reported)) |> 
+#   pivot_longer(cols = c("Bias_prc", "MAE_1e7m3", "R2", "slope"), 
+#                names_to = "metric", values_to = "fit")
+# 
+# df_fit_wide_shift <-
+#   df_fit_long_shift |> 
+#   # pivot longer then wider for paper table formatting
+#   arrange(metric, ts, Algorithm) |> 
+#   pivot_wider(id_cols = "Algorithm", names_from = "metric", values_from = "fit")
+# 
+# # plot - area-adjusted
+# p_timeseries_areaShift <- 
+#   ggplot(df_plot, aes(x = Year, y = Irrigation_m3_shift/1e7, color = Algorithm)) +
+#   geom_line() +
+#   geom_point() +
+#   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
+#   scale_y_continuous(name = "Area-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]",
+#                      limits = c(0, 6.5)) +
+#   theme(legend.position = "bottom",
+#         strip.text = element_text(hjust = 0)) +
+#   guides(color = guide_legend(nrow = 3))
+#
 # statistical bias-correction of calculated irrigation using precip
 # pull out each algorithm
 df_ensemble <- subset(df_fit_with_precip, Algorithm == "ensemble")
@@ -227,34 +240,14 @@ p_timeseries_precipCorrect <-
   scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
   scale_y_continuous(name = "Precip-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]", 
                      limits = c(0,6.5)) +
-  theme(legend.position = "bottom",
-        strip.text = element_text(hjust = 0)) +
-  guides(color = guide_legend(nrow = 3))
+  theme(strip.text = element_text(hjust = 0))
 
-# plot - area-adjusted
-p_timeseries_areaShift <- 
-  ggplot(df_plot, aes(x = Year, y = Irrigation_m3_shift/1e7, color = Algorithm)) +
-  geom_line() +
-  geom_point() +
-  scale_color_manual(name = NULL, values = pal_algorithms, labels = labs_algorithms) +
-  scale_y_continuous(name = "Area-Adjusted\nAnnual Irrigation [x10\u2077 m\u00b3]",
-                     limits = c(0, 6.5)) +
-  theme(legend.position = "bottom",
-        strip.text = element_text(hjust = 0)) +
-  guides(color = guide_legend(nrow = 3))
-
-# combine with line fit plot and save
-(p_timeseries_precipCorrect + p_timeseries_areaShift) +
-  plot_layout(ncol = 1, guides = "collect") +
-  plot_annotation(tag_level = "a", tag_prefix = "(", tag_suffix = ")") &
-  theme(legend.position = "bottom",
-        plot.tag.position = c(0.17, 0.95))
-ggsave(file.path("figures+tables", "Fig10_LEMA-TimeseriesCorrected.png"),
-       width = 95, height = 150, units = "mm")
+ggsave(file.path("figures+tables", "Fig9_LEMA-TimeseriesCorrected.png"),
+       p_timeseries_precipCorrect, width = 190, height = 80, units = "mm")
 
 ### TABLE - fit stats for original, precip correct, area shift
 df_fit_wide$Approach <- "Original"
-df_fit_wide_shift$Approach <- "AreaShift"
+#df_fit_wide_shift$Approach <- "AreaShift"
 
 df_fit_precipCorrect <-
   df_precipCorrect |> 
@@ -269,7 +262,8 @@ df_fit_precipCorrect <-
   mutate(Approach = "PrecipCorrect")
 
 df_fit_all <-
-  bind_rows(df_fit_wide, df_fit_precipCorrect, df_fit_wide_shift) |> 
+  #bind_rows(df_fit_wide, df_fit_precipCorrect, df_fit_wide_shift) |> 
+  bind_rows(df_fit_wide, df_fit_precipCorrect) |> 
   pivot_longer(-c("Algorithm", "Approach")) |> 
   pivot_wider(id_cols = "Algorithm", names_from = c("name", "Approach"), values_from = "value") |> 
   dplyr::select(Algorithm, starts_with("Bias_"), starts_with("MAE_"), starts_with("R2_"), starts_with("slope_"))
