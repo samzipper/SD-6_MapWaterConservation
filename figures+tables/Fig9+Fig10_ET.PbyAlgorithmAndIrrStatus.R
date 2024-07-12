@@ -1,4 +1,4 @@
-## Fig10+Fig11_ET.PbyAlgorithmAndIrrStatus.R
+## Fig9+Fig10_ET.PbyAlgorithmAndIrrStatus.R
 # This script plots variability in ET-P as a function of algorithm and irrigation status.
 
 source(file.path("code", "paths+packages.R"))
@@ -71,8 +71,12 @@ p_et.peff_mm <-
   theme(legend.position = "bottom") +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5,
                              nrow = 2))
-ggsave(file.path("figures+tables", "Fig11_ET.PeffBoxplots_mm.png"),
+
+ggsave(file.path("figures+tables", "Fig10_ET.PeffBoxplots_mm.png"),
        p_et.peff_mm, width = 190, height = 100, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig10_ET.PeffBoxplots_mm.pdf"),
+       p_et.peff_mm, width = 190, height = 100, units = "mm", device = cairo_pdf)
 
 # medians for text
 subset(fields_alldata, Irrigation) |> 
@@ -107,5 +111,9 @@ p_dens_mm_Peff <-
                     values = c("FALSE" = col.cat.yel, "TRUE" = col.cat.grn),
                     labels = c("FALSE" = "Rainfed", "TRUE" = "Irrigated")) +
   theme(legend.position = "bottom")
-ggsave(file.path("figures+tables", "Fig10_Peff_IrrigationDensity_mm.png"),
+
+ggsave(file.path("figures+tables", "Fig9_Peff_IrrigationDensity_mm.png"),
        p_dens_mm_Peff, width = 95, height = 150, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig9_Peff_IrrigationDensity_mm.pdf"),
+       p_dens_mm_Peff, width = 95, height = 150, units = "mm", device = cairo_pdf)

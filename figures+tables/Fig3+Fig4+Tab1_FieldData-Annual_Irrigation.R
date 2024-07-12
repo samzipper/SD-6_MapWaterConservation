@@ -129,6 +129,8 @@ df_fit_annual_Peff |>
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 ggsave(file.path("figures+tables", "Fig3_Fields-FitStats.png"), 
        width = 95, height = 180, units = "mm")
+ggsave(file.path("figures+tables", "Fig3_Fields-FitStats.pdf"), 
+       width = 95, height = 180, units = "mm", device = cairo_pdf)
 
 # scatterplots - all algorithms, best timescale (Growing Season)
 p_annual <-
@@ -185,6 +187,9 @@ p_avg <-
 
 ggsave(file.path("figures+tables", "Fig4_Fields-Annual+AverageScatters.png"),
        width = 190, height = 90, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig4_Fields-Annual+AverageScatters.pdf"),
+       width = 190, height = 90, units = "mm", device = cairo_pdf)
 
 ## plots of ET / (P + Irr)
 ggplot(subset(df_long, ts == "GrowingSeason"), 

@@ -92,6 +92,9 @@ p_irrArea_compare <-
 ggsave(file.path("figures+tables", "Fig6_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.png"),
        p_irrArea_compare, width = 95, height = 95, units = "mm")
 
+ggsave(file.path("figures+tables", "Fig6_Compare_OpenET-WIMAS_WRG_IrrArea_AllWRGs.pdf"),
+       p_irrArea_compare, width = 95, height = 95, units = "mm", device = cairo_pdf)
+
 
 ## Figure- irrigation comparison, all LEMA WRGs
 
@@ -194,6 +197,10 @@ p_d <-
   theme(plot.tag.position = c(0.27, 0.95))
 ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.png"),
        width = 170, height = 130, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.pdf"),
+       width = 170, height = 130, units = "mm", device = cairo_pdf)
+
 
 lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
    data = subset(df_wrg_irr_plot, Algorithm == alg_fig)) |> summary()
@@ -312,6 +319,8 @@ p_d_areaMatch <-
 ggsave(file.path("figures+tables", "Fig7_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.png"),
        width = 170, height = 130, units = "mm")
 
+ggsave(file.path("figures+tables", "Fig7_Peff_Compare_OpenET-WIMAS_WRGs-AreaMatch.pdf"),
+       width = 170, height = 130, units = "mm", device = cairo_pdf)
 
 lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
    data = subset(df_wrg_irr_areaMatch, Algorithm == alg_fig)) |> summary()

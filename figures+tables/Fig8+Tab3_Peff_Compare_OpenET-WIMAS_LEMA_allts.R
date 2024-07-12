@@ -200,8 +200,12 @@ p_timeseries_precipCorrect <-
         plot.tag.position = "topleft",
         plot.tag.location = "panel") &
   guides(color = guide_legend(ncol = 2))
+
 ggsave(file.path("figures+tables", "Fig8_LEMA-Timeseries+PrecipScatter.png"),
        width = 190, height = 100, units = "mm")
+
+ggsave(file.path("figures+tables", "Fig8_LEMA-Timeseries+PrecipScatter.pdf"),
+       width = 190, height = 100, units = "mm", device = cairo_pdf)
 
 ## FIGURE 9 - CORRECTED TIMESERIES
 # Area correction - remove for now
