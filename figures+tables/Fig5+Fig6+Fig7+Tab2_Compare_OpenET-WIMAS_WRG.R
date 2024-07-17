@@ -103,9 +103,12 @@ alg_fig <- "ensemble"
 lema_only <- T  # only plot LEMA fields or buffer too?
 
 if (lema_only) {
-  df_wrg_irr_plot <- subset(df_wrg_irr_all, LEMA_irrFieldArea_fraction > 0.5)
+  df_wrg_irr_plot <- subset(df_wrg_irr_all, 
+                            LEMA_irrFieldArea_fraction > 0.5 &
+                              Algorithm == alg_fig)
 } else {
-  df_wrg_irr_plot <- df_wrg_irr_all
+  df_wrg_irr_plot <- subset(df_wrg_irr_all, 
+                            Algorithm == alg_fig)
 }
 
 # calculate multi-year averages
@@ -119,7 +122,7 @@ df_wrg_irr_plot_avg <-
 
 # panel (a): volume comparison, all WRGs
 p_a <-
-  ggplot(subset(df_wrg_irr_plot, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_plot, 
          aes(x = WRGirrigationTotal_m3_OpenET/1e5, 
              y = WRGirrigationTotal_m3_Reported/1e5,
              color = factor(Year))) +
@@ -138,17 +141,17 @@ p_a <-
 
 # panel (b): depth comparison, all WRGs
 p_b <- 
-  ggplot(subset(df_wrg_irr_plot, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_plot, 
          aes(x = WRGirrigationTotal_mm_OpenET, 
              y = WRGirrigationTotal_mm_Reported,
              color = factor(Year))) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1) +
   scale_x_continuous(name = "Calculated Irrigation [mm]",
-                     limits = c(0, 600),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
-                     limits = c(0, 600),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_color_viridis_d(name = "Year") +
   #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
@@ -157,7 +160,7 @@ p_b <-
 
 # panel (c): avg volume comparison, all WRGs
 p_c <- 
-  ggplot(subset(df_wrg_irr_plot_avg, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_plot_avg, 
          aes(x = WRGirrigationTotal_m3_OpenET_avg/1e5, 
              y = WRGirrigationTotal_m3_Reported_avg/1e5)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
@@ -174,16 +177,16 @@ p_c <-
 
 # panel (d): average depth comparison, all WRGs
 p_d <- 
-  ggplot(subset(df_wrg_irr_plot_avg, Algorithm == alg_fig), 
+  ggplot(df_wrg_irr_plot_avg, 
          aes(x = WRGirrigationTotal_mm_OpenET_avg, 
              y = WRGirrigationTotal_mm_Reported_avg)) +
   geom_abline(intercept = 0, slope = 1, color = col.gray) +
   geom_point(shape = 1, color = pal_algorithms[alg_fig]) +
   scale_x_continuous(name = "Avg. Calculated Irrigation [mm]",
-                     limits = c(0, 375),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Avg. Reported Irrigation [mm]",
-                     limits = c(0, 375),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   coord_equal() +
   NULL
@@ -203,29 +206,16 @@ ggsave(file.path("figures+tables", "Fig5_Peff_Compare_OpenET-WIMAS_WRGs.pdf"),
 
 
 lm(WRGirrigationTotal_mm_Reported ~ WRGirrigationTotal_mm_OpenET,
-   data = subset(df_wrg_irr_plot, Algorithm == alg_fig)) |> summary()
+   data = df_wrg_irr_plot) |> summary()
 
 lm(WRGirrigationTotal_mm_Reported_avg ~ WRGirrigationTotal_mm_OpenET_avg,
    data = subset(df_wrg_irr_plot_avg, Algorithm == alg_fig)) |> summary()
 
 ## Figure - area match comparison
 
-# algorithm for figure
-alg_fig <- "ensemble"
-lema_only <- T  # only plot LEMA fields or buffer too?
-
-if (lema_only) {
-  df_wrg_irr_areaMatch <-
-    df_wrg_irr_all |> 
-    subset(irrArea_goodFit & 
-             Algorithm == alg_fig &
-             LEMA_irrFieldArea_fraction > 0.5)
-} else {
-  df_wrg_irr_areaMatch <-
-    df_wrg_irr_all |> 
-    subset(irrArea_goodFit & 
-             Algorithm == alg_fig)
-}
+df_wrg_irr_areaMatch <-
+  df_wrg_irr_plot |> 
+  subset(irrArea_goodFit)
 
 df_wrg_irr_areaMatch_avg <-
   df_wrg_irr_areaMatch |> 
@@ -263,10 +253,10 @@ p_b_areaMatch <-
   geom_point(aes(color = factor(Year)), shape = 1) +
   #stat_smooth(method = "lm", color = col.cat.red) +
   scale_x_continuous(name = "Calculated Irrigation [mm]",
-                     limits = c(0, 600),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(name = "Reported Irrigation [mm]",
-                     limits = c(0, 600),
+                     limits = c(0, 620),
                      expand = expansion(mult = c(0, 0.05))) +
   scale_color_viridis_d(name = "Year") +
   #scale_color_manual(name = "Year", values = c(col.cat.blu, col.cat.grn, col.cat.yel, col.cat.org, col.cat.red)) +
