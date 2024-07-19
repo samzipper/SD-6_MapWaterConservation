@@ -18,15 +18,17 @@ fields_attributes <-
   left_join(fields_spatial, by = "UID")
 
 ## load and process ETaw data
-dir_ETaw <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data/OpenET/ETaw_20240604extraction"
+#file_ETaw <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data/OpenET/ETaw_20240604extraction/LEMAarea_ETaw_mean_vals.csv"
+file_ETaw <- "C:/Users/s947z036/OneDrive - University of Kansas/Research/LEMA_Sheridan-6/data/OpenET/ETaw_monthly_sum_mean_070624_3monthSpinUp/ETaw_monthly_sum_mean_070624_3monthSpinUp.csv"
 
 #rename to match format of 'ET_Monthly_All_FieldsNoDups.csv' file, join with attributes
 #  UID,Date,ETaw_mm_mean_ensemble
 df_ETaw_mo <- 
-  read_csv(file.path(dir_ETaw, "LEMAarea_ETaw_mean_vals.csv")) |> 
+  read_csv(file_ETaw) |> 
   rename(Date = image_date, ETaw_mm_mean_ensemble = mean) |> 
   dplyr::select(-area) |> 
   mutate(Year = year(Date)) |> 
+  subset(Year > 2016) |> 
   left_join(fields_attributes, by = c("Year", "UID")) |> 
   subset(is.finite(ETaw_mm_mean_ensemble) & 
            is.finite(area_m2)) # no ETaw data for 2016, no attribute data for 2021
@@ -81,6 +83,7 @@ ggplot(df_allLEMA, aes(x = Year, y = LEMAtotal_m3, color = Calculation)) +
 # load previous data
 df_ET_yr <- 
   read_csv(file.path(dir_openet, "OpenET_FieldIrrigation_Annual.csv")) |> 
+  subset(Algorithm == "ensemble") |> 
   group_by(UID, Year) |> 
   summarize(ET_mm_annual = sum(ET_mm),
             ET.P_mm_annual = sum(ET.P_mm),
